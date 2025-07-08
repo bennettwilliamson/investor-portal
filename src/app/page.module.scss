@@ -1,0 +1,29 @@
+.main {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.welcome,
+.historical {
+  margin-top: 2rem;
+}
+
+.statGrid {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.chartPlaceholder {
+  margin-top: 2rem;
+  height: 300px;
+  border: 2px dashed var(--color-text-muted);
+  border-radius: var(--border-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  font-style: italic;
+} 
