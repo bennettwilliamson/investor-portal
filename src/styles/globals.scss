@@ -1,13 +1,34 @@
 @import './tokens.scss';
 
+@font-face {
+  font-family: 'Utile Display';
+  src: url('/fonts/UtileDisplay-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Utile Regular';
+  src: url('/fonts/Utile-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 html,
 body {
   padding: 0;
   margin: 0;
   background: var(--color-bg);
   color: var(--color-text);
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
-    sans-serif;
+  font-family: 'Utile Regular', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+h1,
+h2,
+h3 {
+  font-family: 'Utile Display', sans-serif;
 }
 
 *,
