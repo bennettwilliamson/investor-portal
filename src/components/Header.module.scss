@@ -7,9 +7,14 @@
 }
 
 .logo {
-  font-weight: 600;
-  color: var(--color-primary);
-  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  
+  img {
+    height: auto;
+    max-height: 40px;
+    width: auto;
+  }
 }
 
 .nav {
