@@ -8,9 +8,11 @@
     "start": "next start"
   },
   "dependencies": {
+    "@auth0/nextjs-auth0": "^4.8.0",
     "next": "^14.2.30",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-is": "^19.1.0",
     "recharts": "^3.1.0",
     "sass": "^1.89.2"
   },
