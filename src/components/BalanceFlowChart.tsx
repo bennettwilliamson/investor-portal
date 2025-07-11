@@ -171,9 +171,13 @@ interface CustomTooltipProps {
 }
 
 const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, onUpdate }) => {
-    if (active && payload && payload.length > 0 && onUpdate) {
-        onUpdate(payload[0].payload as PeriodData);
-    }
+    React.useEffect(() => {
+        if (active && payload && payload.length > 0 && onUpdate) {
+            onUpdate(payload[0].payload as PeriodData);
+        }
+        // Only trigger when the tooltip activation state or data changes
+    }, [active, payload, onUpdate]);
+
     return null;
 };
 

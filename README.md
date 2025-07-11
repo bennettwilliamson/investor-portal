@@ -6,7 +6,7 @@
 - Language: **TypeScript**
 - Styling: **SCSS Modules** + CSS custom-property design tokens
 - State/Data: Static mock JSON (to be replaced by Azure SQL backend later)
-- Auth: Auth0 (integration coming in a future milestone)
+- Auth: TBD (authentication platform to be determined)
 - Hosting: Vercel
 - Linting/Formatting: ESLint (Next.js core-web-vitals) + Prettier
 
@@ -14,7 +14,7 @@
 
 1. **Single-app repository** (no monorepo needed)
 2. **TypeScript** across the codebase for early type-safety
-3. **Next.js** chosen now for long-term Auth0 & Azure SQL compatibility and first-class Vercel support
+3. **Next.js** chosen now for long-term Azure SQL compatibility and first-class Vercel support
 4. **Dark theme** by default: black background, white/gray text, Alturas blue `#0C40FF` accents
 5. **Component-centric layout** (Header, StatCard, Section, ChartPlaceholder)
 6. **Mock data** lives in `src/data/dashboardData.ts`
@@ -46,7 +46,7 @@ Push to any branch and Vercel will create a preview deployment. The `main` branc
 
 ## Future Work
 
-- Integrate Auth0 for authentication
+- Integrate authentication platform (TBD)
 - Replace mock data with API routes backed by Azure SQL
 - Implement historical returns chart
 - Add unit & integration tests
