@@ -1,4 +1,5 @@
 // @ts-nocheck
+'use client';
 // Adapted from custom ReturnCombo – Framer-specific imports removed for Next.js environment
 
 import * as React from "react";

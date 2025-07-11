@@ -2,11 +2,7 @@ import Header from '@/components/Header';
 import StatCard from '@/components/StatCard';
 import dashboardData from '@/data/dashboardData';
 import styles from './page.module.scss';
-import dynamic from 'next/dynamic';
-
-// Lazy-load chart components to avoid SSR issues with recharts
-const BalanceFlowChart = dynamic(() => import('@/components/BalanceFlowChart'), { ssr: false });
-const ReturnCombo = dynamic(() => import('@/components/ReturnCombo'), { ssr: false });
+import ChartsSection from '@/components/ChartsSection';
 
 export default function Home() {
   const { welcome, stats, historical } = dashboardData;
@@ -31,12 +27,7 @@ export default function Home() {
               <StatCard key={label} label={label} value={value} />
             ))}
           </div>
-          <div className={styles.chart}>
-            <BalanceFlowChart />
-          </div>
-          <div className={styles.chart}>
-            <ReturnCombo />
-          </div>
+          <ChartsSection />
         </section>
       </main>
     </>
