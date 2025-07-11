@@ -37,3 +37,24 @@ p code {
 .result-block-container .result-block {
   opacity: 1;
 }
+
+/* Custom navbar link styles - white text with pill shape */
+.navbar .nav-link {
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50rem; /* pill shape */
+  padding: 0.35rem 0.9rem;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.navbar .nav-link:hover,
+.navbar .nav-link:focus,
+.navbar .nav-link.active {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff !important;
+}
+
+/* Ensure dropdown items inherit new colour */
+.navbar .dropdown-item a {
+  color: #ffffff !important;
+}
