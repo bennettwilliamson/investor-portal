@@ -16,7 +16,14 @@
   gap: 1rem;
 }
 
-.chart {
+.chartPlaceholder {
   margin-top: 2rem;
-  height: 450px;
+  height: 300px;
+  border: 2px dashed var(--color-text-muted);
+  border-radius: var(--border-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  font-style: italic;
 } 

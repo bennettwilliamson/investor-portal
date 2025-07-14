@@ -2,7 +2,6 @@ import Header from '@/components/Header';
 import StatCard from '@/components/StatCard';
 import dashboardData from '@/data/dashboardData';
 import styles from './page.module.scss';
-import ChartsSection from '@/components/ChartsSection';
 
 export default function Home() {
   const { welcome, stats, historical } = dashboardData;
@@ -27,7 +26,9 @@ export default function Home() {
               <StatCard key={label} label={label} value={value} />
             ))}
           </div>
-          <ChartsSection />
+          <div className={styles.chartPlaceholder}>
+            Historical returns chart coming soon…
+          </div>
         </section>
       </main>
     </>
