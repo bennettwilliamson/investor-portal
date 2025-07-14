@@ -364,12 +364,12 @@ export default function ReturnCombo(props: Props) {
                         />
                         <CartesianGrid strokeDasharray="3 3" stroke="#333333" opacity={0.3} />
                         <Tooltip content={(props) => <CustomTooltip {...props} onUpdate={setSelectedData} />} cursor={<DottedCursor onPositionUpdate={handleCursorPosition} />} labelFormatter={(label) => `${label}`} position={{ y: 0 }} />
-                        <Bar dataKey={viewMode === 'dollar' ? 'returnDollar' : 'returnPercentValue'} name={viewMode === 'dollar' ? 'Return ($)' : 'Return (%)'} isAnimationActive={true} animationDuration={600} animationEasing="ease-out">
+                        <Bar dataKey={viewMode === 'dollar' ? 'returnDollar' : 'returnPercentValue'} name={viewMode === 'dollar' ? 'Return ($)' : 'Return (%)'} animationDuration={600} animationEasing="ease-out">
                             {chartData.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={COLORS[entry.action]} fillOpacity={activeBarIndex !== null && index !== activeBarIndex ? 0.1 : 1} />
                             ))}
                         </Bar>
-                        <Line type="monotone" dataKey={viewMode === 'dollar' ? 'returnDollar' : 'returnPercentValue'} stroke="transparent" dot={false} activeDot={{ r: 7, stroke: '#FFFFFF', strokeWidth: 4, fill: ACCENT_BLUE }} isAnimationActive={true} animationDuration={600} animationEasing="ease-out" />
+                        <Line type="monotone" dataKey={viewMode === 'dollar' ? 'returnDollar' : 'returnPercentValue'} stroke="transparent" dot={false} activeDot={{ r: 7, stroke: '#FFFFFF', strokeWidth: 4, fill: ACCENT_BLUE }} animationDuration={600} animationEasing="ease-out" />
                     </BarChart>
                 </ResponsiveContainer>
             </div>
