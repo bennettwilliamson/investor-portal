@@ -125,4 +125,14 @@ p {
 /* Increase field label font size */
 .cl-formFieldLabel {
   font-size: 1rem;
+}
+
+/* Hide Clerk logo */
+.cl-logoBox {
+  display: none !important;
+}
+
+/* Reduce padding above first field */
+.cl-formField {
+  margin-top: 0.5rem !important;
 } 
