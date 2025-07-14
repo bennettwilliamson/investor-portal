@@ -23,12 +23,34 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
   font-family: 'Utile Regular', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.5;
 }
 
 h1,
 h2,
 h3 {
   font-family: 'Utile Display', sans-serif;
+  font-weight: 400;
+  margin: 0;
+}
+
+h1 {
+  font-size: 2rem;
+}
+
+h2 {
+  font-size: 1.5rem;
+}
+
+h3 {
+  font-size: 1.25rem;
+}
+
+p {
+  font-weight: 400;
+  margin: 0;
 }
 
 *,
