@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import styles from './Header.module.scss';
+// Added Clerk auth component imports
+import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
 export default function Header() {
   return (
@@ -25,7 +27,21 @@ export default function Header() {
             <Link href="#">Requests</Link>
             <Link href="#">Portfolio</Link>
           </nav>
-          <div className={styles.avatar}>B</div>
+          {/* Show user button when signed in */}
+          <SignedIn>
+            <UserButton afterSignOutUrl="/" />
+          </SignedIn>
+          {/* Show sign in/up buttons when signed out */}
+          <SignedOut>
+            <div className={styles.authButtons}>
+              <SignInButton mode="modal">
+                <button className={styles.authButton}>Sign in</button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <button className={styles.authButton}>Sign up</button>
+              </SignUpButton>
+            </div>
+          </SignedOut>
         </div>
       </div>
     </header>
