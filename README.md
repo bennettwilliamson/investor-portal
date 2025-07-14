@@ -20,6 +20,7 @@
 6. **Mock data** lives in `src/data/dashboardData.ts`
 7. **SCSS Modules** over Tailwind to avoid framework lock-in while keeping styles scoped
 8. **CI/CD** handled by Vercel preview deployments on every PR
+Test
 
 ## Getting Started
 
