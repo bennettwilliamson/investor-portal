@@ -2,8 +2,6 @@ import Header from '@/components/Header';
 import StatCard from '@/components/StatCard';
 import dashboardData from '@/data/dashboardData';
 import styles from './page.module.scss';
-import BalanceFlowChart from '@/components/BalanceFlowChart';
-import ReturnCombo from '@/components/ReturnCombo';
 
 export default function Home() {
   const { welcome, stats, historical } = dashboardData;
@@ -27,15 +25,6 @@ export default function Home() {
             {historical.map(({ label, value }) => (
               <StatCard key={label} label={label} value={value} />
             ))}
-          </div>
-          {/* Charts */}
-          <div className={styles.charts}>
-            <div className={styles.chartWrapper}>
-              <BalanceFlowChart style={{ width: '100%', height: '100%' }} />
-            </div>
-            <div className={styles.chartWrapper}>
-              <ReturnCombo style={{ width: '100%', height: '100%' }} />
-            </div>
           </div>
         </section>
       </main>

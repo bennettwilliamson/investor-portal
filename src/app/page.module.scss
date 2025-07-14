@@ -14,22 +14,4 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1rem;
-}
-
-// New charts layout
-.charts {
-  margin-top: 2rem;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 2rem;
-}
-
-@media (min-width: 768px) {
-  .charts {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.chartWrapper {
-  height: 400px;
 } 
