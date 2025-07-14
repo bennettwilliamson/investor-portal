@@ -16,14 +16,20 @@
   gap: 1rem;
 }
 
-.chartPlaceholder {
+// New charts layout
+.charts {
   margin-top: 2rem;
-  height: 300px;
-  border: 2px dashed var(--color-text-muted);
-  border-radius: var(--border-radius);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-muted);
-  font-style: italic;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .charts {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.chartWrapper {
+  height: 400px;
 } 
