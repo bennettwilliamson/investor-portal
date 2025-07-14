@@ -6,6 +6,7 @@ import dashboardData from '@/data/dashboardData';
 import styles from './page.module.scss';
 
 import { SignedIn, SignedOut, SignIn } from "@clerk/nextjs";
+import Image from "next/image";
 
 export default function Home() {
   const { welcome, stats, historical } = dashboardData;
@@ -30,6 +31,14 @@ export default function Home() {
       {/* Show sign-in form when the user is signed out */}
       <SignedOut>
         <div className={styles.signInContainer}>
+          <Image
+            src="/images/AREF Logo Final - 2024 07 18-01.png"
+            alt="Alturas Real Estate Fund Logo"
+            width={180}
+            height={60}
+            className={styles.logo}
+            priority
+          />
           <SignIn
             signUpUrl="/"
             appearance={{
