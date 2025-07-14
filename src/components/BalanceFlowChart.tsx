@@ -131,13 +131,13 @@ function generateSimulation(): PeriodData[] {
     return rows;
 }
 
-const ACCENT_BLUE = '#008AFF';
+const ACCENT_BLUE = '#ffffff';
 const DARK_BLUE = '#292929'; // new background color for cards and toggle
-const GRADIENT_START = 'rgba(0,138,255,0.4)';
-const GRADIENT_END = 'rgba(0,138,255,0)';
+const GRADIENT_START = 'rgba(255,255,255,0.4)';
+const GRADIENT_END = 'rgba(255,255,255,0)';
 const COLORS = {
-    Reinvested: ACCENT_BLUE,
-    Distributed: '#003A57',
+    Reinvested: '#ffffff',
+    Distributed: '#666666',
 };
 
 // Helper: abbreviate number to ≤3 digits plus suffix

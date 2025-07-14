@@ -104,14 +104,14 @@ function generateSimulation(): QuarterData[] {
     return rows;
 }
 
-const ACCENT_BLUE = '#008AFF';
+const ACCENT_BLUE = '#ffffff';
 const DARK_BLUE = '#292929';
 const TOGGLE_PILL_VERT = 2;
 const TOGGLE_PILL_HORZ = 16;
 
 const COLORS = {
-    Reinvested: ACCENT_BLUE,
-    Distributed: '#003A57',
+    Reinvested: '#ffffff',
+    Distributed: '#666666',
 };
 
 const TIMEFRAME_OPTIONS = [
@@ -275,7 +275,7 @@ export default function ReturnCombo(props: Props) {
                     {(() => {
                         const cardBase: React.CSSProperties = { background: DARK_BLUE, borderRadius: 8, padding: '12px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 140, textAlign: 'center' };
                         const valueStyle: React.CSSProperties = { fontSize: 20, fontWeight: 500, color: '#FFFFFF' };
-                        const lineStyle: React.CSSProperties = { width: '100%', height: 2, background: ACCENT_BLUE, margin: '8px 0' };
+                        const lineStyle: React.CSSProperties = { width: '100%', height: 2, background: '#ffffff', margin: '8px 0' };
                         const labelStyle: React.CSSProperties = { fontSize: 14, color: '#C0C0C0' };
                         return (
                             <>
@@ -369,7 +369,7 @@ export default function ReturnCombo(props: Props) {
                                 <Cell key={`cell-${index}`} fill={COLORS[entry.action]} fillOpacity={activeBarIndex !== null && index !== activeBarIndex ? 0.1 : 1} />
                             ))}
                         </Bar>
-                        <Line type="monotone" dataKey={viewMode === 'dollar' ? 'returnDollar' : 'returnPercentValue'} stroke="transparent" dot={false} activeDot={{ r: 7, stroke: '#FFFFFF', strokeWidth: 4, fill: ACCENT_BLUE }} animationDuration={600} animationEasing="ease-out" />
+                        <Line type="monotone" dataKey={viewMode === 'dollar' ? 'returnDollar' : 'returnPercentValue'} stroke="transparent" dot={false} activeDot={{ r: 7, stroke: '#FFFFFF', strokeWidth: 4, fill: '#ffffff' }} animationDuration={600} animationEasing="ease-out" />
                     </BarChart>
                 </ResponsiveContainer>
             </div>
