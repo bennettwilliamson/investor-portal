@@ -1,19 +1,31 @@
 .card {
   background: var(--color-card-bg);
-  padding: 1rem;
+  padding: 1.5rem 1rem;
   border-radius: var(--border-radius);
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 0.5rem;
 }
 
-.label {
-  font-size: 0.85rem;
-  color: var(--color-text-muted);
+.value {
+  font-size: 2rem;
+  font-weight: 400;
+  color: #fff;
+  text-align: center;
 }
 
-.value {
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: var(--color-primary);
+.divider {
+  width: 80px;
+  height: 2px;
+  background: var(--color-primary);
+  margin: 0.5rem 0 0.5rem 0;
+  border-radius: 2px;
+}
+
+.label {
+  font-size: 1rem;
+  color: var(--color-text-muted);
+  text-align: center;
 } 

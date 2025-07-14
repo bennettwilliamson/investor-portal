@@ -1,8 +1,8 @@
-// @ts-nocheck
 'use client';
-// Adapted from custom BalanceFlowChart – Framer-specific imports removed for Next.js environment
 
-import * as React from "react";
+// @ts-nocheck
+
+import React from 'react';
 import {
     ResponsiveContainer,
     ComposedChart,
@@ -15,7 +15,7 @@ import {
     Area,
     ReferenceLine,
     Tooltip,
-} from "recharts";
+} from 'recharts';
 
 // Types
 interface PeriodData {
@@ -26,36 +26,39 @@ interface PeriodData {
     beginningBalance: number;
     returnRate: number; // decimal, e.g. 0.12 for 12%
     returnDollar: number;
-    action: "Reinvested" | "Distributed";
+    action: 'Reinvested' | 'Distributed';
     netFlow: number; // +ve contribution, -ve withdrawal, 0 otherwise
     endingBalance: number;
 }
 
 interface Props {
+    /**
+     * Optional style prop to allow parent containers to dictate sizing.
+     * When used inside Next.js pages you can also wrap with a div that sets height.
+     */
     style?: React.CSSProperties;
-    className?: string;
 }
 
 // Helper: currency formatter
-const currencyFormatter = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
+const currencyFormatter = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
 });
 
-// Helper: Normalize font-weight keywords to valid CSS values
+// Helper: Normalize Framer font-weight keywords to valid CSS values
 function convertFontWeight(weight: any): any {
-    if (typeof weight === "string") {
+    if (typeof weight === 'string') {
         switch (weight.toLowerCase()) {
-            case "regular":
-                return "normal";
-            case "medium":
+            case 'regular':
+                return 'normal';
+            case 'medium':
                 return 500;
-            case "semibold":
+            case 'semibold':
                 return 600;
-            case "bold":
-                return "bold";
+            case 'bold':
+                return 'bold';
             default:
                 return weight;
         }
@@ -63,14 +66,13 @@ function convertFontWeight(weight: any): any {
     return weight;
 }
 
-// Time-frame options
+// ---------- Chart configuration helpers ----------
 const TIMEFRAME_OPTIONS = [
-    { key: "1yr" as const, label: "1 YR" },
-    { key: "5yr" as const, label: "5 YR" },
-    { key: "all" as const, label: "All" },
+    { key: '1yr' as const, label: '1 YR' },
+    { key: '5yr' as const, label: '5 YR' },
+    { key: 'all' as const, label: 'All' },
 ];
 
-// Padding for the pill toggle (vertical, horizontal)
 const TOGGLE_PILL_VERT = 2;
 const TOGGLE_PILL_HORZ = 16;
 
@@ -82,7 +84,7 @@ function generateSimulation(): PeriodData[] {
     const START_YEAR = 2015;
     const TOTAL_PERIODS = (2025 - START_YEAR + 1) * 4; // 44 periods
 
-    // Pre-defined cash-flow schedule (period index → net cash-flow)
+    // Pre-defined cash-flow schedule (period index → net cash-flow):
     const flowsSchedule: Record<number, number> = {
         1: 100_000,
         13: 100_000,
@@ -93,13 +95,13 @@ function generateSimulation(): PeriodData[] {
 
     for (let i = 1; i <= TOTAL_PERIODS; i++) {
         // Deterministic sample: cycle returnRate 11%→15% and alternate action
-        const returnRate = 0.11 + (((i - 1) % 5) * 0.01); // 0.11,0.12,0.13,0.14,0.15 repeat
+        const returnRate = 0.11 + (((i - 1) % 5) * 0.01); // 0.11,0.12,... repeat
         const returnDollar = beginningBalance * returnRate;
-        const action = i % 2 === 0 ? "Reinvested" : "Distributed";
+        const action = i % 2 === 0 ? 'Reinvested' : 'Distributed';
 
         // Apply returns
         const afterReturn =
-            action === "Reinvested" ? beginningBalance + returnDollar : beginningBalance;
+            action === 'Reinvested' ? beginningBalance + returnDollar : beginningBalance;
 
         // Apply any scheduled contribution/withdrawal for this period
         const netFlow = flowsSchedule[i] ?? 0;
@@ -129,19 +131,19 @@ function generateSimulation(): PeriodData[] {
     return rows;
 }
 
-const ACCENT_BLUE = "#008AFF";
-const DARK_BLUE = "#292929";
-const GRADIENT_START = "rgba(0,138,255,0.4)";
-const GRADIENT_END = "rgba(0,138,255,0)";
+const ACCENT_BLUE = '#ffffff';
+const DARK_BLUE = '#292929'; // new background color for cards and toggle
+const GRADIENT_START = 'rgba(255,255,255,0.4)';
+const GRADIENT_END = 'rgba(255,255,255,0)';
 const COLORS = {
-    Reinvested: ACCENT_BLUE,
-    Distributed: "#003A57",
+    Reinvested: '#ffffff',
+    Distributed: '#666666',
 };
 
 // Helper: abbreviate number to ≤3 digits plus suffix
 function abbreviateNumber(value: number): string {
     const abs = Math.abs(value);
-    const sign = value < 0 ? "-" : "";
+    const sign = value < 0 ? '-' : '';
 
     const format = (num: number) => {
         if (num >= 100) return num.toFixed(0);
@@ -155,7 +157,7 @@ function abbreviateNumber(value: number): string {
     return value.toString();
 }
 
-// ---------------- Custom Tooltip & Cursor ----------------
+// ---------------- Tooltip & Cursor helpers ----------------
 interface TooltipPayloadItem {
     name: string;
     value: number;
@@ -171,21 +173,19 @@ interface CustomTooltipProps {
 }
 
 const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, onUpdate }) => {
-    React.useEffect(() => {
-        if (active && payload && payload.length > 0 && onUpdate) {
-            onUpdate(payload[0].payload as PeriodData);
-        }
-        // Only trigger when the tooltip activation state or data changes
-    }, [active, payload, onUpdate]);
-
+    if (active && payload && payload.length > 0 && onUpdate) {
+        onUpdate(payload[0].payload as PeriodData);
+    }
     return null;
 };
 
-const DottedCursor: React.FC<any & { onPositionUpdate?: (pos: { x: number; y: number }) => void; showBelow?: boolean }> = ({ x, width, height, points, onPositionUpdate, showBelow }) => {
+const DottedCursor: React.FC<any & { onPositionUpdate?: (pos: { x: number; y: number }) => void; showBelow?: boolean }> = (
+    { x, width, height, points, onPositionUpdate, showBelow },
+) => {
     let cx: number = 0;
-    if (points && points.length > 0 && typeof (points[0] as any).x === "number") {
+    if (points && points.length > 0 && typeof (points[0] as any).x === 'number') {
         cx = (points[0] as any).x;
-    } else if (typeof x === "number") {
+    } else if (typeof x === 'number') {
         cx = x + ((width ?? 0) / 2);
     }
 
@@ -194,7 +194,7 @@ const DottedCursor: React.FC<any & { onPositionUpdate?: (pos: { x: number; y: nu
 
     let dashedEndY = height;
     if (showBelow && points) {
-        const barInfo = (points as any[]).find((p) => typeof p.height === "number") as any;
+        const barInfo = (points as any[]).find((p) => typeof p.height === 'number') as any;
         if (barInfo && barInfo.y > pointY) {
             dashedEndY = barInfo.y - 1;
         }
@@ -222,13 +222,14 @@ const DottedCursor: React.FC<any & { onPositionUpdate?: (pos: { x: number; y: nu
         </g>
     );
 };
-// ---------------- End helpers ----------------
 
+// ---------------- Main Component ----------------
 export default function BalanceFlowChart(props: Props) {
-    const { style, className } = props;
-    type TimeFrameKey = "all" | "1yr" | "5yr";
-    const [timeFrame, setTimeFrame] = React.useState<TimeFrameKey>("all");
+    const { style } = props;
+    type TimeFrameKey = 'all' | '1yr' | '5yr';
+    const [timeFrame, setTimeFrame] = React.useState<TimeFrameKey>('all');
 
+    // ---------- Refs & state used for dynamic connector paths ----------
     const containerRef = React.useRef<HTMLDivElement>(null);
     const chartAreaRef = React.useRef<HTMLDivElement>(null);
 
@@ -237,32 +238,34 @@ export default function BalanceFlowChart(props: Props) {
     const returnCardRef = React.useRef<HTMLDivElement>(null);
 
     const [cursorPos, setCursorPos] = React.useState<{ x: number; y: number } | null>(null);
-    const [cardAnchors, setCardAnchors] = React.useState<{ return: { x: number; y: number } | null; begin: { x: number; y: number } | null; end: { x: number; y: number } | null }>({
-        return: null,
-        begin: null,
-        end: null,
+    const [cardAnchors, setCardAnchors] = React.useState({
+        return: null as { x: number; y: number } | null,
+        begin: null as { x: number; y: number } | null,
+        end: null as { x: number; y: number } | null,
     });
 
     const [activeBarIndex, setActiveBarIndex] = React.useState<number | null>(null);
     const [hoverPeriod, setHoverPeriod] = React.useState<number | null>(null);
 
+    // Generate simulation once per mount
     const dataRef = React.useRef<PeriodData[]>([]);
     if (dataRef.current.length === 0) {
         dataRef.current = generateSimulation();
     }
     const data = dataRef.current;
 
+    // Slice data according to selected time-frame
     const visibleData = React.useMemo(() => {
         switch (timeFrame) {
-            case "1yr": {
+            case '1yr': {
                 const lastFour = data.slice(-4);
                 return lastFour.length ? lastFour : data;
             }
-            case "5yr": {
+            case '5yr': {
                 const latestYear = data[data.length - 1].year;
                 return data.filter((d) => d.year >= latestYear - 4);
             }
-            case "all":
+            case 'all':
             default:
                 return data;
         }
@@ -282,15 +285,18 @@ export default function BalanceFlowChart(props: Props) {
         }
     }, [visibleData]);
 
-    const handleCursorPosition = React.useCallback((posRelToChart: { x: number; y: number }) => {
-        if (!chartAreaRef.current || !containerRef.current) return;
-        const chartRect = chartAreaRef.current.getBoundingClientRect();
-        const containerRect = containerRef.current.getBoundingClientRect();
-        setCursorPos({
-            x: chartRect.left - containerRect.left + posRelToChart.x,
-            y: chartRect.top - containerRect.top + posRelToChart.y,
-        });
-    }, []);
+    const handleCursorPosition = React.useCallback(
+        (posRelToChart: { x: number; y: number }) => {
+            if (!chartAreaRef.current || !containerRef.current) return;
+            const chartRect = chartAreaRef.current.getBoundingClientRect();
+            const containerRect = containerRef.current.getBoundingClientRect();
+            setCursorPos({
+                x: chartRect.left - containerRect.left + posRelToChart.x,
+                y: chartRect.top - containerRect.top + posRelToChart.y,
+            });
+        },
+        [],
+    );
 
     React.useLayoutEffect(() => {
         function updateAnchors() {
@@ -314,11 +320,11 @@ export default function BalanceFlowChart(props: Props) {
         }
 
         updateAnchors();
-        window.addEventListener("resize", updateAnchors);
-        return () => window.removeEventListener("resize", updateAnchors);
+        window.addEventListener('resize', updateAnchors);
+        return () => window.removeEventListener('resize', updateAnchors);
     }, []);
 
-    // ----- Y-axis ticks calculation -----
+    // Compute dynamic Y-axis ticks aiming for 5–8 labels
     const baseStep = 100_000;
     const valuesExtent = visibleData.reduce(
         (acc, d) => {
@@ -326,7 +332,7 @@ export default function BalanceFlowChart(props: Props) {
             acc.min = Math.min(acc.min, d.netFlow);
             return acc;
         },
-        { max: 0, min: 0 }
+        { max: 0, min: 0 },
     );
 
     let upperTick = Math.ceil(valuesExtent.max / baseStep) * baseStep;
@@ -338,8 +344,12 @@ export default function BalanceFlowChart(props: Props) {
 
     const countTicks = (st: number) => Math.floor((upperTick - lowerTick) / st) + 1;
 
-    while (countTicks(step) > maxTicks) step *= 2;
-    while (countTicks(step) < minTicks && step > 1_000) step = Math.max(step / 2, 1_000);
+    while (countTicks(step) > maxTicks) {
+        step *= 2;
+    }
+    while (countTicks(step) < minTicks && step > 1_000) {
+        step = Math.max(step / 2, 1_000);
+    }
 
     lowerTick = Math.floor(lowerTick / step) * step;
 
@@ -349,17 +359,17 @@ export default function BalanceFlowChart(props: Props) {
     }
 
     const axisTickStyle = {
-        fill: "#888888",
+        fill: '#888888',
         fontSize: 12,
-        fontFamily: "Utile Regular, sans-serif",
-        fontWeight: convertFontWeight("normal"),
+        fontFamily: 'Utile Regular, sans-serif',
+        fontWeight: convertFontWeight('normal'),
     } as const;
 
     // ---------------- Responsive X-axis tick selection ----------------
     const chartContainerRef = React.useRef<HTMLDivElement>(null);
     const [visibleTicks, setVisibleTicks] = React.useState<number[]>([]);
-    const isOneYear = timeFrame === "1yr";
-    const isAllTime = timeFrame === "all";
+    const isOneYear = timeFrame === '1yr';
+    const isAllTime = timeFrame === 'all';
 
     React.useEffect(() => {
         function computeTicks(width: number) {
@@ -375,15 +385,19 @@ export default function BalanceFlowChart(props: Props) {
             const MIN_TICK_SPACING = 60;
             const maxTicks = Math.floor(width / MIN_TICK_SPACING);
             let ticksPerYear = 1;
-            if (maxTicks >= YEARS * 4) ticksPerYear = 4;
-            else if (maxTicks >= YEARS * 2) ticksPerYear = 2;
-
+            if (maxTicks >= YEARS * 4) {
+                ticksPerYear = 4;
+            } else if (maxTicks >= YEARS * 2) {
+                ticksPerYear = 2;
+            }
             const stepWithinYear = Math.floor(4 / ticksPerYear);
             const ticks: number[] = [];
             for (let y = 0; y < YEARS; y++) {
                 for (let q = 0; q < ticksPerYear; q++) {
                     const periodIndex = y * 4 + q * stepWithinYear;
-                    if (periodIndex < visibleData.length) ticks.push(visibleData[periodIndex].period);
+                    if (periodIndex < visibleData.length) {
+                        ticks.push(visibleData[periodIndex].period);
+                    }
                 }
             }
             setVisibleTicks(ticks);
@@ -394,71 +408,71 @@ export default function BalanceFlowChart(props: Props) {
         computeTicks(el.offsetWidth);
         const ro = new ResizeObserver((entries) => {
             for (const entry of entries) {
-                if (entry.contentRect) computeTicks(entry.contentRect.width);
+                if (entry.contentRect) {
+                    computeTicks(entry.contentRect.width);
+                }
             }
         });
         ro.observe(el);
         return () => ro.disconnect();
     }, [visibleData, isOneYear, isAllTime]);
 
+    // ---------------- JSX ----------------
     return (
         <div
             ref={containerRef}
             style={{
                 ...style,
-                display: "flex",
-                flexDirection: "column",
-                width: "100%",
-                height: "100%",
-                fontFamily: "Utile Regular, sans-serif",
-                boxSizing: "border-box",
-                background: "transparent",
-                color: "#FFFFFF",
-                position: "relative",
+                display: 'flex',
+                flexDirection: 'column',
+                width: '100%',
+                height: '100%',
+                fontFamily: 'Utile Regular, sans-serif',
+                boxSizing: 'border-box',
+                background: 'transparent',
+                color: '#FFFFFF',
+                position: 'relative',
             }}
-            className={className}
         >
-            {/* Header cards & toggles */}
+            {/* Header cards and toggle */}
             <div
                 style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    alignItems: "flex-start",
-                    justifyContent: "space-between",
-                    width: "100%",
-                    padding: "0 0 16px 0",
-                    pointerEvents: "none",
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'flex-start',
+                    justifyContent: 'space-between',
+                    width: '100%',
+                    padding: '0 0 16px 0',
+                    pointerEvents: 'none',
                 }}
             >
                 {/* Metric cards */}
-                <div style={{ display: "flex", gap: 16 }}>
+                <div style={{ display: 'flex', gap: 16 }}>
                     {(() => {
                         const cardBase: React.CSSProperties = {
                             background: DARK_BLUE,
                             borderRadius: 8,
-                            padding: "12px 20px",
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
+                            padding: '12px 20px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
                             minWidth: 140,
-                            textAlign: "center",
+                            textAlign: 'center',
                         };
                         const valueStyle: React.CSSProperties = {
                             fontSize: 20,
                             fontWeight: 500,
-                            color: "#FFFFFF",
-                            textAlign: "center",
+                            color: '#FFFFFF',
                         };
                         const lineStyle: React.CSSProperties = {
-                            width: "100%",
+                            width: '100%',
                             height: 2,
                             background: ACCENT_BLUE,
-                            margin: "8px 0",
+                            margin: '8px 0',
                         };
                         const labelStyle: React.CSSProperties = {
                             fontSize: 14,
-                            color: "#C0C0C0",
-                            textAlign: "center",
+                            color: '#C0C0C0',
                         };
                         return (
                             <>
@@ -481,26 +495,41 @@ export default function BalanceFlowChart(props: Props) {
                         );
                     })()}
                 </div>
-                {/* Toggle */}
-                <div style={{ display: "flex", alignItems: "flex-end", gap: 10, pointerEvents: "auto" }}>
-                    <div style={{ display: "flex", background: DARK_BLUE, padding: 2, borderRadius: 9999 }}>
+                {/* Time-frame toggle */}
+                <div
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'flex-end',
+                        gap: 10,
+                        pointerEvents: 'auto',
+                    }}
+                >
+                    <div
+                        style={{
+                            display: 'flex',
+                            background: DARK_BLUE,
+                            padding: 2,
+                            borderRadius: 9999,
+                        }}
+                    >
                         {TIMEFRAME_OPTIONS.map(({ key, label }) => (
                             <button
                                 key={key}
                                 onClick={() => setTimeFrame(key)}
                                 style={{
                                     padding: `${TOGGLE_PILL_VERT + 2}px ${TOGGLE_PILL_HORZ + 6}px`,
-                                    background: timeFrame === key ? ACCENT_BLUE : "transparent",
-                                    color: "#FFFFFF",
-                                    border: "none",
-                                    cursor: "pointer",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    fontFamily: "Utile Regular, sans-serif",
+                                    background: timeFrame === key ? ACCENT_BLUE : 'transparent',
+                                    color: '#FFFFFF',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontFamily: 'Utile Regular, sans-serif',
                                     fontSize: 18,
                                     borderRadius: 9999,
-                                    transition: "background 0.25s ease, color 0.25s ease",
+                                    transition: 'background 0.25s ease, color 0.25s ease',
                                 }}
                             >
                                 {label}
@@ -511,7 +540,7 @@ export default function BalanceFlowChart(props: Props) {
             </div>
 
             {/* Chart area */}
-            <div style={{ flex: 1, position: "relative", padding: 0 }} ref={chartAreaRef}>
+            <div style={{ flex: 1, position: 'relative', padding: 0 }} ref={chartAreaRef}>
                 <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart
                         data={visibleData}
@@ -543,12 +572,17 @@ export default function BalanceFlowChart(props: Props) {
                         {hoverPeriod !== null && (
                             <ReferenceLine
                                 key="dashed-ref"
-                                segment={[{ x: hoverPeriod, y: selectedData.endingBalance + 0.01 }, { x: hoverPeriod, y: hasFlow ? (selectedData.netFlow > 0 ? selectedData.netFlow : 0) : selectedData.endingBalance + 0.01 }]}
+                                segment={[
+                                    { x: hoverPeriod, y: selectedData.endingBalance + 0.01 },
+                                    {
+                                        x: hoverPeriod,
+                                        y: hasFlow ? (selectedData.netFlow > 0 ? selectedData.netFlow : 0) : selectedData.endingBalance + 0.01,
+                                    },
+                                ]}
                                 stroke="#666666"
                                 strokeWidth={1}
                                 strokeDasharray="3 3"
                                 strokeOpacity={hasFlow ? 1 : 0}
-                                isAnimationActive={false}
                                 ifOverflow="extendDomain"
                             />
                         )}
@@ -565,7 +599,7 @@ export default function BalanceFlowChart(props: Props) {
                             ticks={visibleTicks}
                             tickFormatter={(val: number) => {
                                 const row = visibleData.find((d) => d.period === val);
-                                if (!row) return "";
+                                if (!row) return '';
                                 return row.quarter === 1 ? `${row.year}` : `Q${row.quarter}`;
                             }}
                         />
@@ -583,39 +617,59 @@ export default function BalanceFlowChart(props: Props) {
                                 <stop offset="100%" stopColor={GRADIENT_END} />
                             </linearGradient>
                         </defs>
-                        <Area type="monotone" dataKey="endingBalance" stroke="none" fill="url(#balanceGradient)" fillOpacity={1} isAnimationActive={false} />
-                        <Bar dataKey="netFlow" name="Net Flow" barSize={20} isAnimationActive={false}>
+                        <Area type="monotone" dataKey="endingBalance" stroke="none" fill="url(#balanceGradient)" fillOpacity={1} />
+                        <Bar dataKey="netFlow" name="Net Flow" barSize={20}>
                             {visibleData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.netFlow >= 0 ? COLORS.Reinvested : COLORS.Distributed} fillOpacity={activeBarIndex !== null && index !== activeBarIndex ? 0.1 : 1} />
+                                <Cell
+                                    key={`cell-${index}`}
+                                    fill={entry.netFlow >= 0 ? COLORS.Reinvested : COLORS.Distributed}
+                                    fillOpacity={activeBarIndex !== null && index !== activeBarIndex ? 0.1 : 1}
+                                />
                             ))}
                         </Bar>
-                        <Line type="monotone" dataKey="endingBalance" name="Balance" stroke={ACCENT_BLUE} strokeWidth={2} dot={false} isAnimationActive={false} />
+                        <Line type="monotone" dataKey="endingBalance" name="Balance" stroke={ACCENT_BLUE} strokeWidth={2} dot={false} />
                         <ReferenceLine y={0} stroke="#666666" strokeWidth={1} />
-                        <Tooltip content={(props) => <CustomTooltip {...props} onUpdate={setSelectedData} />} cursor={<DottedCursor onPositionUpdate={handleCursorPosition} showBelow={false} />} labelFormatter={(label) => `${label}`} position={{ y: 0 }} />
+                        <Tooltip
+                            content={(props) => <CustomTooltip {...props} onUpdate={setSelectedData} />}
+                            cursor={<DottedCursor onPositionUpdate={handleCursorPosition} showBelow={false} />}
+                            labelFormatter={(label) => `${label}`}
+                            position={{ y: 0 }}
+                        />
                     </ComposedChart>
                 </ResponsiveContainer>
             </div>
-
             {/* Legend */}
-            <div style={{ padding: "0px", display: "flex", flexDirection: "row", gap: "16px", fontSize: "12px", lineHeight: "1.4", justifyContent: "flex-start" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <div style={{ width: "12px", height: "12px", backgroundColor: COLORS.Reinvested, borderRadius: "2px" }} />
-                    <span style={{ color: "#C0C0C0", fontFamily: "Utile Regular, sans-serif" }}>Contribution</span>
+            <div
+                style={{
+                    padding: '0px',
+                    display: 'flex',
+                    flexDirection: 'row',
+                    gap: '16px',
+                    fontSize: '12px',
+                    lineHeight: '1.4',
+                }}
+            >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '12px', height: '12px', backgroundColor: COLORS.Reinvested, borderRadius: '2px' }} />
+                    <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Contribution</span>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <div style={{ width: "12px", height: "12px", backgroundColor: COLORS.Distributed, borderRadius: "2px" }} />
-                    <span style={{ color: "#C0C0C0", fontFamily: "Utile Regular, sans-serif" }}>Redemptions</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '12px', height: '12px', backgroundColor: COLORS.Distributed, borderRadius: '2px' }} />
+                    <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Redemptions</span>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <div style={{ width: "12px", height: "2px", backgroundColor: ACCENT_BLUE }} />
-                    <span style={{ color: "#C0C0C0", fontFamily: "Utile Regular, sans-serif" }}>Balance</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '12px', height: '2px', backgroundColor: ACCENT_BLUE }} />
+                    <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Balance</span>
                 </div>
             </div>
 
+            {/* SVG overlay for connector curves */}
             {cursorPos && cardAnchors && (
                 <>
-                    <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
-                        {(["return", "begin", "end"] as const).map((key) => {
+                    <svg
+                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
+                    >
+                        {(['return', 'begin', 'end'] as const).map((key) => {
                             const anchor = (cardAnchors as any)[key];
                             if (!anchor) return null;
                             const breakY = anchor.y + 10;
@@ -626,22 +680,22 @@ export default function BalanceFlowChart(props: Props) {
                     {cardAnchors.return && (
                         <div
                             style={{
-                                position: "absolute",
+                                position: 'absolute',
                                 left: cursorPos.x,
                                 top: (() => {
                                     const breakY = cardAnchors.return!.y + 10;
                                     const offset = 12;
                                     return breakY + offset;
                                 })(),
-                                transform: "translateX(-50%)",
-                                background: "#666666",
-                                color: "#FFFFFF",
-                                padding: "4px 8px",
+                                transform: 'translateX(-50%)',
+                                background: '#666666',
+                                color: '#FFFFFF',
+                                padding: '4px 8px',
                                 borderRadius: 4,
                                 fontSize: 16,
-                                fontFamily: "Utile Regular, sans-serif",
-                                whiteSpace: "nowrap",
-                                pointerEvents: "none",
+                                fontFamily: 'Utile Regular, sans-serif',
+                                whiteSpace: 'nowrap',
+                                pointerEvents: 'none',
                             }}
                         >
                             {selectedData.label}
@@ -651,4 +705,4 @@ export default function BalanceFlowChart(props: Props) {
             )}
         </div>
     );
-}
+} 

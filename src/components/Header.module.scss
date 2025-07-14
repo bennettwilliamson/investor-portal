@@ -1,20 +1,39 @@
 .header {
   display: flex;
   align-items: center;
+  background: #000000;
+  height: 52px;
+  min-height: 52px;
+  max-height: 52px;
+  box-sizing: border-box;
+}
+
+.container {
+  max-width: 1200px;
+  width: 100%;
+  padding: 0 24px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
   justify-content: space-between;
-  padding: 1rem 2rem;
-  background: var(--color-card-bg);
 }
 
 .logo {
   display: flex;
   align-items: center;
+  height: 24px;
   
   img {
-    height: auto;
-    max-height: 40px;
+    max-height: 100%;
     width: auto;
   }
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-left: auto;
 }
 
 .nav {
@@ -23,8 +42,8 @@
 
   a {
     color: var(--color-text);
+    text-decoration: none;
     transition: color 0.2s;
-
     &:hover {
       color: var(--color-primary);
     }
@@ -32,13 +51,14 @@
 }
 
 .avatar {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-weight: 600;
+  font-weight: 400;
+  margin-left: 1.5rem;
 } 
