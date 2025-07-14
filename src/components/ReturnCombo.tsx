@@ -27,6 +27,10 @@ interface QuarterData {
 }
 
 interface Props {
+    /**
+     * Optional array of QuarterData rows. If omitted the component will render its built-in simulated dataset.
+     */
+    data?: QuarterData[];
     style?: React.CSSProperties;
 }
 
@@ -104,14 +108,14 @@ function generateSimulation(): QuarterData[] {
     return rows;
 }
 
-const ACCENT_BLUE = '#ffffff';
+const ACCENT_BLUE = '#008AFF';
 const DARK_BLUE = '#292929';
 const TOGGLE_PILL_VERT = 2;
 const TOGGLE_PILL_HORZ = 16;
 
 const COLORS = {
-    Reinvested: '#ffffff',
-    Distributed: '#666666',
+    Reinvested: ACCENT_BLUE,
+    Distributed: '#003A57',
 };
 
 const TIMEFRAME_OPTIONS = [
@@ -141,12 +145,18 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, onUpdate
     return null;
 };
 
-const DottedCursor: React.FC<any & { onPositionUpdate?: (pos: { x: number; y: number }) => void }> = ({ x, width, height, points, onPositionUpdate }) => {
+const DottedCursor: React.FC<
+    any & { onPositionUpdate?: (pos: { x: number; y: number }) => void }
+> = ({ x, width, height, points, onPositionUpdate }) => {
+    // Compute coordinates every render
     const cx = x + (width ?? 0) / 2;
     const barTopY = points && points.length > 0 ? points[0].y : 0;
-    if (onPositionUpdate) {
-        onPositionUpdate({ x: cx, y: barTopY });
-    }
+
+    // Notify parent *after* render commit to avoid nested updates
+    React.useEffect(() => {
+        onPositionUpdate?.({ x: cx, y: barTopY });
+    }, [cx, barTopY, onPositionUpdate]);
+
     return (
         <g>
             <line x1={cx} y1={0} x2={cx} y2={height} stroke="#666666" strokeWidth={1} />
@@ -160,11 +170,11 @@ export default function ReturnCombo(props: Props) {
     type TimeFrameKey = 'all' | '1yr' | '5yr';
     const [timeFrame, setTimeFrame] = React.useState<TimeFrameKey>('all');
 
-    const dataRef = React.useRef<QuarterData[]>([]);
-    if (dataRef.current.length === 0) {
-        dataRef.current = generateSimulation();
-    }
-    const data = dataRef.current;
+    // Resolve dataset: use caller-supplied data if present, otherwise fall back to internal simulation.
+    const data = React.useMemo<QuarterData[]>(() => {
+        if (props.data && props.data.length) return props.data;
+        return generateSimulation();
+    }, [props.data]);
 
     const visibleData = React.useMemo(() => {
         switch (timeFrame) {
@@ -363,7 +373,14 @@ export default function ReturnCombo(props: Props) {
                             domain={[0, (dataMax: number) => dataMax * 1.1]}
                         />
                         <CartesianGrid strokeDasharray="3 3" stroke="#333333" opacity={0.3} />
-                        <Tooltip content={(props) => <CustomTooltip {...props} onUpdate={setSelectedData} />} cursor={<DottedCursor onPositionUpdate={handleCursorPosition} />} labelFormatter={(label) => `${label}`} position={{ y: 0 }} />
+                        <Tooltip
+                            content={(tooltipProps) => (
+                                <CustomTooltip {...(tooltipProps as any)} onUpdate={setSelectedData} />
+                            )}
+                            cursor={<DottedCursor onPositionUpdate={handleCursorPosition} />}
+                            labelFormatter={(label) => `${label}`}
+                            position={{ y: 0 }}
+                        />
                         <Bar dataKey={viewMode === 'dollar' ? 'returnDollar' : 'returnPercentValue'} name={viewMode === 'dollar' ? 'Return ($)' : 'Return (%)'} animationDuration={600} animationEasing="ease-out">
                             {chartData.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={COLORS[entry.action]} fillOpacity={activeBarIndex !== null && index !== activeBarIndex ? 0.1 : 1} />

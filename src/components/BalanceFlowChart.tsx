@@ -33,6 +33,10 @@ interface PeriodData {
 
 interface Props {
     /**
+     * Optional array of PeriodData rows. If omitted the component will render its built-in simulated dataset.
+     */
+    data?: PeriodData[];
+    /**
      * Optional style prop to allow parent containers to dictate sizing.
      * When used inside Next.js pages you can also wrap with a div that sets height.
      */
@@ -131,13 +135,13 @@ function generateSimulation(): PeriodData[] {
     return rows;
 }
 
-const ACCENT_BLUE = '#ffffff';
+const ACCENT_BLUE = '#008AFF';
 const DARK_BLUE = '#292929'; // new background color for cards and toggle
-const GRADIENT_START = 'rgba(255,255,255,0.4)';
-const GRADIENT_END = 'rgba(255,255,255,0)';
+const GRADIENT_START = 'rgba(0,138,255,0.4)';
+const GRADIENT_END = 'rgba(0,138,255,0)';
 const COLORS = {
-    Reinvested: '#ffffff',
-    Distributed: '#666666',
+    Reinvested: ACCENT_BLUE,
+    Distributed: '#003A57',
 };
 
 // Helper: abbreviate number to ≤3 digits plus suffix
@@ -179,13 +183,14 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, onUpdate
     return null;
 };
 
-const DottedCursor: React.FC<any & { onPositionUpdate?: (pos: { x: number; y: number }) => void; showBelow?: boolean }> = (
-    { x, width, height, points, onPositionUpdate, showBelow },
-) => {
+const DottedCursor: React.FC<
+    any & { onPositionUpdate?: (pos: { x: number; y: number }) => void; showBelow?: boolean }
+> = ({ x, width, height, points, onPositionUpdate, showBelow }) => {
+    // For some chart types (e.g., ComposedChart), x can be undefined – fall back to points array
     let cx: number = 0;
-    if (points && points.length > 0 && typeof (points[0] as any).x === 'number') {
+    if (points && points.length > 0 && typeof (points[0] as any).x === "number") {
         cx = (points[0] as any).x;
-    } else if (typeof x === 'number') {
+    } else if (typeof x === "number") {
         cx = x + ((width ?? 0) / 2);
     }
 
@@ -194,7 +199,7 @@ const DottedCursor: React.FC<any & { onPositionUpdate?: (pos: { x: number; y: nu
 
     let dashedEndY = height;
     if (showBelow && points) {
-        const barInfo = (points as any[]).find((p) => typeof p.height === 'number') as any;
+        const barInfo = (points as any[]).find((p) => typeof p.height === "number") as any;
         if (barInfo && barInfo.y > pointY) {
             dashedEndY = barInfo.y - 1;
         }
@@ -202,9 +207,10 @@ const DottedCursor: React.FC<any & { onPositionUpdate?: (pos: { x: number; y: nu
 
     const dashStartY = pointY + dotRadius;
 
-    if (onPositionUpdate) {
-        onPositionUpdate({ x: cx, y: pointY });
-    }
+    // Notify parent after render commit to avoid nested updates loop
+    React.useEffect(() => {
+        onPositionUpdate?.({ x: cx, y: pointY });
+    }, [cx, pointY, onPositionUpdate]);
 
     return (
         <g>
@@ -247,12 +253,11 @@ export default function BalanceFlowChart(props: Props) {
     const [activeBarIndex, setActiveBarIndex] = React.useState<number | null>(null);
     const [hoverPeriod, setHoverPeriod] = React.useState<number | null>(null);
 
-    // Generate simulation once per mount
-    const dataRef = React.useRef<PeriodData[]>([]);
-    if (dataRef.current.length === 0) {
-        dataRef.current = generateSimulation();
-    }
-    const data = dataRef.current;
+    // Resolve the dataset: prefer caller-supplied data, otherwise fall back to the internal simulation.
+    const data = React.useMemo<PeriodData[]>(() => {
+        if (props.data && props.data.length) return props.data
+        return generateSimulation()
+    }, [props.data])
 
     // Slice data according to selected time-frame
     const visibleData = React.useMemo(() => {
@@ -630,7 +635,10 @@ export default function BalanceFlowChart(props: Props) {
                         <Line type="monotone" dataKey="endingBalance" name="Balance" stroke={ACCENT_BLUE} strokeWidth={2} dot={false} />
                         <ReferenceLine y={0} stroke="#666666" strokeWidth={1} />
                         <Tooltip
-                            content={(props) => <CustomTooltip {...props} onUpdate={setSelectedData} />}
+                            // Cast tooltip props to any to bypass Recharts' loose generic typing
+                            content={(tooltipProps) => (
+                                <CustomTooltip {...(tooltipProps as any)} onUpdate={setSelectedData} />
+                            )}
                             cursor={<DottedCursor onPositionUpdate={handleCursorPosition} showBelow={false} />}
                             labelFormatter={(label) => `${label}`}
                             position={{ y: 0 }}
