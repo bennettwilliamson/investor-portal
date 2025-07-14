@@ -34,7 +34,7 @@ export default function Home() {
             signUpUrl="/"
             appearance={{
               variables: {
-                colorPrimary: "#0C40FF",
+                colorPrimary: "#008bce",
                 colorText: "#ffffff",
               },
             }}

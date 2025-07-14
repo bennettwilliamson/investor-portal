@@ -71,9 +71,10 @@ p {
   color: #ffffff;
   font-size: 2rem;
   margin-bottom: 0.5rem;
-  border-bottom: 2px solid #0C40FF; /* Alturas blue underline */
+  border-bottom: 2px solid #008bce; /* Alturas blue underline */
   display: inline-block;
   padding-bottom: 0.25rem;
+  font-weight: 300;
 }
 
 .cl-headerSubtitle,
@@ -81,6 +82,7 @@ p {
 .cl-dividerText,
 .cl-formHeaderSubtitle {
   color: #ffffff;
+  font-weight: 300;
 }
 
 /* Input fields */
@@ -93,7 +95,7 @@ p {
 
 /* Primary button */
 .cl-formButtonPrimary {
-  background: #0C40FF;
+  background: #008bce;
   color: #ffffff;
   border-radius: 4px;
   transition: background 0.2s ease;
@@ -101,10 +103,10 @@ p {
 
 .cl-formButtonPrimary:hover,
 .cl-formButtonPrimary:focus {
-  background: #104af5; /* slightly lighter on hover */
+  background: #00a3e8; /* slightly lighter on hover */
 }
 
 /* Footer link */
 .cl-footerActionLink {
-  color: #0C40FF;
+  color: #008bce;
 } 
