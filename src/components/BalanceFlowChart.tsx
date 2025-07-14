@@ -135,13 +135,13 @@ function generateSimulation(): PeriodData[] {
     return rows;
 }
 
-const ACCENT_BLUE = '#ffffff';
+const ACCENT_BLUE = 'var(--color-primary)';
 const DARK_BLUE = '#292929'; // new background color for cards and toggle
 const GRADIENT_START = 'rgba(255,255,255,0.4)';
 const GRADIENT_END = 'rgba(255,255,255,0)';
 const COLORS = {
-    Reinvested: '#ffffff',
-    Distributed: '#666666',
+    Reinvested: 'var(--color-primary)',
+    Distributed: '#EF4444',
 };
 
 // Helper: abbreviate number to ≤3 digits plus suffix

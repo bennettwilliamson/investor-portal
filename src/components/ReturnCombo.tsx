@@ -108,14 +108,14 @@ function generateSimulation(): QuarterData[] {
     return rows;
 }
 
-const ACCENT_BLUE = '#ffffff';
+const ACCENT_BLUE = 'var(--color-primary)';
 const DARK_BLUE = '#292929';
 const TOGGLE_PILL_VERT = 2;
 const TOGGLE_PILL_HORZ = 16;
 
 const COLORS = {
-    Reinvested: '#ffffff',
-    Distributed: '#666666',
+    Reinvested: 'var(--color-primary)',
+    Distributed: '#EF4444',
 };
 
 const TIMEFRAME_OPTIONS = [
