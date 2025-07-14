@@ -57,4 +57,54 @@ p {
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+/* Clerk component overrides for custom dark login screen */
+.cl-card {
+  background: rgba(0, 0, 0, 0.85);
+  border: none;
+  border-radius: 8px;
+  padding: 2rem;
+}
+
+.cl-headerTitle {
+  color: #ffffff;
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 2px solid #0C40FF; /* Alturas blue underline */
+  display: inline-block;
+  padding-bottom: 0.25rem;
+}
+
+.cl-headerSubtitle,
+.cl-footerActionText,
+.cl-dividerText,
+.cl-formHeaderSubtitle {
+  color: #ffffff;
+}
+
+/* Input fields */
+.cl-input,
+.cl-formFieldInput {
+  background: #2a2a2a;
+  border: 1px solid #666666;
+  color: #ffffff;
+}
+
+/* Primary button */
+.cl-formButtonPrimary {
+  background: #0C40FF;
+  color: #ffffff;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.cl-formButtonPrimary:hover,
+.cl-formButtonPrimary:focus {
+  background: #104af5; /* slightly lighter on hover */
+}
+
+/* Footer link */
+.cl-footerActionLink {
+  color: #0C40FF;
 } 
