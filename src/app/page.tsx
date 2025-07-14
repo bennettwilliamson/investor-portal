@@ -18,15 +18,6 @@ export default function Home() {
             ))}
           </div>
         </section>
-
-        <section className={styles.historical}>
-          <h2>Your Historical Returns</h2>
-          <div className={styles.statGrid}>
-            {historical.map(({ label, value }) => (
-              <StatCard key={label} label={label} value={value} />
-            ))}
-          </div>
-        </section>
       </main>
     </>
   );

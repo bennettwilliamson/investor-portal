@@ -16,13 +16,15 @@ export default function Header() {
           priority
         />
       </div>
-      <nav className={styles.nav}>
-        <Link href="#">Tools</Link>
-        <Link href="#">Documents</Link>
-        <Link href="#">Requests</Link>
-        <Link href="#">Portfolio</Link>
-      </nav>
-      <div className={styles.avatar}>B</div>
+      <div className={styles.right}>
+        <nav className={styles.nav}>
+          <Link href="#">Tools</Link>
+          <Link href="#">Documents</Link>
+          <Link href="#">Requests</Link>
+          <Link href="#">Portfolio</Link>
+        </nav>
+        <div className={styles.avatar}>B</div>
+      </div>
     </header>
   );
 } 
