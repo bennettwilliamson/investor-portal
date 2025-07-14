@@ -33,6 +33,10 @@ interface PeriodData {
 
 interface Props {
     /**
+     * Optional array of PeriodData rows. If omitted the component will render its built-in simulated dataset.
+     */
+    data?: PeriodData[];
+    /**
      * Optional style prop to allow parent containers to dictate sizing.
      * When used inside Next.js pages you can also wrap with a div that sets height.
      */
@@ -247,12 +251,11 @@ export default function BalanceFlowChart(props: Props) {
     const [activeBarIndex, setActiveBarIndex] = React.useState<number | null>(null);
     const [hoverPeriod, setHoverPeriod] = React.useState<number | null>(null);
 
-    // Generate simulation once per mount
-    const dataRef = React.useRef<PeriodData[]>([]);
-    if (dataRef.current.length === 0) {
-        dataRef.current = generateSimulation();
-    }
-    const data = dataRef.current;
+    // Resolve the dataset: prefer caller-supplied data, otherwise fall back to the internal simulation.
+    const data = React.useMemo<PeriodData[]>(() => {
+        if (props.data && props.data.length) return props.data
+        return generateSimulation()
+    }, [props.data])
 
     // Slice data according to selected time-frame
     const visibleData = React.useMemo(() => {
@@ -630,7 +633,10 @@ export default function BalanceFlowChart(props: Props) {
                         <Line type="monotone" dataKey="endingBalance" name="Balance" stroke={ACCENT_BLUE} strokeWidth={2} dot={false} />
                         <ReferenceLine y={0} stroke="#666666" strokeWidth={1} />
                         <Tooltip
-                            content={(props) => <CustomTooltip {...props} onUpdate={setSelectedData} />}
+                            // Cast tooltip props to any to bypass Recharts' loose generic typing
+                            content={(tooltipProps) => (
+                                <CustomTooltip {...(tooltipProps as any)} onUpdate={setSelectedData} />
+                            )}
                             cursor={<DottedCursor onPositionUpdate={handleCursorPosition} showBelow={false} />}
                             labelFormatter={(label) => `${label}`}
                             position={{ y: 0 }}
