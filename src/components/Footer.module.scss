@@ -1,0 +1,20 @@
+.footer {
+  margin-top: 4rem;
+  width: 100%;
+  background: #000;
+}
+
+.inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  position: relative;
+  border-top-left-radius: 24px;
+  border-bottom-right-radius: 24px;
+  overflow: hidden;
+}
+
+.address {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+} 

@@ -2,6 +2,7 @@ import Header from '@/components/Header';
 import StatCard from '@/components/StatCard';
 import dashboardData from '@/data/dashboardData';
 import styles from './page.module.scss';
+import Footer from '@/components/Footer';
 
 export default function Home() {
   const { welcome, stats, historical } = dashboardData;
@@ -28,6 +29,7 @@ export default function Home() {
           </div>
         </section>
       </main>
+      <Footer />
     </>
   );
 } 
