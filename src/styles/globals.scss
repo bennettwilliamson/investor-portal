@@ -61,7 +61,9 @@ p {
 
 /* Clerk component overrides for custom dark login screen */
 .cl-card {
-  background: rgba(0, 0, 0, 0.85);
+  background: #212121; /* solid dark */
+  width: 420px;
+  max-width: 90vw;
   border: none;
   border-radius: 8px;
   padding: 2rem;
@@ -69,12 +71,16 @@ p {
 
 .cl-headerTitle {
   color: #ffffff;
-  font-size: 2rem;
+  font-size: 1.75rem;
   margin-bottom: 0.5rem;
   border-bottom: 2px solid #008bce; /* Alturas blue underline */
   display: inline-block;
   padding-bottom: 0.25rem;
   font-weight: 300;
+}
+
+.cl-headerSubtitle {
+  display: none; /* remove default subtitle */
 }
 
 .cl-headerSubtitle,
@@ -109,4 +115,14 @@ p {
 /* Footer link */
 .cl-footerActionLink {
   color: #008bce;
+}
+
+/* Adjust Development footer bar */
+.cl-footer {
+  display: none; /* hide dev banner overlap */
+}
+
+/* Increase field label font size */
+.cl-formFieldLabel {
+  font-size: 1rem;
 } 
