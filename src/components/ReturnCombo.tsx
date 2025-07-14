@@ -145,12 +145,18 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, onUpdate
     return null;
 };
 
-const DottedCursor: React.FC<any & { onPositionUpdate?: (pos: { x: number; y: number }) => void }> = ({ x, width, height, points, onPositionUpdate }) => {
+const DottedCursor: React.FC<
+    any & { onPositionUpdate?: (pos: { x: number; y: number }) => void }
+> = ({ x, width, height, points, onPositionUpdate }) => {
+    // Compute coordinates every render
     const cx = x + (width ?? 0) / 2;
     const barTopY = points && points.length > 0 ? points[0].y : 0;
-    if (onPositionUpdate) {
-        onPositionUpdate({ x: cx, y: barTopY });
-    }
+
+    // Notify parent *after* render commit to avoid nested updates
+    React.useEffect(() => {
+        onPositionUpdate?.({ x: cx, y: barTopY });
+    }, [cx, barTopY, onPositionUpdate]);
+
     return (
         <g>
             <line x1={cx} y1={0} x2={cx} y2={height} stroke="#666666" strokeWidth={1} />

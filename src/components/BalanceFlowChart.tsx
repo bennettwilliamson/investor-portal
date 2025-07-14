@@ -183,13 +183,14 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, onUpdate
     return null;
 };
 
-const DottedCursor: React.FC<any & { onPositionUpdate?: (pos: { x: number; y: number }) => void; showBelow?: boolean }> = (
-    { x, width, height, points, onPositionUpdate, showBelow },
-) => {
+const DottedCursor: React.FC<
+    any & { onPositionUpdate?: (pos: { x: number; y: number }) => void; showBelow?: boolean }
+> = ({ x, width, height, points, onPositionUpdate, showBelow }) => {
+    // For some chart types (e.g., ComposedChart), x can be undefined – fall back to points array
     let cx: number = 0;
-    if (points && points.length > 0 && typeof (points[0] as any).x === 'number') {
+    if (points && points.length > 0 && typeof (points[0] as any).x === "number") {
         cx = (points[0] as any).x;
-    } else if (typeof x === 'number') {
+    } else if (typeof x === "number") {
         cx = x + ((width ?? 0) / 2);
     }
 
@@ -198,7 +199,7 @@ const DottedCursor: React.FC<any & { onPositionUpdate?: (pos: { x: number; y: nu
 
     let dashedEndY = height;
     if (showBelow && points) {
-        const barInfo = (points as any[]).find((p) => typeof p.height === 'number') as any;
+        const barInfo = (points as any[]).find((p) => typeof p.height === "number") as any;
         if (barInfo && barInfo.y > pointY) {
             dashedEndY = barInfo.y - 1;
         }
@@ -206,9 +207,10 @@ const DottedCursor: React.FC<any & { onPositionUpdate?: (pos: { x: number; y: nu
 
     const dashStartY = pointY + dotRadius;
 
-    if (onPositionUpdate) {
-        onPositionUpdate({ x: cx, y: pointY });
-    }
+    // Notify parent after render commit to avoid nested updates loop
+    React.useEffect(() => {
+        onPositionUpdate?.({ x: cx, y: pointY });
+    }, [cx, pointY, onPositionUpdate]);
 
     return (
         <g>
