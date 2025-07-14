@@ -29,16 +29,8 @@ export default function Home() {
 
       {/* Show sign-in form when the user is signed out */}
       <SignedOut>
-        <div className={styles.signInContainer}>
-          <SignIn
-            signUpUrl="/"
-            appearance={{
-              variables: {
-                colorPrimary: "#008bce",
-                colorText: "#ffffff",
-              },
-            }}
-          />
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', width: '100%' }}>
+          <SignIn signUpUrl="/" />
         </div>
       </SignedOut>
     </>
