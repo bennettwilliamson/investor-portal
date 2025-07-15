@@ -305,7 +305,7 @@ export default function BalanceFlowChart(props: Props) {
         const latest = visibleData[visibleData.length - 1];
         // Bail-out if we already have this row selected (strict equality is fine because
         // rows are reused via useMemo, so their references stay stable between renders).
-        if (selectedData === latest) return;
+        if (selectedData && selectedData.period === latest.period) return;
         setSelectedData(latest);
     }, [visibleData, selectedData]);
 
@@ -324,11 +324,12 @@ export default function BalanceFlowChart(props: Props) {
         }
 
         tooltipUpdateTimeoutRef.current = setTimeout(() => {
-            const idx = visibleData.findIndex(d => d === row);
+            if (!row) return;
+            const idx = visibleData.findIndex((d) => d.period === row.period);
             if (idx !== -1) {
-                setActiveBarIndex(idx);
-                setHoverPeriod(row.period);
-                setSelectedData(row);
+                setActiveBarIndex((prev) => (prev === idx ? prev : idx));
+                setHoverPeriod((prev) => (prev === row.period ? prev : row.period));
+                setSelectedData((prev) => (prev === row ? prev : row));
             }
         }, 50);
     }, [visibleData]);

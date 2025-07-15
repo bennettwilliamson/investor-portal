@@ -228,7 +228,7 @@ export default function ReturnCombo(props: Props) {
     React.useEffect(() => {
         if (visibleData.length === 0) return;
         const latest = visibleData[visibleData.length - 1];
-        if (selectedData === latest) return;
+        if (selectedData && selectedData.quarter === latest.quarter) return;
         setSelectedData(latest);
     }, [visibleData, selectedData]);
 
@@ -247,10 +247,11 @@ export default function ReturnCombo(props: Props) {
         }
 
         tooltipUpdateTimeoutRef.current = setTimeout(() => {
-            const idx = visibleData.findIndex(d => d === row);
+            if (!row) return;
+            const idx = visibleData.findIndex((d) => d.quarter === row.quarter);
             if (idx !== -1) {
-                setActiveBarIndex(idx);
-                setSelectedData(row);
+                setActiveBarIndex((prev) => (prev === idx ? prev : idx));
+                setSelectedData((prev) => (prev === row ? prev : row));
             }
         }, 50);
     }, [visibleData]);
