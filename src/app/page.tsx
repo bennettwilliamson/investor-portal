@@ -80,6 +80,12 @@ export default function Home() {
                   headerSubtitle: {
                     display: 'none',
                   },
+                  alternativeMethodsBlockButton: {
+                    color: '#aaaaaa',
+                    '&:hover': {
+                      color: '#ffffff'
+                    }
+                  },
                   formButtonPrimary: {
                     backgroundColor: '#008bce',
                     '&:hover': {
