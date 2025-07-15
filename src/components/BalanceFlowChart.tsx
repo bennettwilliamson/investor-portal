@@ -456,7 +456,7 @@ export default function BalanceFlowChart(props: Props) {
                     alignItems: 'flex-start',
                     justifyContent: 'space-between',
                     width: '100%',
-                    padding: '0 0 16px 0',
+                    padding: '0 0 8px 0',
                     pointerEvents: 'none',
                 }}
             >
@@ -694,7 +694,7 @@ export default function BalanceFlowChart(props: Props) {
             <div
                 style={{
                     position: 'absolute',
-                    bottom: 16,
+                    bottom: 0,
                     left: 24,
                     padding: 0,
                     display: 'flex',
