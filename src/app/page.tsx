@@ -43,6 +43,24 @@ export default function Home() {
               padding: '2rem',
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
             }}>
+              {/* Header */}
+              <div style={{ marginBottom: '1rem' }}>
+                <h2 style={{
+                  margin: 0,
+                  fontSize: '1.25rem',
+                  fontWeight: 500,
+                  color: '#FFFFFF',
+                  fontFamily: 'Utile Regular, sans-serif'
+                }}>
+                  Your Historical Returns
+                </h2>
+                <div style={{
+                  marginTop: 4,
+                  width: 180,
+                  height: 2,
+                  backgroundColor: '#008bce'
+                }} />
+              </div>
               <ReturnComboChart />
             </div>
 
@@ -55,6 +73,24 @@ export default function Home() {
               padding: '2rem',
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
             }}>
+              {/* Header */}
+              <div style={{ marginBottom: '1rem' }}>
+                <h2 style={{
+                  margin: 0,
+                  fontSize: '1.25rem',
+                  fontWeight: 500,
+                  color: '#FFFFFF',
+                  fontFamily: 'Utile Regular, sans-serif'
+                }}>
+                  Your Historical Balance
+                </h2>
+                <div style={{
+                  marginTop: 4,
+                  width: 180,
+                  height: 2,
+                  backgroundColor: '#008bce'
+                }} />
+              </div>
               <BalanceFlowChart />
             </div>
           </section>
