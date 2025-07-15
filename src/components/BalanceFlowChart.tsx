@@ -448,13 +448,13 @@ export default function BalanceFlowChart(props: Props) {
                 position: 'relative',
             }}
         >
-            {/* Header cards and toggle */}
+            {/* Header cards */}
             <div
                 style={{
                     display: 'flex',
                     flexDirection: 'row',
                     alignItems: 'flex-start',
-                    justifyContent: 'space-between',
+                    justifyContent: 'flex-start',
                     width: '100%',
                     padding: '0 0 16px 0',
                     pointerEvents: 'none',
@@ -509,16 +509,12 @@ export default function BalanceFlowChart(props: Props) {
                         );
                     })()}
                 </div>
-                {/* Time-frame toggle */}
-                <div
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'flex-end',
-                        gap: 10,
-                        pointerEvents: 'auto',
-                    }}
-                >
+            </div>
+
+            {/* Chart area */}
+            <div style={{ flex: 1, position: 'relative', padding: 0 }} ref={chartAreaRef}>
+                <div style={{ position: 'absolute', top: 16, right: 24, zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, pointerEvents: 'auto' }}>
+                    {/* Time-frame toggle */}
                     <div
                         style={{
                             display: 'flex',
@@ -551,10 +547,6 @@ export default function BalanceFlowChart(props: Props) {
                         ))}
                     </div>
                 </div>
-            </div>
-
-            {/* Chart area */}
-            <div style={{ flex: 1, position: 'relative', padding: 0 }} ref={chartAreaRef}>
                 <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart
                         data={visibleData}
