@@ -158,7 +158,10 @@ const DottedCursor: React.FC<DottedCursorProps> = ({ x, width, height, points, o
 
     // Notify parent *after* render commit to avoid nested updates
     React.useEffect(() => {
-        onPositionUpdate?.({ x: cx, y: barTopY });
+        // Only call onPositionUpdate if the position has actually changed
+        if (onPositionUpdate) {
+            onPositionUpdate({ x: cx, y: barTopY });
+        }
     }, [cx, barTopY, onPositionUpdate]);
 
     return (
@@ -390,9 +393,8 @@ export default function ReturnCombo(props: Props) {
                             content={(tooltipProps: any) => (
                                 <CustomTooltip
                                     {...tooltipProps}
-                                    onUpdate={(row) => {
-                                        setSelectedData((prev) => (prev === row ? prev : row));
-                                    }}
+                                    // Disable onUpdate to prevent infinite loops - data selection is handled via mouse events
+                                    onUpdate={undefined}
                                 />
                             )}
                             cursor={<DottedCursor onPositionUpdate={handleCursorPosition} />}

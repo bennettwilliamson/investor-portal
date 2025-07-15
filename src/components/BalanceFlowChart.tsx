@@ -214,7 +214,10 @@ const DottedCursor: React.FC<DottedCursorProps> = ({ x, width, height, points, o
 
     // Notify parent after render commit to avoid nested updates loop
     React.useEffect(() => {
-        onPositionUpdate?.({ x: cx, y: pointY });
+        // Only call onPositionUpdate if the position has actually changed
+        if (onPositionUpdate) {
+            onPositionUpdate({ x: cx, y: pointY });
+        }
     }, [cx, pointY, onPositionUpdate]);
 
     return (
@@ -652,10 +655,8 @@ export default function BalanceFlowChart(props: Props) {
                             content={(tooltipProps: any) => (
                                 <CustomTooltip
                                     {...tooltipProps}
-                                    onUpdate={(row) => {
-                                        // Prevent unnecessary state churn
-                                        setSelectedData((prev) => (prev === row ? prev : row));
-                                    }}
+                                    // Disable onUpdate to prevent infinite loops - data selection is handled via mouse events
+                                    onUpdate={undefined}
                                 />
                             )}
                             cursor={<DottedCursor onPositionUpdate={handleCursorPosition} showBelow={false} />}
