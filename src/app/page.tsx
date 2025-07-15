@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image';
 import Header from '@/components/Header';
 import StatCard from '@/components/StatCard';
 import dashboardData from '@/data/dashboardData';
@@ -10,17 +11,23 @@ import BalanceFlowChart from '@/components/client/BalanceFlowChartClient';
 import ReturnComboChart from '@/components/client/ReturnComboClient';
 
 import { SignedIn, SignedOut, SignIn } from "@clerk/nextjs";
-import React from 'react'; // Added missing import for React
 
 export default function Home() {
   const { welcome, stats, historical } = dashboardData;
 
-  const returnStats = historical.map(({ label, value }) => ({
-    label: label === 'Realized Return' ? 'Realized Return ($)' : label,
-    value,
-  }));
   // TODO: This should come from dashboardData.ts
-  // Note: ReturnCombo and BalanceFlow charts manage their own dynamic metric cards internally.
+  const balanceStats = [
+    { label: 'Beginning Balance', value: '$1,760,082.51' },
+    { label: 'Ending Balance', value: '$2,006,494.06' },
+    { label: 'Net Flow', value: '$0.00' },
+  ];
+
+  const returnStats = historical.map(s => {
+    if (s.label === 'Realized Return') {
+      return { ...s, label: 'Realized Return ($)' };
+    }
+    return s;
+  });
 
   return (
     <>
@@ -29,19 +36,7 @@ export default function Home() {
         <Header />
         <main className={styles.main}>
           <section className={styles.welcome}>
-            <h1>{welcome.text.split('\n').map((line, index) => (
-              <React.Fragment key={index}>
-                {line}
-                {index < welcome.text.split('\n').length - 1 && <br />}
-              </React.Fragment>
-            ))}</h1>
-          </section>
-
-          {/* ---- Primary Stats ---- */}
-          <section className={styles.statGrid} style={{ marginTop: '2rem' }}>
-            {stats.map(({ label, value }) => (
-              <StatCard key={label} label={label} value={value} />
-            ))}
+            <h1>{welcome.text}</h1>
           </section>
 
           {/* ---- Charts ---- */}
@@ -53,7 +48,12 @@ export default function Home() {
               padding: '2rem',
               border: '1px solid #333',
             }}>
-              <h1 style={{ color: '#ffffff', marginBottom: '1.5rem' }}>Your Historical Returns</h1>
+              <h2 style={{ color: '#ffffff', fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem' }}>Your Historical Returns</h2>
+              <div className={styles.statGrid} style={{ marginBottom: '2rem' }}>
+                {returnStats.map(({ label, value }) => (
+                  <StatCard key={label} label={label} value={value} />
+                ))}
+              </div>
               <div style={{ height: 500, width: '100%' }}>
                 <ReturnComboChart />
               </div>
@@ -67,7 +67,11 @@ export default function Home() {
               border: '1px solid #333',
             }}>
               <h2 style={{ color: '#ffffff', fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem' }}>Your Historical Balance</h2>
-              {/* Removed static stat grid here to avoid duplication */}
+              <div className={styles.statGrid} style={{ marginBottom: '2rem' }}>
+                {balanceStats.map(({ label, value }) => (
+                  <StatCard key={label} label={label} value={value} />
+                ))}
+              </div>
               <div style={{ height: 500, width: '100%' }}>
                 <BalanceFlowChart />
               </div>

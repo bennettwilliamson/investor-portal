@@ -1,5 +1,7 @@
 'use client';
 
+// @ts-nocheck
+
 import React from 'react';
 import {
     ResponsiveContainer,
@@ -45,7 +47,7 @@ const percentFormatter = new Intl.NumberFormat('en-US', {
     maximumFractionDigits: 2,
 });
 
-function convertFontWeight(weight: string | number): string | number {
+function convertFontWeight(weight: any): any {
     if (typeof weight === 'string') {
         switch (weight.toLowerCase()) {
             case 'regular':
@@ -137,36 +139,22 @@ interface CustomTooltipProps {
 }
 
 const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, onUpdate }) => {
-    const row = active && payload && payload.length > 0 ? (payload[0].payload as QuarterData) : undefined;
-
-    React.useEffect(() => {
-        if (row && onUpdate) {
-            onUpdate(row);
-        }
-    }, [row, onUpdate]);
-
+    if (active && payload && payload.length > 0 && onUpdate) {
+        onUpdate(payload[0].payload as QuarterData);
+    }
     return null;
 };
 
-interface DottedCursorProps {
-    x?: number;
-    width?: number;
-    height?: number;
-    points?: Array<{ x: number; y: number }>;
-    onPositionUpdate?: (pos: { x: number; y: number }) => void;
-}
-
-const DottedCursor: React.FC<DottedCursorProps> = ({ x, width, height, points, onPositionUpdate }) => {
+const DottedCursor: React.FC<
+    any & { onPositionUpdate?: (pos: { x: number; y: number }) => void }
+> = ({ x, width, height, points, onPositionUpdate }) => {
     // Compute coordinates every render
-    const cx = (x ?? 0) + (width ?? 0) / 2;
+    const cx = x + (width ?? 0) / 2;
     const barTopY = points && points.length > 0 ? points[0].y : 0;
 
     // Notify parent *after* render commit to avoid nested updates
     React.useEffect(() => {
-        // Only call onPositionUpdate if the position has actually changed
-        if (onPositionUpdate) {
-            onPositionUpdate({ x: cx, y: barTopY });
-        }
+        onPositionUpdate?.({ x: cx, y: barTopY });
     }, [cx, barTopY, onPositionUpdate]);
 
     return (
@@ -181,10 +169,12 @@ export default function ReturnCombo(props: Props) {
     const [viewMode, setViewMode] = React.useState<'dollar' | 'percent'>('dollar');
     type TimeFrameKey = 'all' | '1yr' | '5yr';
     const [timeFrame, setTimeFrame] = React.useState<TimeFrameKey>('all');
-    // Disable animations entirely to prevent animation-triggered update loops
-    const isAnimationEnabled = false;
+    const [isAnimationEnabled, setIsAnimationEnabled] = React.useState(true);
 
-    const tooltipUpdateTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+    React.useEffect(() => {
+        const timer = setTimeout(() => setIsAnimationEnabled(false), 1000); // Disable animation after initial load
+        return () => clearTimeout(timer);
+    }, []);
 
     // Resolve dataset: use caller-supplied data if present, otherwise fall back to internal simulation.
     const data = React.useMemo<QuarterData[]>(() => {
@@ -228,33 +218,9 @@ export default function ReturnCombo(props: Props) {
     React.useEffect(() => {
         if (visibleData.length === 0) return;
         const latest = visibleData[visibleData.length - 1];
-        if (selectedData && selectedData.quarter === latest.quarter) return;
+        if (selectedData === latest) return;
         setSelectedData(latest);
     }, [visibleData, selectedData]);
-
-    // Cleanup timeout on unmount
-    React.useEffect(() => {
-        return () => {
-            if (tooltipUpdateTimeoutRef.current) {
-                clearTimeout(tooltipUpdateTimeoutRef.current);
-            }
-        };
-    }, []);
-
-    const handleTooltipUpdate = React.useCallback((row: QuarterData) => {
-        if (tooltipUpdateTimeoutRef.current) {
-            clearTimeout(tooltipUpdateTimeoutRef.current);
-        }
-
-        tooltipUpdateTimeoutRef.current = setTimeout(() => {
-            if (!row) return;
-            const idx = visibleData.findIndex((d) => d.quarter === row.quarter);
-            if (idx !== -1) {
-                setActiveBarIndex((prev) => (prev === idx ? prev : idx));
-                setSelectedData((prev) => (prev === row ? prev : row));
-            }
-        }, 50);
-    }, [visibleData]);
 
     const returnValue = viewMode === 'dollar'
         ? currencyFormatter.format(selectedData.returnDollar)
@@ -392,10 +358,12 @@ export default function ReturnCombo(props: Props) {
                         data={chartData}
                         margin={{ top: 48, right: 24, left: 24, bottom: 8 }}
                         barCategoryGap={2}
-                        onMouseLeave={() => {
-                            if (tooltipUpdateTimeoutRef.current) {
-                                clearTimeout(tooltipUpdateTimeoutRef.current);
+                        onMouseMove={(state: any) => {
+                            if (state && state.isTooltipActive) {
+                                setActiveBarIndex((prev) => (prev === state.activeTooltipIndex ? prev : state.activeTooltipIndex));
                             }
+                        }}
+                        onMouseLeave={() => {
                             const latest = visibleData[visibleData.length - 1];
                             setSelectedData((prev) => (prev === latest ? prev : latest));
                             setCursorPos((prev) => (prev === null ? prev : null));
@@ -419,10 +387,12 @@ export default function ReturnCombo(props: Props) {
                         />
                         <CartesianGrid strokeDasharray="3 3" stroke="#333333" opacity={0.3} />
                         <Tooltip
-                            content={(tooltipProps: any) => (
+                            content={(tooltipProps) => (
                                 <CustomTooltip
-                                    {...tooltipProps}
-                                    onUpdate={handleTooltipUpdate}
+                                    {...(tooltipProps as any)}
+                                    onUpdate={(row) => {
+                                        setSelectedData((prev) => (prev === row ? prev : row));
+                                    }}
                                 />
                             )}
                             cursor={<DottedCursor onPositionUpdate={handleCursorPosition} />}
@@ -432,6 +402,9 @@ export default function ReturnCombo(props: Props) {
                         <Bar
                             dataKey={viewMode === 'dollar' ? 'returnDollar' : 'returnPercentValue'}
                             name={viewMode === 'dollar' ? 'Return ($)' : 'Return (%)'}
+                            isAnimationActive={isAnimationEnabled}
+                            animationDuration={600}
+                            animationEasing="ease-out"
                         >
                             {chartData.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={COLORS[entry.action]} fillOpacity={activeBarIndex !== null && index !== activeBarIndex ? 0.1 : 1} />
@@ -443,6 +416,9 @@ export default function ReturnCombo(props: Props) {
                             stroke="transparent"
                             dot={false}
                             activeDot={{ r: 7, stroke: '#FFFFFF', strokeWidth: 4, fill: '#ffffff' }}
+                            isAnimationActive={isAnimationEnabled}
+                            animationDuration={600}
+                            animationEasing="ease-out"
                         />
                     </BarChart>
                 </ResponsiveContainer>
@@ -465,7 +441,7 @@ export default function ReturnCombo(props: Props) {
                 <>
                     <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
                         {(['return', 'begin', 'end'] as const).map((key) => {
-                            const anchor = cardAnchors[key];
+                            const anchor = (cardAnchors as any)[key];
                             if (!anchor) return null;
                             const breakY = anchor.y + 10;
                             const d = `M ${cursorPos.x} ${cursorPos.y} L ${cursorPos.x} ${breakY} L ${anchor.x} ${breakY} L ${anchor.x} ${anchor.y}`;
