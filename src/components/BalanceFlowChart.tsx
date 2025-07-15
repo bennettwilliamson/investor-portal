@@ -555,7 +555,7 @@ export default function BalanceFlowChart(props: Props) {
             </div>
 
             {/* Chart area */}
-            <div style={{ flex: 1, position: 'relative', padding: 0 }} ref={chartAreaRef}>
+            <div style={{ flex: 1, position: 'relative', padding: 0, paddingBottom: 48 }} ref={chartAreaRef}>
                 <div style={{ display: 'none' }}>
                     {/* Time-frame toggle */}
                     <div
