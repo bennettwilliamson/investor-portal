@@ -647,8 +647,8 @@ export default function BalanceFlowChart(props: Props) {
                                 <stop offset="100%" stopColor={GRADIENT_END} />
                             </linearGradient>
                         </defs>
-                        <Area type="monotone" dataKey="endingBalance" stroke="none" fill="url(#balanceGradient)" fillOpacity={1} />
-                        <Bar dataKey="netFlow" name="Net Flow" barSize={20}>
+                        <Area type="monotone" dataKey="endingBalance" stroke="none" fill="url(#balanceGradient)" fillOpacity={1} isAnimationActive={false} />
+                        <Bar dataKey="netFlow" name="Net Flow" barSize={20} isAnimationActive={false}>
                             {visibleData.map((entry, index) => (
                                 <Cell
                                     key={`cell-${index}`}
@@ -657,7 +657,7 @@ export default function BalanceFlowChart(props: Props) {
                                 />
                             ))}
                         </Bar>
-                        <Line type="monotone" dataKey="endingBalance" name="Balance" stroke={ACCENT_BLUE} strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="endingBalance" name="Balance" stroke={ACCENT_BLUE} strokeWidth={2} dot={false} isAnimationActive={false} />
                         <ReferenceLine y={0} stroke="#666666" strokeWidth={1} />
                         <Tooltip
                             content={(tooltipProps: any) => (
