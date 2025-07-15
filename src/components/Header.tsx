@@ -25,7 +25,7 @@ export default function Header() {
             <Link href="#">Tools</Link>
             <Link href="#">Documents</Link>
             <Link href="#">Requests</Link>
-            <Link href="#">Profile</Link>
+            <Link href="/profile">Profile</Link>
           </nav>
           {/* Show user button when signed in */}
           <SignedIn>
