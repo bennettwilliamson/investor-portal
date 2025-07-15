@@ -3,7 +3,7 @@
 @font-face {
   font-family: 'Utile Display';
   src: url('/fonts/UtileDisplay-Regular.woff') format('woff');
-  font-weight: 300;
+  font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
@@ -11,7 +11,7 @@
 @font-face {
   font-family: 'Utile Regular';
   src: url('/fonts/Utile-Regular.woff') format('woff');
-  font-weight: 300;
+  font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
@@ -32,7 +32,7 @@ h1,
 h2,
 h3 {
   font-family: 'Utile Display', sans-serif;
-  font-weight: 400;
+  font-weight: 300;
   margin: 0;
 }
 
