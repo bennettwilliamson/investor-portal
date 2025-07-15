@@ -11,16 +11,14 @@ export default function Header() {
     <header className={styles.header}>
       <div className={styles.container}>
         <div className={styles.logo}>
-          <div style={{ width: '75%', position: 'relative' }}>
-            <Image
-              src="/images/AREF Logo Final - 2024 07 18-04.png"
-              alt="Alturas Real Estate Fund"
-              layout="responsive"
-              width={199.5} // Original width for aspect ratio
-              height={24}   // Original height for aspect ratio
-              priority
-            />
-          </div>
+          <Image
+            src="/images/AREF Logo Final - 2024 07 18-04.png"
+            alt="Alturas Real Estate Fund"
+            layout="intrinsic"
+            width={199.5}
+            height={24}
+            priority
+          />
         </div>
         <div className={styles.right}>
           <nav className={styles.nav}>

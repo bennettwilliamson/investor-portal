@@ -15,6 +15,20 @@ import { SignedIn, SignedOut, SignIn } from "@clerk/nextjs";
 export default function Home() {
   const { welcome, stats, historical } = dashboardData;
 
+  // TODO: This should come from dashboardData.ts
+  const balanceStats = [
+    { label: 'Beginning Balance', value: '$1,760,082.51' },
+    { label: 'Ending Balance', value: '$2,006,494.06' },
+    { label: 'Net Flow', value: '$0.00' },
+  ];
+
+  const returnStats = historical.map(s => {
+    if (s.label === 'Realized Return') {
+      return { ...s, label: 'Realized Return ($)' };
+    }
+    return s;
+  });
+
   return (
     <>
       {/* Show dashboard only when the user is signed in */}
@@ -23,23 +37,44 @@ export default function Home() {
         <main className={styles.main}>
           <section className={styles.welcome}>
             <h1>{welcome.text}</h1>
-            <div className={styles.statGrid}>
-              {stats.map(({ label, value }) => (
-                <StatCard key={label} label={label} value={value} />
-              ))}
-            </div>
           </section>
 
           {/* ---- Charts ---- */}
-          <section style={{ marginTop: '3rem', width: '100%' }}>
-            {/* Balance Flow Chart */}
-            <div style={{ height: 500, width: '100%', marginBottom: '3rem' }}>
-              <BalanceFlowChart />
+          <section style={{ marginTop: '3rem', width: '100%', display: 'grid', gap: '2rem' }}>
+            {/* Balance Flow Chart Card */}
+            <div style={{
+              background: '#1c1c1c',
+              borderRadius: '12px',
+              padding: '2rem',
+              border: '1px solid #333',
+            }}>
+              <h2 style={{ color: '#ffffff', fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem' }}>Your Historical Balance</h2>
+              <div className={styles.statGrid} style={{ marginBottom: '2rem' }}>
+                {balanceStats.map(({ label, value }) => (
+                  <StatCard key={label} label={label} value={value} />
+                ))}
+              </div>
+              <div style={{ height: 500, width: '100%' }}>
+                <BalanceFlowChart />
+              </div>
             </div>
 
-            {/* Return Combo Chart */}
-            <div style={{ height: 500, width: '100%' }}>
-              <ReturnComboChart />
+            {/* Return Combo Chart Card */}
+            <div style={{
+              background: '#1c1c1c',
+              borderRadius: '12px',
+              padding: '2rem',
+              border: '1px solid #333',
+            }}>
+              <h2 style={{ color: '#ffffff', fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem' }}>Your Historical Returns</h2>
+              <div className={styles.statGrid} style={{ marginBottom: '2rem' }}>
+                {returnStats.map(({ label, value }) => (
+                  <StatCard key={label} label={label} value={value} />
+                ))}
+              </div>
+              <div style={{ height: 500, width: '100%' }}>
+                <ReturnComboChart />
+              </div>
             </div>
           </section>
         </main>
@@ -64,13 +99,13 @@ export default function Home() {
                 },
                 elements: {
                   logoImage: {
-                    width: '65%',
+                    width: '100%',
                     margin: '0 auto 1.5rem auto'
                   },
                   card: {
                     width: '100%',
-                    maxWidth: '420px',
-                    background: '#212121',
+                    maxWidth: '500px',
+                    background: '#1c1c1c',
                     borderRadius: '12px',
                     padding: '2.5rem 2rem',
                     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',

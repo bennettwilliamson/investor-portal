@@ -169,6 +169,12 @@ export default function ReturnCombo(props: Props) {
     const [viewMode, setViewMode] = React.useState<'dollar' | 'percent'>('dollar');
     type TimeFrameKey = 'all' | '1yr' | '5yr';
     const [timeFrame, setTimeFrame] = React.useState<TimeFrameKey>('all');
+    const [isAnimationEnabled, setIsAnimationEnabled] = React.useState(true);
+
+    React.useEffect(() => {
+        const timer = setTimeout(() => setIsAnimationEnabled(false), 1000); // Disable animation after initial load
+        return () => clearTimeout(timer);
+    }, []);
 
     // Resolve dataset: use caller-supplied data if present, otherwise fall back to internal simulation.
     const data = React.useMemo<QuarterData[]>(() => {
@@ -381,12 +387,27 @@ export default function ReturnCombo(props: Props) {
                             labelFormatter={(label) => `${label}`}
                             position={{ y: 0 }}
                         />
-                        <Bar dataKey={viewMode === 'dollar' ? 'returnDollar' : 'returnPercentValue'} name={viewMode === 'dollar' ? 'Return ($)' : 'Return (%)'} animationDuration={600} animationEasing="ease-out">
+                        <Bar
+                            dataKey={viewMode === 'dollar' ? 'returnDollar' : 'returnPercentValue'}
+                            name={viewMode === 'dollar' ? 'Return ($)' : 'Return (%)'}
+                            isAnimationActive={isAnimationEnabled}
+                            animationDuration={600}
+                            animationEasing="ease-out"
+                        >
                             {chartData.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={COLORS[entry.action]} fillOpacity={activeBarIndex !== null && index !== activeBarIndex ? 0.1 : 1} />
                             ))}
                         </Bar>
-                        <Line type="monotone" dataKey={viewMode === 'dollar' ? 'returnDollar' : 'returnPercentValue'} stroke="transparent" dot={false} activeDot={{ r: 7, stroke: '#FFFFFF', strokeWidth: 4, fill: '#ffffff' }} animationDuration={600} animationEasing="ease-out" />
+                        <Line
+                            type="monotone"
+                            dataKey={viewMode === 'dollar' ? 'returnDollar' : 'returnPercentValue'}
+                            stroke="transparent"
+                            dot={false}
+                            activeDot={{ r: 7, stroke: '#FFFFFF', strokeWidth: 4, fill: '#ffffff' }}
+                            isAnimationActive={isAnimationEnabled}
+                            animationDuration={600}
+                            animationEasing="ease-out"
+                        />
                     </BarChart>
                 </ResponsiveContainer>
             </div>
