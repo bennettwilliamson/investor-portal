@@ -300,9 +300,15 @@ export default function BalanceFlowChart(props: Props) {
             if (!chartAreaRef.current || !containerRef.current) return;
             const chartRect = chartAreaRef.current.getBoundingClientRect();
             const containerRect = containerRef.current.getBoundingClientRect();
-            setCursorPos({
+            const newPos = {
                 x: chartRect.left - containerRect.left + posRelToChart.x,
                 y: chartRect.top - containerRect.top + posRelToChart.y,
+            } as const;
+            // Only update when the coordinates actually change to avoid an infinite
+            // update cascade that eventually triggers React error #185.
+            setCursorPos((prev) => {
+                if (prev && prev.x === newPos.x && prev.y === newPos.y) return prev;
+                return newPos;
             });
         },
         [],
@@ -642,7 +648,13 @@ export default function BalanceFlowChart(props: Props) {
                         <Tooltip
                             // Cast tooltip props to any to bypass Recharts' loose generic typing
                             content={(tooltipProps) => (
-                                <CustomTooltip {...(tooltipProps as any)} onUpdate={setSelectedData} />
+                                <CustomTooltip
+                                    {...(tooltipProps as any)}
+                                    onUpdate={(row) => {
+                                        // Prevent unnecessary state churn
+                                        setSelectedData((prev) => (prev === row ? prev : row));
+                                    }}
+                                />
                             )}
                             cursor={<DottedCursor onPositionUpdate={handleCursorPosition} showBelow={false} />}
                             labelFormatter={(label) => `${label}`}

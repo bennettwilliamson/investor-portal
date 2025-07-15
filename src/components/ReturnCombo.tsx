@@ -245,9 +245,13 @@ export default function ReturnCombo(props: Props) {
         if (!chartAreaRef.current || !containerRef.current) return;
         const chartRect = chartAreaRef.current.getBoundingClientRect();
         const containerRect = containerRef.current.getBoundingClientRect();
-        setCursorPos({
+        const newPos = {
             x: chartRect.left - containerRect.left + posRelToChart.x,
             y: chartRect.top - containerRect.top + posRelToChart.y,
+        } as const;
+        setCursorPos((prev) => {
+            if (prev && prev.x === newPos.x && prev.y === newPos.y) return prev;
+            return newPos;
         });
     }, []);
 
@@ -383,7 +387,12 @@ export default function ReturnCombo(props: Props) {
                         <CartesianGrid strokeDasharray="3 3" stroke="#333333" opacity={0.3} />
                         <Tooltip
                             content={(tooltipProps) => (
-                                <CustomTooltip {...(tooltipProps as any)} onUpdate={setSelectedData} />
+                                <CustomTooltip
+                                    {...(tooltipProps as any)}
+                                    onUpdate={(row) => {
+                                        setSelectedData((prev) => (prev === row ? prev : row));
+                                    }}
+                                />
                             )}
                             cursor={<DottedCursor onPositionUpdate={handleCursorPosition} />}
                             labelFormatter={(label) => `${label}`}
