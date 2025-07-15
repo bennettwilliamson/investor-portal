@@ -1,6 +1,6 @@
 const dashboardData = {
   welcome: {
-    text: 'Welcome Bennett,\nHere are your 2025 Q2 numbers.'
+    text: 'Welcome Bennett,\nHere are your 2024 Q4 numbers.'
   },
   stats: [
     { label: 'Realized Return (%)', value: '13.67%' },

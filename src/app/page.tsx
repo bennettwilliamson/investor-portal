@@ -23,7 +23,7 @@ export default function Home() {
         <Header />
         <main className={styles.main}>
           <section className={styles.welcome}>
-            <h1>{welcome.text}</h1>
+            <h1 style={{ whiteSpace: 'pre-line' }}>{welcome.text}</h1>
             <div className={styles.statGrid}>
               {stats.map(({ label, value }) => (
                 <StatCard key={label} label={label} value={value} />
