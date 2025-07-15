@@ -35,7 +35,7 @@ export default function Home() {
           <section style={{ marginTop: '3rem', width: '100%' }}>
             {/* Return Combo Chart */}
             <div style={{
-              height: 500,
+              height: 550,
               width: '100%',
               marginBottom: '3rem',
               background: '#212121',
@@ -66,7 +66,7 @@ export default function Home() {
 
             {/* Balance Flow Chart */}
             <div style={{
-              height: 500,
+              height: 550,
               width: '100%',
               background: '#212121',
               borderRadius: '12px',
