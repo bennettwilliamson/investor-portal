@@ -41,24 +41,6 @@ export default function Home() {
 
           {/* ---- Charts ---- */}
           <section style={{ marginTop: '3rem', width: '100%', display: 'grid', gap: '2rem' }}>
-            {/* Balance Flow Chart Card */}
-            <div style={{
-              background: '#1c1c1c',
-              borderRadius: '12px',
-              padding: '2rem',
-              border: '1px solid #333',
-            }}>
-              <h2 style={{ color: '#ffffff', fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem' }}>Your Historical Balance</h2>
-              <div className={styles.statGrid} style={{ marginBottom: '2rem' }}>
-                {balanceStats.map(({ label, value }) => (
-                  <StatCard key={label} label={label} value={value} />
-                ))}
-              </div>
-              <div style={{ height: 500, width: '100%' }}>
-                <BalanceFlowChart />
-              </div>
-            </div>
-
             {/* Return Combo Chart Card */}
             <div style={{
               background: '#1c1c1c',
@@ -74,6 +56,24 @@ export default function Home() {
               </div>
               <div style={{ height: 500, width: '100%' }}>
                 <ReturnComboChart />
+              </div>
+            </div>
+
+            {/* Balance Flow Chart Card */}
+            <div style={{
+              background: '#1c1c1c',
+              borderRadius: '12px',
+              padding: '2rem',
+              border: '1px solid #333',
+            }}>
+              <h2 style={{ color: '#ffffff', fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem' }}>Your Historical Balance</h2>
+              <div className={styles.statGrid} style={{ marginBottom: '2rem' }}>
+                {balanceStats.map(({ label, value }) => (
+                  <StatCard key={label} label={label} value={value} />
+                ))}
+              </div>
+              <div style={{ height: 500, width: '100%' }}>
+                <BalanceFlowChart />
               </div>
             </div>
           </section>

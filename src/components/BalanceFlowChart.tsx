@@ -284,11 +284,16 @@ export default function BalanceFlowChart(props: Props) {
 
     const [selectedData, setSelectedData] = React.useState<PeriodData>(() => visibleData[visibleData.length - 1]);
 
+    // Ensure we only update state when the selected row has actually changed to avoid
+    // triggering React’s “Maximum update depth exceeded” error (#185 in prod build).
     React.useEffect(() => {
-        if (visibleData.length > 0) {
-            setSelectedData(visibleData[visibleData.length - 1]);
-        }
-    }, [visibleData]);
+        if (visibleData.length === 0) return;
+        const latest = visibleData[visibleData.length - 1];
+        // Bail-out if we already have this row selected (strict equality is fine because
+        // rows are reused via useMemo, so their references stay stable between renders).
+        if (selectedData === latest) return;
+        setSelectedData(latest);
+    }, [visibleData, selectedData]);
 
     const handleCursorPosition = React.useCallback(
         (posRelToChart: { x: number; y: number }) => {

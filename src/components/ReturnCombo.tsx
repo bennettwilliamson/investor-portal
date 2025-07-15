@@ -214,11 +214,13 @@ export default function ReturnCombo(props: Props) {
     } as const;
 
     const [selectedData, setSelectedData] = React.useState<QuarterData>(() => visibleData[visibleData.length - 1]);
+    // Guard against unnecessary updates that can cause React error #185 (max update depth exceeded)
     React.useEffect(() => {
-        if (visibleData.length > 0) {
-            setSelectedData(visibleData[visibleData.length - 1]);
-        }
-    }, [visibleData]);
+        if (visibleData.length === 0) return;
+        const latest = visibleData[visibleData.length - 1];
+        if (selectedData === latest) return;
+        setSelectedData(latest);
+    }, [visibleData, selectedData]);
 
     const returnValue = viewMode === 'dollar'
         ? currencyFormatter.format(selectedData.returnDollar)
