@@ -1,18 +1,21 @@
+import equityData from './equity_boe.json';
+
 const dashboardData = {
   welcome: {
-    line1: 'Welcome Bennett,',
-    line2: 'Here are your 2024 Q4 numbers.'
+    line1: `Welcome ${equityData.investorInfo.name},`,
+    line2: `Here are your ${equityData.investorInfo.currentQuarter} numbers.`
   },
   stats: [
-    { label: 'Realized Return (%)', value: '13.67%' },
-    { label: 'Realized Return ($)', value: '$10,203.00' },
-    { label: 'Current Balance', value: '$100,673.55' }
+    { label: 'Realized Return (%)', value: `${equityData.currentMetrics.realizedReturnPercent}%` },
+    { label: 'Realized Return ($)', value: `$${equityData.currentMetrics.realizedReturnDollar.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` },
+    { label: 'Current Balance', value: `$${equityData.currentMetrics.currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }
   ],
   historical: [
-    { label: 'Beginning Balance', value: '$1,760,082.51' },
-    { label: 'Realized Return', value: '$246,411.55' },
-    { label: 'Ending Balance', value: '$2,006,494.06' }
+    { label: 'Beginning Balance', value: `$${equityData.historicalSummary.beginningBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` },
+    { label: 'Realized Return', value: `$${equityData.historicalSummary.realizedReturn.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` },
+    { label: 'Ending Balance', value: `$${equityData.historicalSummary.endingBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }
   ]
 };
 
-export default dashboardData; 
+export default dashboardData;
+export { equityData }; 

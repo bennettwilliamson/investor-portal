@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Header from '@/components/Header';
 import StatCard from '@/components/StatCard';
-import dashboardData from '@/data/dashboardData';
+import dashboardData, { equityData } from '@/data/dashboardData';
 import styles from './page.module.scss';
 import SectionHeader from '@/components/SectionHeader';
 
@@ -45,7 +45,7 @@ export default function Home() {
                 padding: '2rem',
                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
               }}>
-                <ReturnComboChart />
+                <ReturnComboChart data={equityData.quarterlyData} />
               </div>
             </div>
 
@@ -60,7 +60,7 @@ export default function Home() {
                 padding: '2rem',
                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
               }}>
-                <BalanceFlowChart />
+                <BalanceFlowChart data={equityData.quarterlyData} />
               </div>
             </div>
           </section>
