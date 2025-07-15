@@ -81,9 +81,9 @@ export default function Home() {
                     display: 'none',
                   },
                   alternativeMethodsBlockButton: {
-                    color: '#aaaaaa',
+                    color: '#ffffff',
                     '&:hover': {
-                      color: '#ffffff'
+                      color: '#dddddd' // Slightly off-white for hover
                     }
                   },
                   formButtonPrimary: {
