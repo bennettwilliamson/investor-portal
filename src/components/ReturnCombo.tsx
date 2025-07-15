@@ -139,9 +139,12 @@ interface CustomTooltipProps {
 }
 
 const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, onUpdate }) => {
-    if (active && payload && payload.length > 0 && onUpdate) {
-        onUpdate(payload[0].payload as QuarterData);
-    }
+    React.useEffect(() => {
+        if (active && payload && payload.length > 0 && onUpdate) {
+            onUpdate(payload[0].payload as QuarterData);
+        }
+    }, [active, payload, onUpdate]);
+
     return null;
 };
 
