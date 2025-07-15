@@ -214,13 +214,11 @@ export default function ReturnCombo(props: Props) {
     } as const;
 
     const [selectedData, setSelectedData] = React.useState<QuarterData>(() => visibleData[visibleData.length - 1]);
-    // Guard against unnecessary updates that can cause React error #185 (max update depth exceeded)
     React.useEffect(() => {
-        if (visibleData.length === 0) return;
-        const latest = visibleData[visibleData.length - 1];
-        if (selectedData === latest) return;
-        setSelectedData(latest);
-    }, [visibleData, selectedData]);
+        if (visibleData.length > 0) {
+            setSelectedData(visibleData[visibleData.length - 1]);
+        }
+    }, [visibleData]);
 
     const returnValue = viewMode === 'dollar'
         ? currencyFormatter.format(selectedData.returnDollar)
@@ -245,13 +243,9 @@ export default function ReturnCombo(props: Props) {
         if (!chartAreaRef.current || !containerRef.current) return;
         const chartRect = chartAreaRef.current.getBoundingClientRect();
         const containerRect = containerRef.current.getBoundingClientRect();
-        const newPos = {
+        setCursorPos({
             x: chartRect.left - containerRect.left + posRelToChart.x,
             y: chartRect.top - containerRect.top + posRelToChart.y,
-        } as const;
-        setCursorPos((prev) => {
-            if (prev && prev.x === newPos.x && prev.y === newPos.y) return prev;
-            return newPos;
         });
     }, []);
 
@@ -360,14 +354,13 @@ export default function ReturnCombo(props: Props) {
                         barCategoryGap={2}
                         onMouseMove={(state: any) => {
                             if (state && state.isTooltipActive) {
-                                setActiveBarIndex((prev) => (prev === state.activeTooltipIndex ? prev : state.activeTooltipIndex));
+                                setActiveBarIndex(state.activeTooltipIndex);
                             }
                         }}
                         onMouseLeave={() => {
-                            const latest = visibleData[visibleData.length - 1];
-                            setSelectedData((prev) => (prev === latest ? prev : latest));
-                            setCursorPos((prev) => (prev === null ? prev : null));
-                            setActiveBarIndex((prev) => (prev === null ? prev : null));
+                            setSelectedData(visibleData[visibleData.length - 1]);
+                            setCursorPos(null);
+                            setActiveBarIndex(null);
                         }}
                     >
                         <XAxis dataKey="quarterLabel" axisLine={{ stroke: '#333333', strokeWidth: 1 }} tickLine={false} tick={axisTickStyle} />
@@ -388,12 +381,7 @@ export default function ReturnCombo(props: Props) {
                         <CartesianGrid strokeDasharray="3 3" stroke="#333333" opacity={0.3} />
                         <Tooltip
                             content={(tooltipProps) => (
-                                <CustomTooltip
-                                    {...(tooltipProps as any)}
-                                    onUpdate={(row) => {
-                                        setSelectedData((prev) => (prev === row ? prev : row));
-                                    }}
-                                />
+                                <CustomTooltip {...(tooltipProps as any)} onUpdate={setSelectedData} />
                             )}
                             cursor={<DottedCursor onPositionUpdate={handleCursorPosition} />}
                             labelFormatter={(label) => `${label}`}

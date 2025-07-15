@@ -284,31 +284,20 @@ export default function BalanceFlowChart(props: Props) {
 
     const [selectedData, setSelectedData] = React.useState<PeriodData>(() => visibleData[visibleData.length - 1]);
 
-    // Ensure we only update state when the selected row has actually changed to avoid
-    // triggering React’s “Maximum update depth exceeded” error (#185 in prod build).
     React.useEffect(() => {
-        if (visibleData.length === 0) return;
-        const latest = visibleData[visibleData.length - 1];
-        // Bail-out if we already have this row selected (strict equality is fine because
-        // rows are reused via useMemo, so their references stay stable between renders).
-        if (selectedData === latest) return;
-        setSelectedData(latest);
-    }, [visibleData, selectedData]);
+        if (visibleData.length > 0) {
+            setSelectedData(visibleData[visibleData.length - 1]);
+        }
+    }, [visibleData]);
 
     const handleCursorPosition = React.useCallback(
         (posRelToChart: { x: number; y: number }) => {
             if (!chartAreaRef.current || !containerRef.current) return;
             const chartRect = chartAreaRef.current.getBoundingClientRect();
             const containerRect = containerRef.current.getBoundingClientRect();
-            const newPos = {
+            setCursorPos({
                 x: chartRect.left - containerRect.left + posRelToChart.x,
                 y: chartRect.top - containerRect.top + posRelToChart.y,
-            } as const;
-            // Only update when the coordinates actually change to avoid an infinite
-            // update cascade that eventually triggers React error #185.
-            setCursorPos((prev) => {
-                if (prev && prev.x === newPos.x && prev.y === newPos.y) return prev;
-                return newPos;
             });
         },
         [],
@@ -563,19 +552,18 @@ export default function BalanceFlowChart(props: Props) {
                         margin={{ top: 24, right: 0, left: 0, bottom: 8 }}
                         onMouseMove={(state: any) => {
                             if (state && state.isTooltipActive) {
-                                setActiveBarIndex((prev) => (prev === state.activeTooltipIndex ? prev : state.activeTooltipIndex));
+                                setActiveBarIndex(state.activeTooltipIndex);
                                 if (state.activeTooltipIndex != null) {
                                     const p = visibleData[state.activeTooltipIndex];
-                                    if (p) setHoverPeriod((prev) => (prev === p.period ? prev : p.period));
+                                    if (p) setHoverPeriod(p.period);
                                 }
                             }
                         }}
                         onMouseLeave={() => {
-                            const latest = visibleData[visibleData.length - 1];
-                            setSelectedData((prev) => (prev === latest ? prev : latest));
-                            setCursorPos((prev) => (prev === null ? prev : null));
-                            setActiveBarIndex((prev) => (prev === null ? prev : null));
-                            setHoverPeriod((prev) => (prev === null ? prev : null));
+                            setSelectedData(visibleData[visibleData.length - 1]);
+                            setCursorPos(null);
+                            setActiveBarIndex(null);
+                            setHoverPeriod(null);
                         }}
                     >
                         {hoverPeriod !== null && (
@@ -649,13 +637,7 @@ export default function BalanceFlowChart(props: Props) {
                         <Tooltip
                             // Cast tooltip props to any to bypass Recharts' loose generic typing
                             content={(tooltipProps) => (
-                                <CustomTooltip
-                                    {...(tooltipProps as any)}
-                                    onUpdate={(row) => {
-                                        // Prevent unnecessary state churn
-                                        setSelectedData((prev) => (prev === row ? prev : row));
-                                    }}
-                                />
+                                <CustomTooltip {...(tooltipProps as any)} onUpdate={setSelectedData} />
                             )}
                             cursor={<DottedCursor onPositionUpdate={handleCursorPosition} showBelow={false} />}
                             labelFormatter={(label) => `${label}`}
