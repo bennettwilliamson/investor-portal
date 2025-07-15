@@ -184,11 +184,7 @@ export default function ReturnCombo(props: Props) {
     // Disable animations entirely to prevent animation-triggered update loops
     const isAnimationEnabled = false;
 
-    // Track last tooltip index to skip redundant updates
-    const lastTooltipIndexRef = React.useRef<number | null>(null);
-    
-    // Add debouncing for mouse move events
-    const mouseMoveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+    const tooltipUpdateTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
     // Resolve dataset: use caller-supplied data if present, otherwise fall back to internal simulation.
     const data = React.useMemo<QuarterData[]>(() => {
@@ -239,11 +235,25 @@ export default function ReturnCombo(props: Props) {
     // Cleanup timeout on unmount
     React.useEffect(() => {
         return () => {
-            if (mouseMoveTimeoutRef.current) {
-                clearTimeout(mouseMoveTimeoutRef.current);
+            if (tooltipUpdateTimeoutRef.current) {
+                clearTimeout(tooltipUpdateTimeoutRef.current);
             }
         };
     }, []);
+
+    const handleTooltipUpdate = React.useCallback((row: QuarterData) => {
+        if (tooltipUpdateTimeoutRef.current) {
+            clearTimeout(tooltipUpdateTimeoutRef.current);
+        }
+
+        tooltipUpdateTimeoutRef.current = setTimeout(() => {
+            const idx = visibleData.findIndex(d => d === row);
+            if (idx !== -1) {
+                setActiveBarIndex(idx);
+                setSelectedData(row);
+            }
+        }, 50);
+    }, [visibleData]);
 
     const returnValue = viewMode === 'dollar'
         ? currencyFormatter.format(selectedData.returnDollar)
@@ -381,39 +391,14 @@ export default function ReturnCombo(props: Props) {
                         data={chartData}
                         margin={{ top: 48, right: 24, left: 24, bottom: 8 }}
                         barCategoryGap={2}
-                        onMouseMove={(state: { isTooltipActive?: boolean; activeTooltipIndex?: number | null }) => {
-                            if (!state || !state.isTooltipActive) return;
-                            const idx = state.activeTooltipIndex ?? null;
-                            if (idx === lastTooltipIndexRef.current) return;
-                            
-                            // Clear any existing timeout
-                            if (mouseMoveTimeoutRef.current) {
-                                clearTimeout(mouseMoveTimeoutRef.current);
-                            }
-                            
-                            // Debounce the state updates
-                            mouseMoveTimeoutRef.current = setTimeout(() => {
-                                lastTooltipIndexRef.current = idx;
-                                setActiveBarIndex(idx);
-
-                                if (idx != null) {
-                                    const row = visibleData[idx];
-                                    if (row) setSelectedData((prev) => (prev === row ? prev : row));
-                                }
-                            }, 16); // ~60fps debouncing
-                        }}
                         onMouseLeave={() => {
-                            // Clear any pending timeout
-                            if (mouseMoveTimeoutRef.current) {
-                                clearTimeout(mouseMoveTimeoutRef.current);
-                                mouseMoveTimeoutRef.current = null;
+                            if (tooltipUpdateTimeoutRef.current) {
+                                clearTimeout(tooltipUpdateTimeoutRef.current);
                             }
-                            
                             const latest = visibleData[visibleData.length - 1];
                             setSelectedData((prev) => (prev === latest ? prev : latest));
                             setCursorPos((prev) => (prev === null ? prev : null));
                             setActiveBarIndex((prev) => (prev === null ? prev : null));
-                            lastTooltipIndexRef.current = null;
                         }}
                     >
                         <XAxis dataKey="quarterLabel" axisLine={{ stroke: '#333333', strokeWidth: 1 }} tickLine={false} tick={axisTickStyle} />
@@ -436,9 +421,7 @@ export default function ReturnCombo(props: Props) {
                             content={(tooltipProps: any) => (
                                 <CustomTooltip
                                     {...tooltipProps}
-                                    onUpdate={(row) => {
-                                        setSelectedData((prev) => (prev === row ? prev : row));
-                                    }}
+                                    onUpdate={handleTooltipUpdate}
                                 />
                             )}
                             cursor={<DottedCursor onPositionUpdate={handleCursorPosition} />}

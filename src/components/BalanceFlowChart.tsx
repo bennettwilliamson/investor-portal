@@ -267,11 +267,8 @@ export default function BalanceFlowChart(props: Props) {
 
     const [activeBarIndex, setActiveBarIndex] = React.useState<number | null>(null);
     const [hoverPeriod, setHoverPeriod] = React.useState<number | null>(null);
-    // Avoid handling every mouseMove when still on the same bar
-    const lastTooltipIndexRef = React.useRef<number | null>(null);
     
-    // Add debouncing for mouse move events
-    const mouseMoveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+    const tooltipUpdateTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
     // Resolve the dataset: prefer caller-supplied data, otherwise fall back to the internal simulation.
     const data = React.useMemo<PeriodData[]>(() => {
@@ -315,11 +312,26 @@ export default function BalanceFlowChart(props: Props) {
     // Cleanup timeout on unmount
     React.useEffect(() => {
         return () => {
-            if (mouseMoveTimeoutRef.current) {
-                clearTimeout(mouseMoveTimeoutRef.current);
+            if (tooltipUpdateTimeoutRef.current) {
+                clearTimeout(tooltipUpdateTimeoutRef.current);
             }
         };
     }, []);
+
+    const handleTooltipUpdate = React.useCallback((row: PeriodData) => {
+        if (tooltipUpdateTimeoutRef.current) {
+            clearTimeout(tooltipUpdateTimeoutRef.current);
+        }
+
+        tooltipUpdateTimeoutRef.current = setTimeout(() => {
+            const idx = visibleData.findIndex(d => d === row);
+            if (idx !== -1) {
+                setActiveBarIndex(idx);
+                setHoverPeriod(row.period);
+                setSelectedData(row);
+            }
+        }, 50);
+    }, [visibleData]);
 
     const handleCursorPosition = React.useCallback(
         (posRelToChart: { x: number; y: number }) => {
@@ -587,43 +599,15 @@ export default function BalanceFlowChart(props: Props) {
                     <ComposedChart
                         data={visibleData}
                         margin={{ top: 24, right: 0, left: 0, bottom: 8 }}
-                        onMouseMove={(state: { isTooltipActive?: boolean; activeTooltipIndex?: number | null }) => {
-                            if (!state || !state.isTooltipActive) return;
-                            const idx = state.activeTooltipIndex ?? null;
-                            if (idx === lastTooltipIndexRef.current) return; // same bar as before
-                            
-                            // Clear any existing timeout
-                            if (mouseMoveTimeoutRef.current) {
-                                clearTimeout(mouseMoveTimeoutRef.current);
-                            }
-                            
-                            // Debounce the state updates
-                            mouseMoveTimeoutRef.current = setTimeout(() => {
-                                lastTooltipIndexRef.current = idx;
-                                setActiveBarIndex(idx);
-
-                                if (idx != null) {
-                                    const row = visibleData[idx];
-                                    if (row) {
-                                        setHoverPeriod(row.period);
-                                        setSelectedData((prev) => (prev === row ? prev : row));
-                                    }
-                                }
-                            }, 16); // ~60fps debouncing
-                        }}
                         onMouseLeave={() => {
-                            // Clear any pending timeout
-                            if (mouseMoveTimeoutRef.current) {
-                                clearTimeout(mouseMoveTimeoutRef.current);
-                                mouseMoveTimeoutRef.current = null;
+                            if (tooltipUpdateTimeoutRef.current) {
+                                clearTimeout(tooltipUpdateTimeoutRef.current);
                             }
-                            
                             const latest = visibleData[visibleData.length - 1];
                             setSelectedData((prev) => (prev === latest ? prev : latest));
                             setCursorPos((prev) => (prev === null ? prev : null));
                             setActiveBarIndex((prev) => (prev === null ? prev : null));
                             setHoverPeriod((prev) => (prev === null ? prev : null));
-                            lastTooltipIndexRef.current = null;
                         }}
                     >
                         {hoverPeriod !== null && (
@@ -698,9 +682,7 @@ export default function BalanceFlowChart(props: Props) {
                             content={(tooltipProps: any) => (
                                 <CustomTooltip
                                     {...tooltipProps}
-                                    onUpdate={(row) => {
-                                        setSelectedData((prev) => (prev === row ? prev : row));
-                                    }}
+                                    onUpdate={handleTooltipUpdate}
                                 />
                             )}
                             cursor={<DottedCursor onPositionUpdate={handleCursorPosition} showBelow={false} />}
