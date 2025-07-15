@@ -12,7 +12,7 @@ export default function Header() {
       <div className={styles.container}>
         <div className={styles.logo}>
           <Image
-            src="/images/AREF Logo Final - 2024 07 18-04.png"
+            src="/images/AREF Logo Final - 2024 07 18-03.png"
             alt="Alturas Real Estate Fund"
             width={199.5}
             height={24}

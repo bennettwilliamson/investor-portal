@@ -20,7 +20,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      localization={{
+        signIn: {
+          start: {
+            title: 'Sign In To Your Investor Portal',
+            subtitle: '',
+          }
+        }
+      }}
+    >
       <html lang="en">
         <body>{children}</body>
       </html>
