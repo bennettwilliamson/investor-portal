@@ -3,9 +3,9 @@
 import Image from 'next/image';
 import Header from '@/components/Header';
 import StatCard from '@/components/StatCard';
-import dashboardData from '@/data/dashboardData';
 import styles from './page.module.scss';
 import SectionHeader from '@/components/SectionHeader';
+import { useEffect, useState } from 'react';
 
 // Chart components (client-side rendered)
 import BalanceFlowChart from '@/components/client/BalanceFlowChartClient';
@@ -13,13 +13,36 @@ import ReturnComboChart from '@/components/client/ReturnComboClient';
 
 import { SignedIn, SignedOut, SignIn } from "@clerk/nextjs";
 
+type DashboardData = {
+  welcome: { line1: string; line2: string };
+  stats: { label: string; value: string }[];
+  historical: { label: string; value: string }[];
+};
+
 export default function Home() {
-  const { welcome, stats, historical } = dashboardData;
+  const [data, setData] = useState<DashboardData | null>(null);
+
+  useEffect(() => {
+    fetch('/api/dashboard')
+      .then((res) => res.json())
+      .then((d: DashboardData) => setData(d))
+      .catch(() => setData(null));
+  }, []);
+
+  const { welcome, stats, historical } = data ?? {
+    welcome: { line1: '', line2: '' },
+    stats: [],
+    historical: [],
+  };
 
   return (
     <>
       {/* Show dashboard only when the user is signed in */}
       <SignedIn>
+        {!data ? (
+          <p>Loading...</p>
+        ) : (
+        <>
         <Header />
         <main className={styles.main}>
           <section className={styles.welcome}>
@@ -65,6 +88,8 @@ export default function Home() {
             </div>
           </section>
         </main>
+        </>
+      )}
       </SignedIn>
 
       {/* Show sign-in form when the user is signed out */}
