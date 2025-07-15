@@ -47,9 +47,9 @@ export default function Home() {
               <div style={{ marginBottom: '1rem' }}>
                 <h2 style={{
                   margin: 0,
-                  fontSize: '1.25rem',
-                  fontWeight: 500,
-                  color: '#FFFFFF',
+                  fontSize: '30px',
+                  fontWeight: 400,
+                  color: '#E6E7E8',
                   fontFamily: 'Utile Regular, sans-serif'
                 }}>
                   Your Historical Returns
@@ -77,9 +77,9 @@ export default function Home() {
               <div style={{ marginBottom: '1rem' }}>
                 <h2 style={{
                   margin: 0,
-                  fontSize: '1.25rem',
-                  fontWeight: 500,
-                  color: '#FFFFFF',
+                  fontSize: '30px',
+                  fontWeight: 400,
+                  color: '#E6E7E8',
                   fontFamily: 'Utile Regular, sans-serif'
                 }}>
                   Your Historical Balance
