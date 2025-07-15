@@ -1,7 +1,5 @@
 'use client';
 
-// @ts-nocheck
-
 import React from 'react';
 import {
     ResponsiveContainer,
@@ -47,7 +45,7 @@ const percentFormatter = new Intl.NumberFormat('en-US', {
     maximumFractionDigits: 2,
 });
 
-function convertFontWeight(weight: any): any {
+function convertFontWeight(weight: string | number): string | number {
     if (typeof weight === 'string') {
         switch (weight.toLowerCase()) {
             case 'regular':
@@ -145,11 +143,17 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, onUpdate
     return null;
 };
 
-const DottedCursor: React.FC<
-    any & { onPositionUpdate?: (pos: { x: number; y: number }) => void }
-> = ({ x, width, height, points, onPositionUpdate }) => {
+interface DottedCursorProps {
+    x?: number;
+    width?: number;
+    height?: number;
+    points?: Array<{ x: number; y: number }>;
+    onPositionUpdate?: (pos: { x: number; y: number }) => void;
+}
+
+const DottedCursor: React.FC<DottedCursorProps> = ({ x, width, height, points, onPositionUpdate }) => {
     // Compute coordinates every render
-    const cx = x + (width ?? 0) / 2;
+    const cx = (x ?? 0) + (width ?? 0) / 2;
     const barTopY = points && points.length > 0 ? points[0].y : 0;
 
     // Notify parent *after* render commit to avoid nested updates
@@ -169,12 +173,8 @@ export default function ReturnCombo(props: Props) {
     const [viewMode, setViewMode] = React.useState<'dollar' | 'percent'>('dollar');
     type TimeFrameKey = 'all' | '1yr' | '5yr';
     const [timeFrame, setTimeFrame] = React.useState<TimeFrameKey>('all');
-    const [isAnimationEnabled, setIsAnimationEnabled] = React.useState(true);
-
-    React.useEffect(() => {
-        const timer = setTimeout(() => setIsAnimationEnabled(false), 1000); // Disable animation after initial load
-        return () => clearTimeout(timer);
-    }, []);
+    // Disable animations entirely to prevent animation-triggered update loops
+    const isAnimationEnabled = false;
 
     // Resolve dataset: use caller-supplied data if present, otherwise fall back to internal simulation.
     const data = React.useMemo<QuarterData[]>(() => {
@@ -358,15 +358,16 @@ export default function ReturnCombo(props: Props) {
                         data={chartData}
                         margin={{ top: 48, right: 24, left: 24, bottom: 8 }}
                         barCategoryGap={2}
-                        onMouseMove={(state: any) => {
+                        onMouseMove={(state: { isTooltipActive?: boolean; activeTooltipIndex?: number | null }) => {
                             if (state && state.isTooltipActive) {
-                                setActiveBarIndex(state.activeTooltipIndex);
+                                setActiveBarIndex((prev) => (prev === state.activeTooltipIndex ? prev : state.activeTooltipIndex ?? null));
                             }
                         }}
                         onMouseLeave={() => {
-                            setSelectedData(visibleData[visibleData.length - 1]);
-                            setCursorPos(null);
-                            setActiveBarIndex(null);
+                            const latest = visibleData[visibleData.length - 1];
+                            setSelectedData((prev) => (prev === latest ? prev : latest));
+                            setCursorPos((prev) => (prev === null ? prev : null));
+                            setActiveBarIndex((prev) => (prev === null ? prev : null));
                         }}
                     >
                         <XAxis dataKey="quarterLabel" axisLine={{ stroke: '#333333', strokeWidth: 1 }} tickLine={false} tick={axisTickStyle} />
@@ -386,9 +387,9 @@ export default function ReturnCombo(props: Props) {
                         />
                         <CartesianGrid strokeDasharray="3 3" stroke="#333333" opacity={0.3} />
                         <Tooltip
-                            content={(tooltipProps) => (
+                            content={(tooltipProps: any) => (
                                 <CustomTooltip
-                                    {...(tooltipProps as any)}
+                                    {...tooltipProps}
                                     onUpdate={(row) => {
                                         setSelectedData((prev) => (prev === row ? prev : row));
                                     }}
@@ -401,9 +402,6 @@ export default function ReturnCombo(props: Props) {
                         <Bar
                             dataKey={viewMode === 'dollar' ? 'returnDollar' : 'returnPercentValue'}
                             name={viewMode === 'dollar' ? 'Return ($)' : 'Return (%)'}
-                            isAnimationActive={isAnimationEnabled}
-                            animationDuration={600}
-                            animationEasing="ease-out"
                         >
                             {chartData.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={COLORS[entry.action]} fillOpacity={activeBarIndex !== null && index !== activeBarIndex ? 0.1 : 1} />
@@ -415,9 +413,6 @@ export default function ReturnCombo(props: Props) {
                             stroke="transparent"
                             dot={false}
                             activeDot={{ r: 7, stroke: '#FFFFFF', strokeWidth: 4, fill: '#ffffff' }}
-                            isAnimationActive={isAnimationEnabled}
-                            animationDuration={600}
-                            animationEasing="ease-out"
                         />
                     </BarChart>
                 </ResponsiveContainer>
@@ -440,7 +435,7 @@ export default function ReturnCombo(props: Props) {
                 <>
                     <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
                         {(['return', 'begin', 'end'] as const).map((key) => {
-                            const anchor = (cardAnchors as any)[key];
+                            const anchor = cardAnchors[key];
                             if (!anchor) return null;
                             const breakY = anchor.y + 10;
                             const d = `M ${cursorPos.x} ${cursorPos.y} L ${cursorPos.x} ${breakY} L ${anchor.x} ${breakY} L ${anchor.x} ${anchor.y}`;

@@ -1,7 +1,5 @@
 'use client';
 
-// @ts-nocheck
-
 import React from 'react';
 import {
     ResponsiveContainer,
@@ -52,7 +50,7 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
 });
 
 // Helper: Normalize Framer font-weight keywords to valid CSS values
-function convertFontWeight(weight: any): any {
+function convertFontWeight(weight: string | number): string | number {
     if (typeof weight === 'string') {
         switch (weight.toLowerCase()) {
             case 'regular':
@@ -183,23 +181,30 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, onUpdate
     return null;
 };
 
-const DottedCursor: React.FC<
-    any & { onPositionUpdate?: (pos: { x: number; y: number }) => void; showBelow?: boolean }
-> = ({ x, width, height, points, onPositionUpdate, showBelow }) => {
+interface DottedCursorProps {
+    x?: number;
+    width?: number;
+    height?: number;
+    points?: Array<{ x: number; y: number; height?: number }>;
+    onPositionUpdate?: (pos: { x: number; y: number }) => void;
+    showBelow?: boolean;
+}
+
+const DottedCursor: React.FC<DottedCursorProps> = ({ x, width, height, points, onPositionUpdate, showBelow }) => {
     // For some chart types (e.g., ComposedChart), x can be undefined – fall back to points array
     let cx: number = 0;
-    if (points && points.length > 0 && typeof (points[0] as any).x === "number") {
-        cx = (points[0] as any).x;
+    if (points && points.length > 0 && typeof points[0].x === "number") {
+        cx = points[0].x;
     } else if (typeof x === "number") {
         cx = x + ((width ?? 0) / 2);
     }
 
-    const pointY = points && points.length > 0 ? (points[0] as any).y : 0;
+    const pointY = points && points.length > 0 ? points[0].y : 0;
     const dotRadius = 6;
 
     let dashedEndY = height;
     if (showBelow && points) {
-        const barInfo = (points as any[]).find((p) => typeof p.height === "number") as any;
+        const barInfo = points.find((p) => typeof p.height === "number");
         if (barInfo && barInfo.y > pointY) {
             dashedEndY = barInfo.y - 1;
         }
@@ -276,11 +281,8 @@ export default function BalanceFlowChart(props: Props) {
         }
     }, [data, timeFrame]);
 
-    const hasFlow = React.useMemo(() => {
-        if (activeBarIndex === null) return false;
-        const row = visibleData[activeBarIndex];
-        return !!row && row.netFlow !== 0;
-    }, [activeBarIndex, visibleData]);
+    // Simple computation - no need for useMemo
+    const hasFlow = activeBarIndex !== null && visibleData[activeBarIndex]?.netFlow !== 0;
 
     const [selectedData, setSelectedData] = React.useState<PeriodData>(() => visibleData[visibleData.length - 1]);
 
@@ -561,20 +563,21 @@ export default function BalanceFlowChart(props: Props) {
                     <ComposedChart
                         data={visibleData}
                         margin={{ top: 24, right: 0, left: 0, bottom: 8 }}
-                        onMouseMove={(state: any) => {
+                        onMouseMove={(state: { isTooltipActive?: boolean; activeTooltipIndex?: number | null }) => {
                             if (state && state.isTooltipActive) {
-                                setActiveBarIndex(state.activeTooltipIndex);
+                                setActiveBarIndex((prev) => (prev === state.activeTooltipIndex ? prev : state.activeTooltipIndex ?? null));
                                 if (state.activeTooltipIndex != null) {
                                     const p = visibleData[state.activeTooltipIndex];
-                                    if (p) setHoverPeriod(p.period);
+                                    if (p) setHoverPeriod((prev) => (prev === p.period ? prev : p.period));
                                 }
                             }
                         }}
                         onMouseLeave={() => {
-                            setSelectedData(visibleData[visibleData.length - 1]);
-                            setCursorPos(null);
-                            setActiveBarIndex(null);
-                            setHoverPeriod(null);
+                            const latest = visibleData[visibleData.length - 1];
+                            setSelectedData((prev) => (prev === latest ? prev : latest));
+                            setCursorPos((prev) => (prev === null ? prev : null));
+                            setActiveBarIndex((prev) => (prev === null ? prev : null));
+                            setHoverPeriod((prev) => (prev === null ? prev : null));
                         }}
                     >
                         {hoverPeriod !== null && (
@@ -646,10 +649,9 @@ export default function BalanceFlowChart(props: Props) {
                         <Line type="monotone" dataKey="endingBalance" name="Balance" stroke={ACCENT_BLUE} strokeWidth={2} dot={false} />
                         <ReferenceLine y={0} stroke="#666666" strokeWidth={1} />
                         <Tooltip
-                            // Cast tooltip props to any to bypass Recharts' loose generic typing
-                            content={(tooltipProps) => (
+                            content={(tooltipProps: any) => (
                                 <CustomTooltip
-                                    {...(tooltipProps as any)}
+                                    {...tooltipProps}
                                     onUpdate={(row) => {
                                         // Prevent unnecessary state churn
                                         setSelectedData((prev) => (prev === row ? prev : row));
@@ -695,7 +697,7 @@ export default function BalanceFlowChart(props: Props) {
                         style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
                     >
                         {(['return', 'begin', 'end'] as const).map((key) => {
-                            const anchor = (cardAnchors as any)[key];
+                            const anchor = cardAnchors[key];
                             if (!anchor) return null;
                             const breakY = anchor.y + 10;
                             const d = `M ${cursorPos.x} ${cursorPos.y} L ${cursorPos.x} ${breakY} L ${anchor.x} ${breakY} L ${anchor.x} ${anchor.y}`;
