@@ -32,14 +32,29 @@ export default function Home() {
 
           {/* ---- Charts ---- */}
           <section style={{ marginTop: '3rem', width: '100%' }}>
-            {/* Balance Flow Chart */}
-            <div style={{ height: 500, width: '100%', marginBottom: '3rem' }}>
-              <BalanceFlowChart />
+            {/* Return Combo Chart */}
+            <div style={{
+              height: 500,
+              width: '100%',
+              marginBottom: '3rem',
+              background: '#212121',
+              borderRadius: '12px',
+              padding: '2rem',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+            }}>
+              <ReturnComboChart />
             </div>
 
-            {/* Return Combo Chart */}
-            <div style={{ height: 500, width: '100%' }}>
-              <ReturnComboChart />
+            {/* Balance Flow Chart */}
+            <div style={{
+              height: 500,
+              width: '100%',
+              background: '#212121',
+              borderRadius: '12px',
+              padding: '2rem',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+            }}>
+              <BalanceFlowChart />
             </div>
           </section>
         </main>
