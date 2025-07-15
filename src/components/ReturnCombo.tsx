@@ -137,9 +137,14 @@ interface CustomTooltipProps {
 }
 
 const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, onUpdate }) => {
-    if (active && payload && payload.length > 0 && onUpdate) {
-        onUpdate(payload[0].payload as QuarterData);
-    }
+    const row = active && payload && payload.length > 0 ? (payload[0].payload as QuarterData) : undefined;
+
+    React.useEffect(() => {
+        if (row && onUpdate) {
+            onUpdate(row);
+        }
+    }, [row, onUpdate]);
+
     return null;
 };
 
@@ -397,8 +402,9 @@ export default function ReturnCombo(props: Props) {
                             content={(tooltipProps: any) => (
                                 <CustomTooltip
                                     {...tooltipProps}
-                                    // Disable onUpdate to prevent infinite loops - data selection is handled via mouse events
-                                    onUpdate={undefined}
+                                    onUpdate={(row) => {
+                                        setSelectedData((prev) => (prev === row ? prev : row));
+                                    }}
                                 />
                             )}
                             cursor={<DottedCursor onPositionUpdate={handleCursorPosition} />}

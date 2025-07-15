@@ -175,9 +175,16 @@ interface CustomTooltipProps {
 }
 
 const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, onUpdate }) => {
-    if (active && payload && payload.length > 0 && onUpdate) {
-        onUpdate(payload[0].payload as PeriodData);
-    }
+    // Extract the row outside render side-effects
+    const row = active && payload && payload.length > 0 ? (payload[0].payload as PeriodData) : undefined;
+
+    // Invoke onUpdate **after** commit to avoid calling setState during render (fixes React error #185)
+    React.useEffect(() => {
+        if (row && onUpdate) {
+            onUpdate(row);
+        }
+    }, [row, onUpdate]);
+
     return null;
 };
 
@@ -656,8 +663,9 @@ export default function BalanceFlowChart(props: Props) {
                             content={(tooltipProps: any) => (
                                 <CustomTooltip
                                     {...tooltipProps}
-                                    // Disable onUpdate to prevent infinite loops - data selection is handled via mouse events
-                                    onUpdate={undefined}
+                                    onUpdate={(row) => {
+                                        setSelectedData((prev) => (prev === row ? prev : row));
+                                    }}
                                 />
                             )}
                             cursor={<DottedCursor onPositionUpdate={handleCursorPosition} showBelow={false} />}
