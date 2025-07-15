@@ -53,7 +53,7 @@ export default function Home() {
               padding: '2rem',
               border: '1px solid #333',
             }}>
-              <h2 style={{ color: '#ffffff', fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem' }}>Your Historical Returns</h2>
+              <h1 style={{ color: '#ffffff', marginBottom: '1.5rem' }}>Your Historical Returns</h1>
               <div style={{ height: 500, width: '100%' }}>
                 <ReturnComboChart />
               </div>
