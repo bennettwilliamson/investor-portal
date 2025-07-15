@@ -47,30 +47,15 @@ export default function Home() {
           {/* ---- Charts ---- */}
           <section style={{ marginTop: '3rem', width: '100%', display: 'grid', gap: '2rem' }}>
             {/* Return Combo Chart Card */}
-            <div style={{ width: '100%' }}>
-              <h2 style={{ color: '#ffffff', fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem' }}>Your Historical Returns</h2>
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', 
-                gap: '1rem', 
-                marginBottom: '1.5rem',
-                background: '#212121',
-                padding: '1rem',
-                borderRadius: '8px'
-              }}>
-                {returnStats.map(({ label, value }) => (
-                  <StatCard key={label} label={label} value={value} />
-                ))}
-              </div>
-              <div style={{
-                background: '#1c1c1c',
-                borderRadius: '12px',
-                padding: '2rem',
-                border: '1px solid #333',
-              }}>
-                <div style={{ height: 500, width: '100%' }}>
-                  <ReturnComboChart />
-                </div>
+            <div style={{
+              background: '#1c1c1c',
+              borderRadius: '12px',
+              padding: '2rem',
+              border: '1px solid #333',
+            }}>
+              <h2 style={{ color: '#ffffff', fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem' }}>Your Historical Returns</h2>
+              <div style={{ height: 500, width: '100%' }}>
+                <ReturnComboChart />
               </div>
             </div>
 

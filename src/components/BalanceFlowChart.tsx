@@ -269,6 +269,9 @@ export default function BalanceFlowChart(props: Props) {
     const [hoverPeriod, setHoverPeriod] = React.useState<number | null>(null);
     // Avoid handling every mouseMove when still on the same bar
     const lastTooltipIndexRef = React.useRef<number | null>(null);
+    
+    // Add debouncing for mouse move events
+    const mouseMoveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
     // Resolve the dataset: prefer caller-supplied data, otherwise fall back to the internal simulation.
     const data = React.useMemo<PeriodData[]>(() => {
@@ -308,6 +311,15 @@ export default function BalanceFlowChart(props: Props) {
         if (selectedData === latest) return;
         setSelectedData(latest);
     }, [visibleData, selectedData]);
+
+    // Cleanup timeout on unmount
+    React.useEffect(() => {
+        return () => {
+            if (mouseMoveTimeoutRef.current) {
+                clearTimeout(mouseMoveTimeoutRef.current);
+            }
+        };
+    }, []);
 
     const handleCursorPosition = React.useCallback(
         (posRelToChart: { x: number; y: number }) => {
@@ -579,19 +591,33 @@ export default function BalanceFlowChart(props: Props) {
                             if (!state || !state.isTooltipActive) return;
                             const idx = state.activeTooltipIndex ?? null;
                             if (idx === lastTooltipIndexRef.current) return; // same bar as before
-                            lastTooltipIndexRef.current = idx;
-
-                            setActiveBarIndex(idx);
-
-                            if (idx != null) {
-                                const row = visibleData[idx];
-                                if (row) {
-                                    setHoverPeriod(row.period);
-                                    setSelectedData((prev) => (prev === row ? prev : row));
-                                }
+                            
+                            // Clear any existing timeout
+                            if (mouseMoveTimeoutRef.current) {
+                                clearTimeout(mouseMoveTimeoutRef.current);
                             }
+                            
+                            // Debounce the state updates
+                            mouseMoveTimeoutRef.current = setTimeout(() => {
+                                lastTooltipIndexRef.current = idx;
+                                setActiveBarIndex(idx);
+
+                                if (idx != null) {
+                                    const row = visibleData[idx];
+                                    if (row) {
+                                        setHoverPeriod(row.period);
+                                        setSelectedData((prev) => (prev === row ? prev : row));
+                                    }
+                                }
+                            }, 16); // ~60fps debouncing
                         }}
                         onMouseLeave={() => {
+                            // Clear any pending timeout
+                            if (mouseMoveTimeoutRef.current) {
+                                clearTimeout(mouseMoveTimeoutRef.current);
+                                mouseMoveTimeoutRef.current = null;
+                            }
+                            
                             const latest = visibleData[visibleData.length - 1];
                             setSelectedData((prev) => (prev === latest ? prev : latest));
                             setCursorPos((prev) => (prev === null ? prev : null));

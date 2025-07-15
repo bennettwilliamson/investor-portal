@@ -186,6 +186,9 @@ export default function ReturnCombo(props: Props) {
 
     // Track last tooltip index to skip redundant updates
     const lastTooltipIndexRef = React.useRef<number | null>(null);
+    
+    // Add debouncing for mouse move events
+    const mouseMoveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
     // Resolve dataset: use caller-supplied data if present, otherwise fall back to internal simulation.
     const data = React.useMemo<QuarterData[]>(() => {
@@ -232,6 +235,15 @@ export default function ReturnCombo(props: Props) {
         if (selectedData === latest) return;
         setSelectedData(latest);
     }, [visibleData, selectedData]);
+
+    // Cleanup timeout on unmount
+    React.useEffect(() => {
+        return () => {
+            if (mouseMoveTimeoutRef.current) {
+                clearTimeout(mouseMoveTimeoutRef.current);
+            }
+        };
+    }, []);
 
     const returnValue = viewMode === 'dollar'
         ? currencyFormatter.format(selectedData.returnDollar)
@@ -373,16 +385,30 @@ export default function ReturnCombo(props: Props) {
                             if (!state || !state.isTooltipActive) return;
                             const idx = state.activeTooltipIndex ?? null;
                             if (idx === lastTooltipIndexRef.current) return;
-                            lastTooltipIndexRef.current = idx;
-
-                            setActiveBarIndex(idx);
-
-                            if (idx != null) {
-                                const row = visibleData[idx];
-                                if (row) setSelectedData((prev) => (prev === row ? prev : row));
+                            
+                            // Clear any existing timeout
+                            if (mouseMoveTimeoutRef.current) {
+                                clearTimeout(mouseMoveTimeoutRef.current);
                             }
+                            
+                            // Debounce the state updates
+                            mouseMoveTimeoutRef.current = setTimeout(() => {
+                                lastTooltipIndexRef.current = idx;
+                                setActiveBarIndex(idx);
+
+                                if (idx != null) {
+                                    const row = visibleData[idx];
+                                    if (row) setSelectedData((prev) => (prev === row ? prev : row));
+                                }
+                            }, 16); // ~60fps debouncing
                         }}
                         onMouseLeave={() => {
+                            // Clear any pending timeout
+                            if (mouseMoveTimeoutRef.current) {
+                                clearTimeout(mouseMoveTimeoutRef.current);
+                                mouseMoveTimeoutRef.current = null;
+                            }
+                            
                             const latest = visibleData[visibleData.length - 1];
                             setSelectedData((prev) => (prev === latest ? prev : latest));
                             setCursorPos((prev) => (prev === null ? prev : null));
