@@ -13,7 +13,7 @@ export default function Header() {
         <div className={styles.logo}>
           <div style={{ width: '75%', position: 'relative' }}>
             <Image
-              src="/images/AREF Logo Final - 2024 07 18-03.png"
+              src="/images/AREF Logo Final - 2024 07 18-04.png"
               alt="Alturas Real Estate Fund"
               layout="responsive"
               width={199.5} // Original width for aspect ratio
@@ -27,7 +27,7 @@ export default function Header() {
             <Link href="#">Tools</Link>
             <Link href="#">Documents</Link>
             <Link href="#">Requests</Link>
-            <Link href="#">Portfolio</Link>
+            <Link href="#">Profile</Link>
           </nav>
           {/* Show user button when signed in */}
           <SignedIn>

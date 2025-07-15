@@ -56,17 +56,35 @@ export default function Home() {
           background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)',
           padding: '2rem'
         }}>
+          <div style={{
+            width: '100%',
+            maxWidth: '420px',
+            background: '#212121',
+            borderRadius: '12px',
+            padding: '2.5rem 2rem',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+            border: '1px solid #333'
+          }}>
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <div style={{ width: '80%', margin: '0 auto', position: 'relative' }}>
+                <Image
+                  src="/images/AREF Logo Final - 2024 07 18-03.png"
+                  alt="Alturas Real Estate Fund Logo"
+                  layout="responsive"
+                  width={150}
+                  height={38}
+                  priority
+                />
+              </div>
+            </div>
             <SignIn 
               appearance={{
                 elements: {
                   card: {
-                    width: '100%',
-                    maxWidth: '420px',
-                    background: '#212121',
-                    borderRadius: '12px',
-                    padding: '2.5rem 2rem',
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-                    border: '1px solid #333'
+                    background: 'transparent',
+                    boxShadow: 'none',
+                    padding: '0',
+                    border: '0'
                   },
                   header: {
                     textAlign: 'center',
@@ -126,6 +144,7 @@ export default function Home() {
                 }
               }}
             />
+          </div>
         </div>
       </SignedOut>
     </>
