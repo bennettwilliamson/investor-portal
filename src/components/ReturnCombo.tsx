@@ -154,11 +154,16 @@ const DottedCursor: React.FC<
     // Compute coordinates every render
     const cx = x + (width ?? 0) / 2;
     const barTopY = points && points.length > 0 ? points[0].y : 0;
+    const currentPayload = points && points.length > 0 ? (points[0] as any).payload : null;
+    const lastPayloadRef = React.useRef<any>();
 
     // Notify parent *after* render commit to avoid nested updates
     React.useEffect(() => {
-        onPositionUpdate?.({ x: cx, y: barTopY });
-    }, [cx, barTopY, onPositionUpdate]);
+        if (onPositionUpdate && currentPayload && currentPayload !== lastPayloadRef.current) {
+            onPositionUpdate({ x: cx, y: barTopY });
+            lastPayloadRef.current = currentPayload;
+        }
+    }, [cx, barTopY, onPositionUpdate, currentPayload]);
 
     return (
         <g>

@@ -210,10 +210,16 @@ const DottedCursor: React.FC<
 
     const dashStartY = pointY + dotRadius;
 
+    const currentPayload = points && points.length > 0 ? (points[0] as any).payload : null;
+    const lastPayloadRef = React.useRef<any>();
+
     // Notify parent after render commit to avoid nested updates loop
     React.useEffect(() => {
-        onPositionUpdate?.({ x: cx, y: pointY });
-    }, [cx, pointY, onPositionUpdate]);
+        if (onPositionUpdate && currentPayload && currentPayload !== lastPayloadRef.current) {
+            onPositionUpdate({ x: cx, y: pointY });
+            lastPayloadRef.current = currentPayload;
+        }
+    }, [cx, pointY, onPositionUpdate, currentPayload]);
 
     return (
         <g>
