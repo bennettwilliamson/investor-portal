@@ -454,7 +454,7 @@ export default function BalanceFlowChart(props: Props) {
                     display: 'flex',
                     flexDirection: 'row',
                     alignItems: 'flex-start',
-                    justifyContent: 'flex-start',
+                    justifyContent: 'space-between',
                     width: '100%',
                     padding: '0 0 16px 0',
                     pointerEvents: 'none',
@@ -509,11 +509,54 @@ export default function BalanceFlowChart(props: Props) {
                         );
                     })()}
                 </div>
+                {/* Time-frame toggle */}
+                <div
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'flex-end',
+                        gap: 10,
+                        pointerEvents: 'auto',
+                        marginLeft: 'auto',
+                    }}
+                >
+                    <div
+                        style={{
+                            display: 'flex',
+                            background: DARK_BLUE,
+                            padding: 2,
+                            borderRadius: 9999,
+                        }}
+                    >
+                        {TIMEFRAME_OPTIONS.map(({ key, label }) => (
+                            <button
+                                key={key}
+                                onClick={() => setTimeFrame(key)}
+                                style={{
+                                    padding: `${TOGGLE_PILL_VERT + 2}px ${TOGGLE_PILL_HORZ + 6}px`,
+                                    background: timeFrame === key ? ACCENT_BLUE : 'transparent',
+                                    color: '#FFFFFF',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontFamily: 'Utile Regular, sans-serif',
+                                    fontSize: 18,
+                                    borderRadius: 9999,
+                                    transition: 'background 0.25s ease, color 0.25s ease',
+                                }}
+                            >
+                                {label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
             </div>
 
             {/* Chart area */}
             <div style={{ flex: 1, position: 'relative', padding: 0 }} ref={chartAreaRef}>
-                <div style={{ position: 'absolute', top: 16, right: 24, zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, pointerEvents: 'auto' }}>
+                <div style={{ display: 'none' }}>
                     {/* Time-frame toggle */}
                     <div
                         style={{
