@@ -8,10 +8,17 @@
   margin-top: 2rem;
 
   h1 {
-    white-space: pre-line;
     font-size: 3rem;
     font-weight: 300;
     line-height: 1.2;
+    margin-bottom: 0.25rem;
+  }
+
+  .welcomeSubtitle {
+    font-family: "Utile Display Regular", sans-serif;
+    font-size: 30px;
+    font-weight: 400;
+    color: #E6E7E8;
     margin-bottom: 2rem;
   }
 }

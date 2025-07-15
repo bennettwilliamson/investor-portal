@@ -322,7 +322,11 @@ export default function ReturnCombo(props: Props) {
                         );
                     })()}
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, pointerEvents: 'auto' }}>
+            </div>
+
+            {/* Chart area */}
+            <div style={{ flex: 1, position: 'relative', padding: 0 }} ref={chartAreaRef}>
+                <div style={{ position: 'absolute', top: 16, right: 24, zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, pointerEvents: 'auto' }}>
                     {/* Time-frame toggle */}
                     <div style={{ display: 'flex', background: DARK_BLUE, padding: 2, borderRadius: 9999 }}>
                         {TIMEFRAME_OPTIONS.map(({ key, label }) => (
@@ -351,10 +355,6 @@ export default function ReturnCombo(props: Props) {
                         ))}
                     </div>
                 </div>
-            </div>
-
-            {/* Chart area */}
-            <div style={{ flex: 1, position: 'relative', padding: 0 }} ref={chartAreaRef}>
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                         data={chartData}
