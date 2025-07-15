@@ -184,6 +184,9 @@ export default function ReturnCombo(props: Props) {
     // Disable animations entirely to prevent animation-triggered update loops
     const isAnimationEnabled = false;
 
+    // Track last tooltip index to skip redundant updates
+    const lastTooltipIndexRef = React.useRef<number | null>(null);
+
     // Resolve dataset: use caller-supplied data if present, otherwise fall back to internal simulation.
     const data = React.useMemo<QuarterData[]>(() => {
         if (props.data && props.data.length) return props.data;
@@ -367,12 +370,16 @@ export default function ReturnCombo(props: Props) {
                         margin={{ top: 48, right: 24, left: 24, bottom: 8 }}
                         barCategoryGap={2}
                         onMouseMove={(state: { isTooltipActive?: boolean; activeTooltipIndex?: number | null }) => {
-                            if (state && state.isTooltipActive) {
-                                setActiveBarIndex((prev) => (prev === state.activeTooltipIndex ? prev : state.activeTooltipIndex ?? null));
-                                if (state.activeTooltipIndex != null) {
-                                    const p = visibleData[state.activeTooltipIndex];
-                                    if (p) setSelectedData((prev) => (prev === p ? prev : p));
-                                }
+                            if (!state || !state.isTooltipActive) return;
+                            const idx = state.activeTooltipIndex ?? null;
+                            if (idx === lastTooltipIndexRef.current) return;
+                            lastTooltipIndexRef.current = idx;
+
+                            setActiveBarIndex(idx);
+
+                            if (idx != null) {
+                                const row = visibleData[idx];
+                                if (row) setSelectedData((prev) => (prev === row ? prev : row));
                             }
                         }}
                         onMouseLeave={() => {
@@ -380,6 +387,7 @@ export default function ReturnCombo(props: Props) {
                             setSelectedData((prev) => (prev === latest ? prev : latest));
                             setCursorPos((prev) => (prev === null ? prev : null));
                             setActiveBarIndex((prev) => (prev === null ? prev : null));
+                            lastTooltipIndexRef.current = null;
                         }}
                     >
                         <XAxis dataKey="quarterLabel" axisLine={{ stroke: '#333333', strokeWidth: 1 }} tickLine={false} tick={axisTickStyle} />

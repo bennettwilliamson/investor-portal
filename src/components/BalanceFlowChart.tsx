@@ -267,6 +267,8 @@ export default function BalanceFlowChart(props: Props) {
 
     const [activeBarIndex, setActiveBarIndex] = React.useState<number | null>(null);
     const [hoverPeriod, setHoverPeriod] = React.useState<number | null>(null);
+    // Avoid handling every mouseMove when still on the same bar
+    const lastTooltipIndexRef = React.useRef<number | null>(null);
 
     // Resolve the dataset: prefer caller-supplied data, otherwise fall back to the internal simulation.
     const data = React.useMemo<PeriodData[]>(() => {
@@ -574,12 +576,18 @@ export default function BalanceFlowChart(props: Props) {
                         data={visibleData}
                         margin={{ top: 24, right: 0, left: 0, bottom: 8 }}
                         onMouseMove={(state: { isTooltipActive?: boolean; activeTooltipIndex?: number | null }) => {
-                            if (state && state.isTooltipActive) {
-                                setActiveBarIndex((prev) => (prev === state.activeTooltipIndex ? prev : state.activeTooltipIndex ?? null));
-                                if (state.activeTooltipIndex != null) {
-                                    const p = visibleData[state.activeTooltipIndex];
-                                    if (p) setHoverPeriod((prev) => (prev === p.period ? prev : p.period));
-                                    if (p) setSelectedData((prev) => (prev === p ? prev : p));
+                            if (!state || !state.isTooltipActive) return;
+                            const idx = state.activeTooltipIndex ?? null;
+                            if (idx === lastTooltipIndexRef.current) return; // same bar as before
+                            lastTooltipIndexRef.current = idx;
+
+                            setActiveBarIndex(idx);
+
+                            if (idx != null) {
+                                const row = visibleData[idx];
+                                if (row) {
+                                    setHoverPeriod(row.period);
+                                    setSelectedData((prev) => (prev === row ? prev : row));
                                 }
                             }
                         }}
@@ -589,6 +597,7 @@ export default function BalanceFlowChart(props: Props) {
                             setCursorPos((prev) => (prev === null ? prev : null));
                             setActiveBarIndex((prev) => (prev === null ? prev : null));
                             setHoverPeriod((prev) => (prev === null ? prev : null));
+                            lastTooltipIndexRef.current = null;
                         }}
                     >
                         {hoverPeriod !== null && (
