@@ -22,7 +22,8 @@ export default function Home() {
         <Header />
         <main className={styles.main}>
           <section className={styles.welcome}>
-            <h1>{welcome.text}</h1>
+            <h1>{welcome.line1}</h1>
+            <p className={styles.welcomeSubtitle}>{welcome.line2}</p>
             <div className={styles.statGrid}>
               {stats.map(({ label, value }) => (
                 <StatCard key={label} label={label} value={value} />
