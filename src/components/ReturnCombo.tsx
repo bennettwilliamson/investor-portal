@@ -364,6 +364,10 @@ export default function ReturnCombo(props: Props) {
                         onMouseMove={(state: { isTooltipActive?: boolean; activeTooltipIndex?: number | null }) => {
                             if (state && state.isTooltipActive) {
                                 setActiveBarIndex((prev) => (prev === state.activeTooltipIndex ? prev : state.activeTooltipIndex ?? null));
+                                if (state.activeTooltipIndex != null) {
+                                    const p = visibleData[state.activeTooltipIndex];
+                                    if (p) setSelectedData((prev) => (prev === p ? prev : p));
+                                }
                             }
                         }}
                         onMouseLeave={() => {

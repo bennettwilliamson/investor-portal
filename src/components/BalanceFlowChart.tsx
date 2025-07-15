@@ -572,6 +572,7 @@ export default function BalanceFlowChart(props: Props) {
                                 if (state.activeTooltipIndex != null) {
                                     const p = visibleData[state.activeTooltipIndex];
                                     if (p) setHoverPeriod((prev) => (prev === p.period ? prev : p.period));
+                                    if (p) setSelectedData((prev) => (prev === p ? prev : p));
                                 }
                             }
                         }}
