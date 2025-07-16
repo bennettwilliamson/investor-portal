@@ -1,9 +1,8 @@
 "use client";
 
-import Image from 'next/image';
 import Header from '@/components/Header';
 import StatCard from '@/components/StatCard';
-import dashboardData from '@/data/dashboardData';
+import equityData from '@/data/equity_bennett_williamson.json';
 import styles from './page.module.scss';
 
 // Chart components (client-side rendered)
@@ -11,9 +10,169 @@ import BalanceFlowChart from '@/components/client/BalanceFlowChartClient';
 import ReturnComboChart from '@/components/client/ReturnComboClient';
 
 import { SignedIn, SignedOut, SignIn } from "@clerk/nextjs";
+import React from 'react';
+
+// Helper formatters
+const currencyFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+const percentFormatter = new Intl.NumberFormat('en-US', {
+  style: 'percent',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+// Utility to parse "1,234.56" or "-4.71" into number
+function parseAmount(raw: string): number {
+  return parseFloat(raw.replace(/,/g, ''));
+}
+
+interface AggregatedRow {
+  period: number;
+  year: number;
+  quarter: number;
+  label: string; // e.g. "2024 Q4"
+  beginningBalance: number;
+  returnDollar: number;
+  returnRate: number; // decimal
+  action: 'Reinvested' | 'Distributed';
+  netFlow: number;
+  endingBalance: number;
+}
 
 export default function Home() {
-  const { welcome, stats, historical } = dashboardData;
+  // Parse and aggregate transactions by quarter using memoisation to avoid recomputation
+  const { rows, stats, historical, welcome } = React.useMemo(() => {
+    // Convert raw transactions
+    const transactions = (equityData as any[]).map((t) => ({
+      ...t,
+      amount: parseAmount(t.Actual_Transaction_Amount as string),
+      date: new Date(t.Effective_Date as string),
+    })) as Array<{
+      amount: number;
+      date: Date;
+      Transaction_Type: string;
+      Investor: string;
+    }>;
+
+    // Sort chronologically
+    transactions.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+    // Group by year + quarter
+    const groups = new Map<string, {
+      year: number;
+      quarter: number;
+      transactions: typeof transactions;
+    }>();
+
+    transactions.forEach((tx) => {
+      const year = tx.date.getUTCFullYear();
+      const quarter = Math.floor(tx.date.getUTCMonth() / 3) + 1;
+      const key = `${year}-Q${quarter}`;
+      if (!groups.has(key)) {
+        groups.set(key, { year, quarter, transactions: [] });
+      }
+      groups.get(key)!.transactions.push(tx);
+    });
+
+    // Build aggregated rows in chronological order
+    const sortedKeys = Array.from(groups.keys()).sort((a, b) => {
+      const [ay, aq] = a.split('-Q').map(Number);
+      const [by, bq] = b.split('-Q').map(Number);
+      return ay === by ? aq - bq : ay - by;
+    });
+
+    const rows: AggregatedRow[] = [];
+    let beginningBalance = 0;
+
+    sortedKeys.forEach((key, idx) => {
+      const grp = groups.get(key)!;
+      let returnDollar = 0;
+      let netFlow = 0;
+      let action: 'Reinvested' | 'Distributed' = 'Distributed';
+
+      grp.transactions.forEach((tx) => {
+        const type = tx.Transaction_Type;
+        if (type === 'Contribution - Equity') {
+          netFlow += tx.amount;
+        } else {
+          returnDollar += tx.amount;
+        }
+
+        if (type === 'Income Reinvestment') {
+          action = 'Reinvested';
+        }
+      });
+
+      const endingBalance = beginningBalance + returnDollar + netFlow;
+      const returnRate = beginningBalance > 0 ? returnDollar / beginningBalance : 0;
+
+      rows.push({
+        period: idx + 1,
+        year: grp.year,
+        quarter: grp.quarter,
+        label: `${grp.year} Q${grp.quarter}`,
+        beginningBalance,
+        returnDollar,
+        returnRate,
+        action,
+        netFlow,
+        endingBalance,
+      });
+
+      beginningBalance = endingBalance;
+    });
+
+    // ----- Metrics -----
+    const lastRow = rows[rows.length - 1];
+
+    const stats = [
+      {
+        label: 'Realized Return (%)',
+        value: percentFormatter.format(lastRow.returnRate),
+      },
+      {
+        label: 'Realized Return ($)',
+        value: currencyFormatter.format(lastRow.returnDollar),
+      },
+      {
+        label: 'Current Balance',
+        value: currencyFormatter.format(lastRow.endingBalance),
+      },
+    ];
+
+    const totalReturns = rows.reduce((sum, r) => sum + r.returnDollar, 0);
+
+    const historical = [
+      {
+        label: 'Beginning Balance',
+        value: currencyFormatter.format(rows[0]?.beginningBalance ?? 0),
+      },
+      {
+        label: 'Realized Return',
+        value: currencyFormatter.format(totalReturns),
+      },
+      {
+        label: 'Ending Balance',
+        value: currencyFormatter.format(lastRow.endingBalance),
+      },
+    ];
+
+    // Greeting lines
+    const investorNameRaw = (equityData as any[])[0]?.Investor ?? '';
+    const firstName = investorNameRaw.split(' ')[0] || 'Investor';
+
+    const welcome = {
+      line1: `Welcome ${firstName},`,
+      line2: `Here are your ${lastRow.year} Q${lastRow.quarter} numbers.`,
+    };
+
+    return { rows, stats, historical, welcome };
+  }, []);
 
   return (
     <>
@@ -61,7 +220,16 @@ export default function Home() {
                   backgroundColor: '#008bce'
                 }} />
               </div>
-              <ReturnComboChart />
+              <ReturnComboChart data={rows.map((r) => ({
+                quarter: r.period,
+                quarterLabel: r.label,
+                beginningBalance: r.beginningBalance,
+                returnRate: r.returnRate,
+                returnDollar: r.returnDollar,
+                action: r.action,
+                netFlow: r.netFlow,
+                endingBalance: r.endingBalance,
+              }))} />
             </div>
 
             {/* Balance Flow Chart */}
@@ -91,7 +259,18 @@ export default function Home() {
                   backgroundColor: '#008bce'
                 }} />
               </div>
-              <BalanceFlowChart />
+              <BalanceFlowChart data={rows.map((r) => ({
+                period: r.period,
+                label: r.label,
+                year: r.year,
+                quarter: r.quarter,
+                beginningBalance: r.beginningBalance,
+                returnRate: r.returnRate,
+                returnDollar: r.returnDollar,
+                action: r.action,
+                netFlow: r.netFlow,
+                endingBalance: r.endingBalance,
+              }))} />
             </div>
           </section>
         </main>
