@@ -123,7 +123,7 @@ export default function Home() {
                   logoBox: {
                     transform: 'scale(3)',
                     transformOrigin: 'top center',
-                    marginTop: '0.5rem',
+                    marginTop: '1.25rem',
                     marginBottom: '0.5rem'
                   },
                   card: {
@@ -147,9 +147,11 @@ export default function Home() {
                     display: 'none',
                   },
                   alternativeMethodsBlockButton: {
-                    color: '#ffffff',
+                    color: '#b0b0b0', // medium grey for readability
+                    fontSize: '1rem',
+                    fontWeight: '500',
                     '&:hover': {
-                      color: '#dddddd'
+                      color: '#c8c8c8'
                     }
                   },
                   formButtonPrimary: {
@@ -170,12 +172,17 @@ export default function Home() {
                     backgroundColor: '#2a2a2a',
                     border: '1px solid #444',
                     color: '#fff',
+                    '&::placeholder': {
+                      color: '#8e8e8e' // lighter medium grey placeholder
+                    },
                     '&:focus': {
                       borderColor: '#008bce'
                     }
                   },
                   formFieldLabel: {
-                    color: '#ccc'
+                    color: '#e6e7e8',
+                    fontSize: '1rem',
+                    fontWeight: '500'
                   },
                   footerActionLink: {
                     color: '#008bce',
