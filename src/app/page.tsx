@@ -243,6 +243,9 @@ export default function Home() {
     return { rows, stats, historical, welcome };
   }, []);
 
+  // NEW: balance mode toggle (GAAP vs NAV)
+  const [balanceMode, setBalanceMode] = React.useState<'gaap' | 'nav'>('nav');
+
   return (
     <>
       {/* Show dashboard only when the user is signed in */}
@@ -311,7 +314,7 @@ export default function Home() {
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
             }}>
               {/* Header */}
-              <div style={{ marginBottom: '1rem' }}>
+              <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <h2 style={{
                   margin: 0,
                   fontSize: '30px',
@@ -321,25 +324,51 @@ export default function Home() {
                 }}>
                   Your Historical Balance
                 </h2>
-                <div style={{
-                  marginTop: 4,
-                  width: 180,
-                  height: 2,
-                  backgroundColor: '#008bce'
-                }} />
+                {/* GAAP / NAV toggle */}
+                <div style={{ display: 'flex', border: '1px solid #555', borderRadius: 20, overflow: 'hidden' }}>
+                  {['gaap', 'nav'].map((key) => (
+                    <button
+                      key={key}
+                      onClick={() => setBalanceMode(key as 'gaap' | 'nav')}
+                      style={{
+                        padding: '4px 12px',
+                        background: balanceMode === key ? '#008bce' : 'transparent',
+                        color: balanceMode === key ? '#fff' : '#ccc',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontSize: 14,
+                      }}
+                    >
+                      {key.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <BalanceFlowChart data={rows.map((r) => ({
-                period: r.period,
-                label: r.label,
-                year: r.year,
-                quarter: r.quarter,
-                beginningBalance: r.beginningBalance,
-                returnRate: r.returnRate,
-                returnDollar: r.returnDollar,
-                action: r.action,
-                netFlow: r.netFlow,
-                endingBalance: r.endingBalance,
-              }))} />
+              <BalanceFlowChart data={(() => {
+                let prevNavEnd = 0;
+                return rows.map((r, idx) => {
+                  const endingBalance = balanceMode === 'gaap' ? r.gaapEnd : r.navEnd;
+                  let beginningBalance: number;
+                  if (balanceMode === 'gaap') {
+                    beginningBalance = r.beginningBalance; // gaapBegin
+                  } else {
+                    beginningBalance = idx === 0 ? endingBalance - r.returnDollar - r.netFlow : prevNavEnd;
+                  }
+                  prevNavEnd = endingBalance;
+                  return {
+                    period: r.period,
+                    label: r.label,
+                    year: r.year,
+                    quarter: r.quarter,
+                    beginningBalance,
+                    returnRate: r.returnRate,
+                    returnDollar: r.returnDollar,
+                    action: r.action,
+                    netFlow: r.netFlow,
+                    endingBalance,
+                  };
+                });
+              })()} />
             </div>
           </section>
         </main>
