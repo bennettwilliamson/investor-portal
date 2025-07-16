@@ -141,7 +141,7 @@ export default function Home() {
                   headerTitle: {
                     color: '#ffffff', 
                     fontSize: '1.5rem', 
-                    fontWeight: '400', // lighter weight for cleaner look
+                    fontWeight: '300', // lighter weight for cleaner look
                   },
                   headerSubtitle: {
                     display: 'none',
