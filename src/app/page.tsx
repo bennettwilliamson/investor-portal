@@ -50,6 +50,9 @@ interface AggregatedRow {
   // ----- NEW BALANCE FIELDS -----
   gaapEnd: number; // GAAP capital account at end of quarter
   navEnd: number;  // GAAP + unrealised at end
+  contributionDollar: number;
+  redemptionGaapDollar: number;
+  redemptionNavDollar: number;
 }
 
 export default function Home() {
@@ -167,6 +170,9 @@ export default function Home() {
         action,
         netFlow: contributionDollar - cashDistDollar - redemptionGaapDollar - redemptionNavDollar - taxDollar,
         capitalFlow: contributionDollar - redemptionGaapDollar - redemptionNavDollar,
+        contributionDollar,
+        redemptionGaapDollar,
+        redemptionNavDollar,
         gaapEnd,
         navEnd,
         endingBalance: navEnd,
@@ -363,6 +369,9 @@ export default function Home() {
                     action: r.action,
                     netFlow: r.netFlow,
                     capitalFlow: r.capitalFlow,
+                    contributionDollar: r.contributionDollar,
+                    redemptionGaapDollar: r.redemptionGaapDollar,
+                    redemptionNavDollar: r.redemptionNavDollar,
                     endingBalance,
                   };
                 });

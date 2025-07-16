@@ -29,7 +29,9 @@ interface PeriodData {
     action: 'Reinvested' | 'Distributed';
     netFlow: number; // +ve contribution, -ve withdrawal, 0 otherwise
     endingBalance: number;
-    capitalFlow: number;
+    contributionDollar: number;
+    redemptionGaapDollar: number;
+    redemptionNavDollar: number;
 }
 
 interface Props {
@@ -132,7 +134,9 @@ function generateSimulation(): PeriodData[] {
             action,
             netFlow,
             endingBalance,
-            capitalFlow: netFlow,
+            contributionDollar: 0,
+            redemptionGaapDollar: 0,
+            redemptionNavDollar: 0,
         });
 
         beginningBalance = endingBalance;
@@ -527,13 +531,37 @@ export default function BalanceFlowChart(props: Props) {
                                     <div style={lineStyle} />
                                     <div style={labelStyle}>Ending Balance</div>
                                 </div>
-                                <div style={cardBase}>
-                                    <div style={valueStyle}>{currencyFormatter.format(selectedData.capitalFlow)}</div>
-                                    <div style={lineStyle} />
-                                    <div style={labelStyle}>
-                                        {selectedData.capitalFlow >= 0 ? 'Contribution' : 'Redemption'}
-                                    </div>
-                                </div>
+                                {(() => {
+                                    const cards: JSX.Element[] = [];
+                                    if (selectedData.contributionDollar > 0) {
+                                        cards.push(
+                                            <div style={cardBase} key="contrib">
+                                                <div style={valueStyle}>{currencyFormatter.format(selectedData.contributionDollar)}</div>
+                                                <div style={lineStyle} />
+                                                <div style={labelStyle}>Contribution</div>
+                                            </div>
+                                        );
+                                    }
+                                    if (selectedData.redemptionGaapDollar > 0) {
+                                        cards.push(
+                                            <div style={cardBase} key="redG">
+                                                <div style={valueStyle}>{currencyFormatter.format(selectedData.redemptionGaapDollar)}</div>
+                                                <div style={lineStyle} />
+                                                <div style={labelStyle}>Redemption (GAAP)</div>
+                                            </div>
+                                        );
+                                    }
+                                    if (selectedData.redemptionNavDollar > 0) {
+                                        cards.push(
+                                            <div style={cardBase} key="redN">
+                                                <div style={valueStyle}>{currencyFormatter.format(selectedData.redemptionNavDollar)}</div>
+                                                <div style={lineStyle} />
+                                                <div style={labelStyle}>Redemption (NAV)</div>
+                                            </div>
+                                        );
+                                    }
+                                    return cards;
+                                })()}
                             </>
                         );
                     })()}
