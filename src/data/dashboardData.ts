@@ -2,7 +2,7 @@ import equityData from './equity_boe.json';
 
 const dashboardData = {
   welcome: {
-    line1: `Welcome ${equityData.investorInfo.name},`,
+    line1: `Welcome ${equityData.investorInfo.name.split(' ')[0]},`,
     line2: `Here are your ${equityData.investorInfo.currentQuarter} numbers.`
   },
   stats: [
