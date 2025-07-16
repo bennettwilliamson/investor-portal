@@ -119,6 +119,12 @@ export default function Home() {
                     width: '100%',
                     margin: '0 auto 1.5rem auto'
                   },
+                  // Enlarge the logo container by 50% while keeping Clerk functionality intact
+                  logoBox: {
+                    transform: 'scale(1.5)',
+                    transformOrigin: 'top center',
+                    marginBottom: '1.5rem'
+                  },
                   card: {
                     width: '100%',
                     maxWidth: '500px',
