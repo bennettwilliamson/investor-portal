@@ -139,11 +139,32 @@ interface CustomTooltipProps {
 }
 
 const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, onUpdate }) => {
+    // Keep parent component in sync with the hovered data point
     React.useEffect(() => {
         if (active && payload && payload.length > 0 && onUpdate) {
             onUpdate(payload[0].payload as QuarterData);
         }
     }, [active, payload, onUpdate]);
+
+    // Show the quarter label in a minimal tooltip so users can quickly identify the period
+    if (active && payload && payload.length > 0) {
+        const row = payload[0].payload as QuarterData;
+        return (
+            <div
+                style={{
+                    background: '#262626',
+                    color: '#FFFFFF',
+                    padding: '4px 8px',
+                    borderRadius: 4,
+                    fontSize: 12,
+                    fontFamily: 'Utile Regular, sans-serif',
+                    whiteSpace: 'nowrap',
+                }}
+            >
+                {row.quarterLabel}
+            </div>
+        );
+    }
 
     return null;
 };
@@ -154,16 +175,11 @@ const DottedCursor: React.FC<
     // Compute coordinates every render
     const cx = x + (width ?? 0) / 2;
     const barTopY = points && points.length > 0 ? points[0].y : 0;
-    const currentPayload = points && points.length > 0 ? (points[0] as any).payload : null;
-    const lastPayloadRef = React.useRef<any>();
 
-    // Notify parent *after* render commit to avoid nested updates
-    React.useEffect(() => {
-        if (onPositionUpdate && currentPayload && currentPayload !== lastPayloadRef.current) {
-            onPositionUpdate({ x: cx, y: barTopY });
-            lastPayloadRef.current = currentPayload;
-        }
-    }, [cx, barTopY, onPositionUpdate, currentPayload]);
+    // Immediately inform parent of cursor position each render so overlay connectors/bubble stay in sync
+    if (onPositionUpdate) {
+        onPositionUpdate({ x: cx, y: barTopY });
+    }
 
     return (
         <g>

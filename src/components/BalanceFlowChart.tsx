@@ -177,11 +177,32 @@ interface CustomTooltipProps {
 }
 
 const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, onUpdate }) => {
+    // When tooltip is active notify parent component of the new data point
     React.useEffect(() => {
         if (active && payload && payload.length > 0 && onUpdate) {
             onUpdate(payload[0].payload as PeriodData);
         }
     }, [active, payload, onUpdate]);
+
+    // Render the period label so users can immediately identify the hovered quarter/year
+    if (active && payload && payload.length > 0) {
+        const row = payload[0].payload as PeriodData;
+        return (
+            <div
+                style={{
+                    background: '#262626',
+                    color: '#FFFFFF',
+                    padding: '4px 8px',
+                    borderRadius: 4,
+                    fontSize: 12,
+                    fontFamily: 'Utile Regular, sans-serif',
+                    whiteSpace: 'nowrap',
+                }}
+            >
+                {row.label}
+            </div>
+        );
+    }
 
     return null;
 };
@@ -210,16 +231,10 @@ const DottedCursor: React.FC<
 
     const dashStartY = pointY + dotRadius;
 
-    const currentPayload = points && points.length > 0 ? (points[0] as any).payload : null;
-    const lastPayloadRef = React.useRef<any>();
-
-    // Notify parent after render commit to avoid nested updates loop
-    React.useEffect(() => {
-        if (onPositionUpdate && currentPayload && currentPayload !== lastPayloadRef.current) {
-            onPositionUpdate({ x: cx, y: pointY });
-            lastPayloadRef.current = currentPayload;
-        }
-    }, [cx, pointY, onPositionUpdate, currentPayload]);
+    // Report cursor position every render so the overlay connectors/bubble follow the pointer reliably
+    if (onPositionUpdate) {
+        onPositionUpdate({ x: cx, y: pointY });
+    }
 
     return (
         <g>
