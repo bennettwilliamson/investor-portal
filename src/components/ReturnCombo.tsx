@@ -234,9 +234,10 @@ export default function ReturnCombo(props: Props) {
         }
     }, [data, timeFrame]);
 
+    // Convert quarterly rate to annualised percentage for display (×4 then %)
     const chartData = visibleData.map((d) => ({
         ...d,
-        returnPercentValue: d.returnRate * 100,
+        returnPercentValue: d.returnRate * 4 * 100,
     }));
 
     const axisTickStyle = {
@@ -352,7 +353,7 @@ export default function ReturnCombo(props: Props) {
                     {/* Realised / Total toggle */}
                     <div style={{ display: 'flex', background: DARK_BLUE, padding: 2, borderRadius: 9999 }}>
                         {([
-                            { key: 'realised', label: 'REALIZED' },
+                            { key: 'realised', label: 'REALISED' },
                             { key: 'total', label: 'TOTAL' },
                         ] as const).map(({ key, label }) => (
                             <button

@@ -153,13 +153,9 @@ export default function Home() {
       const navEnd = gaapEnd + cumulativeUnreal;
 
       const denominator = gaapBegin > 0 ? gaapBegin : 0;
-      // Annualise quarterly returns by multiplying by 4 so every rate in the dataset is annualised
-      const quarterlyRealisedRate = denominator > 0 ? realizedDollar / denominator : 0;
-      const realizedRate = quarterlyRealisedRate * 4;
-
+      const realizedRate = denominator > 0 ? realizedDollar / denominator : 0;
       const totalReturnDollar = realizedDollar + unrealizedDollar;
-      const quarterlyTotalReturnRate = denominator > 0 ? totalReturnDollar / denominator : 0;
-      const totalReturnRate = quarterlyTotalReturnRate * 4;
+      const totalReturnRate = denominator > 0 ? totalReturnDollar / denominator : 0;
 
       rows.push({
         period: idx + 1,
@@ -193,7 +189,7 @@ export default function Home() {
       {
         label: 'Realized Return (%)',
         // Use simple annualisation (quarterly rate × 4) instead of compound growth
-        value: percentFormatter.format(lastRow.realizedRate),
+        value: percentFormatter.format(lastRow.realizedRate * 4),
       },
       {
         label: 'Realized Return ($)',
@@ -202,7 +198,7 @@ export default function Home() {
       {
         label: 'Total Return (%)',
         // Simple annualisation for total return as well
-        value: percentFormatter.format(lastRow.returnRate),
+        value: percentFormatter.format(lastRow.returnRate * 4),
       },
       {
         label: 'Total Return ($)',
