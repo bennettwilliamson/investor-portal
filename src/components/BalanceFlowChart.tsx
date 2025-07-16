@@ -542,7 +542,7 @@ export default function BalanceFlowChart(props: Props) {
                                             </div>
                                         );
                                     }
-                                    if (selectedData.redemptionGaapDollar > 0) {
+                                    if (balanceMode === 'gaap' && selectedData.redemptionGaapDollar > 0) {
                                         cards.push(
                                             <div style={cardBase} key="redG">
                                                 <div style={valueStyle}>{currencyFormatter.format(selectedData.redemptionGaapDollar)}</div>
@@ -551,7 +551,7 @@ export default function BalanceFlowChart(props: Props) {
                                             </div>
                                         );
                                     }
-                                    if (selectedData.redemptionNavDollar > 0) {
+                                    if (balanceMode === 'nav' && selectedData.redemptionNavDollar > 0) {
                                         cards.push(
                                             <div style={cardBase} key="redN">
                                                 <div style={valueStyle}>{currencyFormatter.format(selectedData.redemptionNavDollar)}</div>
