@@ -64,7 +64,8 @@ export default function Home() {
     const transactions = (equityData as any[]).map((t) => ({
       ...t,
       amount: parseAmount(t.Actual_Transaction_Amount as string),
-      date: new Date((t as any).Tran_Date ?? t.Effective_Date as string),
+      // Use Effective_Date as the canonical date, fallback to Tran_Date if missing
+      date: new Date((t as any).Effective_Date ?? (t as any).Tran_Date as string),
     })) as Array<{
       amount: number;
       date: Date;
