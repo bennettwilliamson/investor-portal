@@ -62,14 +62,7 @@ export default function Home() {
     const transactions = (equityData as any[]).map((t) => ({
       ...t,
       amount: parseAmount(t.Actual_Transaction_Amount as string),
-      date: (() => {
-        const eff = new Date(t.Effective_Date as string);
-        const tran = new Date((t as any).Tran_Date as string);
-        if (!isNaN(eff.valueOf()) && !isNaN(tran.valueOf())) {
-          return eff <= tran ? eff : tran;
-        }
-        return isNaN(eff.valueOf()) ? tran : eff;
-      })(),
+      date: new Date((t as any).Tran_Date ?? t.Effective_Date as string),
     })) as Array<{
       amount: number;
       date: Date;
