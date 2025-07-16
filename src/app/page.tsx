@@ -36,7 +36,9 @@ interface AggregatedRow {
   year: number;
   quarter: number;
   label: string; // e.g. "2024 Q4"
-  beginningBalance: number;
+  beginningBalance: number; // GAAP starting balance (for display)
+  beginningGaap: number;
+  beginningNav: number;
   // ----- NEW fields to distinguish cash vs economic performance -----
   realizedDollar: number; // cash distributions counted as return
   realizedRate: number;   // realizedDollar / beginningBalance
@@ -113,6 +115,9 @@ export default function Home() {
 
       let action: 'Reinvested' | 'Distributed' = 'Distributed';
 
+      // NAV balance at the start of this quarter (GAAP + cumulative unrealized)
+      const navBegin = gaapBegin + cumulativeUnreal;
+
       grp.transactions.forEach((tx) => {
         const type = tx.Transaction_Type as string;
 
@@ -148,6 +153,7 @@ export default function Home() {
       cumulativeUnreal += unrealizedDollar - redemptionNavDollar;
       const navEnd = gaapEnd + cumulativeUnreal;
 
+      // Use GAAP beginning balance as denominator per user requirement
       const denominator = gaapBegin > 0 ? gaapBegin : 0;
       const realizedRate = denominator > 0 ? realizedDollar / denominator : 0;
       const totalReturnDollar = realizedDollar + unrealizedDollar;
@@ -158,7 +164,9 @@ export default function Home() {
         year: grp.year,
         quarter: grp.quarter,
         label: `${grp.year} Q${grp.quarter}`,
-        beginningBalance: gaapBegin, // keep for chart back-compat
+        beginningBalance: gaapBegin,
+        beginningGaap: gaapBegin,
+        beginningNav: navBegin,
         realizedDollar,
         realizedRate,
         returnDollar: totalReturnDollar, // total
@@ -333,9 +341,10 @@ export default function Home() {
                   const endingBalance = balanceMode === 'gaap' ? r.gaapEnd : r.navEnd;
                   let beginningBalance: number;
                   if (balanceMode === 'gaap') {
-                    beginningBalance = r.beginningBalance; // gaapBegin
+                    beginningBalance = r.beginningGaap;
                   } else {
-                    beginningBalance = idx === 0 ? endingBalance - r.returnDollar - r.netFlow : prevNavEnd;
+                    // NAV mode: use stored NAV beginning balance (or previous ending nav for continuity)
+                    beginningBalance = idx === 0 ? r.beginningNav : prevNavEnd;
                   }
                   prevNavEnd = endingBalance;
                   return {
