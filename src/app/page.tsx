@@ -168,7 +168,7 @@ export default function Home() {
         returnDollar: totalReturnDollar, // total
         returnRate: totalReturnRate,     // total
         action,
-        netFlow: contributionDollar - cashDistDollar - redemptionGaapDollar - redemptionNavDollar - taxDollar,
+        netFlow: contributionDollar - redemptionGaapDollar - redemptionNavDollar,
         capitalFlow: contributionDollar - redemptionGaapDollar - redemptionNavDollar,
         contributionDollar,
         redemptionGaapDollar,
