@@ -255,8 +255,8 @@ export default function Home() {
 
   // NEW: balance mode toggle (GAAP vs NAV)
   const [balanceMode, setBalanceMode] = React.useState<'gaap' | 'nav'>('nav');
-  // Toggle for Returns chart: realised vs total
-  const [returnMode, setReturnMode] = React.useState<'realised' | 'total'>('total');
+  // Toggle for Returns chart: realised vs total (default to realised per user feedback)
+  const [returnMode, setReturnMode] = React.useState<'realised' | 'total'>('realised');
 
   return (
     <>
