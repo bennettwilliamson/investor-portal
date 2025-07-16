@@ -123,6 +123,7 @@ export default function Home() {
                   logoBox: {
                     transform: 'scale(3)',
                     transformOrigin: 'top center',
+                    marginTop: '0.5rem',
                     marginBottom: '0.5rem'
                   },
                   card: {
@@ -140,7 +141,7 @@ export default function Home() {
                   headerTitle: {
                     color: '#ffffff', 
                     fontSize: '1.5rem', 
-                    fontWeight: '600',
+                    fontWeight: '400', // lighter weight for cleaner look
                   },
                   headerSubtitle: {
                     display: 'none',
