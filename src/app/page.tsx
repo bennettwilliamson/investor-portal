@@ -96,13 +96,27 @@ export default function Home() {
       let action: 'Reinvested' | 'Distributed' = 'Distributed';
 
       grp.transactions.forEach((tx) => {
-        const type = tx.Transaction_Type;
+        const type = tx.Transaction_Type as string;
+
+        // ----- Cash in / out (net flow) -----
         if (type === 'Contribution - Equity') {
+          // New money into the investment
           netFlow += tx.amount;
+        } else if (
+          type.startsWith('Distribution') ||
+          type === 'Income Paid' ||
+          type.startsWith('Redemption')
+        ) {
+          // Cash flowing OUT of the investment → treat as negative net-flow
+          netFlow -= tx.amount;
+          // Still counts toward realised return
+          returnDollar += tx.amount;
         } else {
+          // All other non-cash transactions (unrealised gains/losses, tax adj, reinvestments)
           returnDollar += tx.amount;
         }
 
+        // Flag whether the quarter overall was reinvested vs distributed
         if (type === 'Income Reinvestment') {
           action = 'Reinvested';
         }
@@ -133,7 +147,7 @@ export default function Home() {
     const stats = [
       {
         label: 'Realized Return (%)',
-        value: percentFormatter.format(lastRow.returnRate),
+        value: percentFormatter.format(Math.pow(1 + lastRow.returnRate, 4) - 1),
       },
       {
         label: 'Realized Return ($)',
