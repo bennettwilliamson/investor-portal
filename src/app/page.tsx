@@ -2,7 +2,7 @@
 
 import Header from '@/components/Header';
 import StatCard from '@/components/StatCard';
-import equityData from '@/data/equity_bennett_williamson.json';
+import equityData from '@/data/brian_schmidt.json';
 import styles from './page.module.scss';
 
 // Chart components (client-side rendered)
@@ -164,7 +164,8 @@ export default function Home() {
 
     // Greeting lines
     const investorNameRaw = (equityData as any[])[0]?.Investor ?? '';
-    const firstName = investorNameRaw.split(' ')[0] || 'Investor';
+    const firstNameMatch = investorNameRaw.match(/[A-Za-z]+/);
+    const firstName = firstNameMatch ? firstNameMatch[0] : 'Investor';
 
     const welcome = {
       line1: `Welcome ${firstName},`,
