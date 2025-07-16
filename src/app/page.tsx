@@ -46,6 +46,7 @@ interface AggregatedRow {
   action: 'Reinvested' | 'Distributed';
   netFlow: number;
   endingBalance: number;
+  capitalFlow: number;
   // ----- NEW BALANCE FIELDS -----
   gaapEnd: number; // GAAP capital account at end of quarter
   navEnd: number;  // GAAP + unrealised at end
@@ -164,7 +165,8 @@ export default function Home() {
         returnDollar: totalReturnDollar, // total
         returnRate: totalReturnRate,     // total
         action,
-        netFlow: contributionDollar - cashDistDollar - redemptionGaapDollar - redemptionNavDollar - taxDollar, // for charts
+        netFlow: contributionDollar - cashDistDollar - redemptionGaapDollar - redemptionNavDollar - taxDollar,
+        capitalFlow: contributionDollar - redemptionGaapDollar - redemptionNavDollar,
         gaapEnd,
         navEnd,
         endingBalance: navEnd,
@@ -338,25 +340,6 @@ export default function Home() {
                 }}>
                   Your Historical Balance
                 </h2>
-                {/* GAAP / NAV toggle */}
-                <div style={{ display: 'flex', border: '1px solid #555', borderRadius: 20, overflow: 'hidden' }}>
-                  {['gaap', 'nav'].map((key) => (
-                    <button
-                      key={key}
-                      onClick={() => setBalanceMode(key as 'gaap' | 'nav')}
-                      style={{
-                        padding: '4px 12px',
-                        background: balanceMode === key ? '#008bce' : 'transparent',
-                        color: balanceMode === key ? '#fff' : '#ccc',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontSize: 14,
-                      }}
-                    >
-                      {key.toUpperCase()}
-                    </button>
-                  ))}
-                </div>
               </div>
               <BalanceFlowChart data={(() => {
                 let prevNavEnd = 0;
@@ -379,10 +362,11 @@ export default function Home() {
                     returnDollar: r.returnDollar,
                     action: r.action,
                     netFlow: r.netFlow,
+                    capitalFlow: r.capitalFlow,
                     endingBalance,
                   };
                 });
-              })()} />
+              })()} balanceMode={balanceMode} onBalanceModeChange={setBalanceMode} />
             </div>
           </section>
         </main>

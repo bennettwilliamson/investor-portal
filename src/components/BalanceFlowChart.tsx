@@ -29,6 +29,7 @@ interface PeriodData {
     action: 'Reinvested' | 'Distributed';
     netFlow: number; // +ve contribution, -ve withdrawal, 0 otherwise
     endingBalance: number;
+    capitalFlow: number;
 }
 
 interface Props {
@@ -41,6 +42,10 @@ interface Props {
      * When used inside Next.js pages you can also wrap with a div that sets height.
      */
     style?: React.CSSProperties;
+    /** Currently selected balance mode (GAAP vs NAV). */
+    balanceMode?: 'gaap' | 'nav';
+    /** Callback fired when the user selects a new balance mode */
+    onBalanceModeChange?: (mode: 'gaap' | 'nav') => void;
 }
 
 // Helper: currency formatter
@@ -127,6 +132,7 @@ function generateSimulation(): PeriodData[] {
             action,
             netFlow,
             endingBalance,
+            capitalFlow: netFlow,
         });
 
         beginningBalance = endingBalance;
@@ -261,7 +267,7 @@ const DottedCursor: React.FC<
 
 // ---------------- Main Component ----------------
 export default function BalanceFlowChart(props: Props) {
-    const { style } = props;
+    const { style, balanceMode = 'nav', onBalanceModeChange } = props;
     type TimeFrameKey = 'all' | '1yr' | '5yr';
     const [timeFrame, setTimeFrame] = React.useState<TimeFrameKey>('all');
 
@@ -521,10 +527,12 @@ export default function BalanceFlowChart(props: Props) {
                                     <div style={lineStyle} />
                                     <div style={labelStyle}>Ending Balance</div>
                                 </div>
-                                <div style={cardBase} ref={returnCardRef}>
-                                    <div style={valueStyle}>{currencyFormatter.format(selectedData.netFlow)}</div>
+                                <div style={cardBase}>
+                                    <div style={valueStyle}>{currencyFormatter.format(selectedData.capitalFlow)}</div>
                                     <div style={lineStyle} />
-                                    <div style={labelStyle}>Net Flow</div>
+                                    <div style={labelStyle}>
+                                        {selectedData.capitalFlow >= 0 ? 'Contribution' : 'Redemption'}
+                                    </div>
                                 </div>
                             </>
                         );
@@ -541,6 +549,38 @@ export default function BalanceFlowChart(props: Props) {
                         marginLeft: 'auto',
                     }}
                 >
+                    {/* GAAP / NAV toggle */}
+                    <div
+                        style={{
+                            display: 'flex',
+                            background: DARK_BLUE,
+                            padding: 2,
+                            borderRadius: 9999,
+                        }}
+                    >
+                        {(['gaap', 'nav'] as const).map((key) => (
+                            <button
+                                key={key}
+                                onClick={() => onBalanceModeChange && onBalanceModeChange(key)}
+                                style={{
+                                    padding: `${TOGGLE_PILL_VERT + 2}px ${TOGGLE_PILL_HORZ + 6}px`,
+                                    background: balanceMode === key ? ACCENT_BLUE : 'transparent',
+                                    color: '#FFFFFF',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontFamily: 'Utile Regular, sans-serif',
+                                    fontSize: 18,
+                                    borderRadius: 9999,
+                                    transition: 'background 0.25s ease, color 0.25s ease',
+                                }}
+                            >
+                                {key.toUpperCase()}
+                            </button>
+                        ))}
+                    </div>
                     <div
                         style={{
                             display: 'flex',
