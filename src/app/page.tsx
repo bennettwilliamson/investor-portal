@@ -8,7 +8,6 @@ import styles from './page.module.scss';
 import SectionHeader from '@/components/SectionHeader';
 
 // Chart components (client-side rendered)
-import BalanceFlowChart from '@/components/client/BalanceFlowChartClient';
 import ReturnComboChart from '@/components/client/ReturnComboClient';
 
 import { SignedIn, SignedOut, SignIn } from "@clerk/nextjs";
@@ -18,10 +17,6 @@ export default function Home() {
 
   // Prepare chart datasets
   const returnData = equityData.quarterlyData;
-  const balanceData = equityData.quarterlyData.map((row) => ({
-    ...row,
-    quarter: row.quarterNum ?? (((row.period - 1) % 4) + 1)
-  }));
 
   return (
     <>
@@ -39,36 +34,27 @@ export default function Home() {
             </div>
           </section>
 
-          {/* ---- Charts ---- */}
+          {/* ---- Your Historical Returns Section ---- */}
           <section style={{ marginTop: '3rem', width: '100%' }}>
-            <div>
-              <SectionHeader title="Your Historical Returns" />
-              {/* Return Combo Chart */}
-              <div style={{
-                height: 500,
-                width: '100%',
-                background: '#212121',
-                borderRadius: '12px',
-                padding: '2rem',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
-              }}>
-                <ReturnComboChart data={returnData} />
-              </div>
+            <SectionHeader title="Your Historical Returns" />
+            
+            {/* Historical stat cards */}
+            <div className={styles.statGrid} style={{ marginBottom: '2rem' }}>
+              {historical.map(({ label, value }) => (
+                <StatCard key={label} label={label} value={value} />
+              ))}
             </div>
 
-            <div style={{ marginTop: '3rem' }}>
-              <SectionHeader title="Your Historical Balance" />
-              {/* Balance Flow Chart */}
-              <div style={{
-                height: 500,
-                width: '100%',
-                background: '#212121',
-                borderRadius: '12px',
-                padding: '2rem',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
-              }}>
-                <BalanceFlowChart data={balanceData} />
-              </div>
+            {/* Return Combo Chart */}
+            <div style={{
+              height: 500,
+              width: '100%',
+              background: '#212121',
+              borderRadius: '12px',
+              padding: '2rem',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+            }}>
+              <ReturnComboChart data={returnData} />
             </div>
           </section>
         </main>

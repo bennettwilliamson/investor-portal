@@ -2,11 +2,10 @@ import equityData from './equity_boe.json';
 
 const dashboardData = {
   welcome: {
-    line1: `Welcome ${equityData.investorInfo.name.split(' ')[0]},`,
+    line1: `Welcome ${equityData.investorInfo.name},`,
     line2: `Here are your ${equityData.investorInfo.currentQuarter} numbers.`
   },
   stats: (() => {
-    const latest = equityData.quarterlyData[equityData.quarterlyData.length - 1];
     const percentFormatter = new Intl.NumberFormat('en-US', {
       style: 'percent',
       minimumFractionDigits: 2,
@@ -20,16 +19,25 @@ const dashboardData = {
     });
 
     return [
-      { label: 'Realized Return (%)', value: percentFormatter.format(latest.returnRate) },
-      { label: 'Realized Return ($)', value: currencyFormatter.format(latest.returnDollar) },
-      { label: 'Current Balance', value: currencyFormatter.format(latest.endingBalance) },
+      { label: 'Realized Return (%)', value: percentFormatter.format(equityData.currentMetrics.realizedReturnPercent / 100) },
+      { label: 'Realized Return ($)', value: currencyFormatter.format(equityData.currentMetrics.realizedReturnDollar) },
+      { label: 'Current Balance', value: currencyFormatter.format(equityData.currentMetrics.currentBalance) },
     ];
   })(),
-  historical: [
-    { label: 'Beginning Balance', value: `$${equityData.historicalSummary.beginningBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` },
-    { label: 'Realized Return', value: `$${equityData.historicalSummary.realizedReturn.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` },
-    { label: 'Ending Balance', value: `$${equityData.historicalSummary.endingBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }
-  ]
+  historical: (() => {
+    const currencyFormatter = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    
+    return [
+      { label: 'Beginning Balance', value: currencyFormatter.format(equityData.historicalSummary.beginningBalance) },
+      { label: 'Realized Return', value: currencyFormatter.format(equityData.historicalSummary.realizedReturn) },
+      { label: 'Ending Balance', value: currencyFormatter.format(equityData.historicalSummary.endingBalance) }
+    ];
+  })()
 };
 
 export default dashboardData;

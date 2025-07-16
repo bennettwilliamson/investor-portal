@@ -108,7 +108,7 @@ function generateSimulation(): QuarterData[] {
     return rows;
 }
 
-const ACCENT_BLUE = '#008AFF';
+const ACCENT_BLUE = '#008bce';
 const DARK_BLUE = '#292929';
 const TOGGLE_PILL_VERT = 2;
 const TOGGLE_PILL_HORZ = 16;
