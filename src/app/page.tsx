@@ -37,12 +37,12 @@ interface AggregatedRow {
   quarter: number;
   label: string; // e.g. "2024 Q4"
   beginningBalance: number;
-  returnDollar: number;
-  returnRate: number; // decimal
-  // New fields to differentiate realised vs unrealised performance
-  realizedDollar: number;
-  unrealizedDollar: number;
-  realizedRate: number; // decimal
+  // ----- NEW fields to distinguish cash vs economic performance -----
+  realizedDollar: number; // cash distributions counted as return
+  realizedRate: number;   // realizedDollar / beginningBalance
+  // Existing fields now represent TOTAL (realised + unrealised) return
+  returnDollar: number;   // totalReturnDollar
+  returnRate: number;     // totalReturnRate
   action: 'Reinvested' | 'Distributed';
   netFlow: number;
   endingBalance: number;
@@ -95,52 +95,39 @@ export default function Home() {
 
     sortedKeys.forEach((key, idx) => {
       const grp = groups.get(key)!;
-      let returnDollar = 0;
-      let realizedDollar = 0;
-      let unrealizedDollar = 0;
+      let realizedDollar = 0;   // cash events
+      let unrealizedDollar = 0; // non-cash fair-value changes & adjustments
       let netFlow = 0;
       let action: 'Reinvested' | 'Distributed' = 'Distributed';
 
       grp.transactions.forEach((tx) => {
         const type = tx.Transaction_Type as string;
 
-        // ----- Cash in / out (net flow) & return classification -----
         if (type === 'Contribution - Equity') {
-          // New money into the investment
+          // --- Cash in (new capital) ---
           netFlow += tx.amount;
-        } else if (
-          type.startsWith('Distribution') ||
-          type === 'Income Paid' ||
-          type.startsWith('Redemption')
-        ) {
-          // Cash flowing OUT of the investment → treat as negative net-flow
-          netFlow -= tx.amount;
-          // ---------------- Realised return ----------------
-          realizedDollar += tx.amount;
+        } else if (type.startsWith('Distribution') || type === 'Income Paid') {
+          // --- Cash distributed out to investor ---
+          netFlow -= tx.amount;           // cash leaves the fund
+          realizedDollar += tx.amount;    // still realised earnings
+        } else if (type === 'Income Reinvestment') {
+          // --- Earnings that stay in the fund but are still realised ---
+          realizedDollar += tx.amount;    // no netFlow change
+          action = 'Reinvested';          // marks quarter as reinvested
+        } else if (type === 'Unrealized Gains/Losses') {
+          // --- Fair-value movement ---
+          unrealizedDollar += tx.amount;  // affects total return only
         } else {
-          // Non-cash transactions
-          if (type === 'Unrealized Gains/Losses') {
-            // ----- Unrealised performance -----
-            unrealizedDollar += tx.amount;
-          } else {
-            // All other non-cash items (tax adj, reinvestments) are treated as realised
-            realizedDollar += tx.amount;
-          }
-        }
-
-        // Flag whether the quarter overall was reinvested vs distributed
-        if (type === 'Income Reinvestment') {
-          action = 'Reinvested';
+          // --- Misc adjustments (tax, accounting, etc.) treated as realised ---
+          realizedDollar += tx.amount;
         }
       });
 
-      // Total performance (realised + unrealised)
-      returnDollar = realizedDollar + unrealizedDollar;
+      const totalReturnDollar = realizedDollar + unrealizedDollar;
+      const endingBalance = beginningBalance + totalReturnDollar + netFlow;
 
       const realizedRate = beginningBalance > 0 ? realizedDollar / beginningBalance : 0;
-      const returnRate = beginningBalance > 0 ? returnDollar / beginningBalance : 0;
-
-      const endingBalance = beginningBalance + returnDollar + netFlow;
+      const totalReturnRate = beginningBalance > 0 ? totalReturnDollar / beginningBalance : 0;
 
       rows.push({
         period: idx + 1,
@@ -148,11 +135,10 @@ export default function Home() {
         quarter: grp.quarter,
         label: `${grp.year} Q${grp.quarter}`,
         beginningBalance,
-        returnDollar,
         realizedDollar,
-        unrealizedDollar,
         realizedRate,
-        returnRate,
+        returnDollar: totalReturnDollar, // total
+        returnRate: totalReturnRate,     // total
         action,
         netFlow,
         endingBalance,
@@ -174,12 +160,21 @@ export default function Home() {
         value: currencyFormatter.format(lastRow.realizedDollar),
       },
       {
+        label: 'Total Return (%)',
+        value: percentFormatter.format(Math.pow(1 + lastRow.returnRate, 4) - 1),
+      },
+      {
+        label: 'Total Return ($)',
+        value: currencyFormatter.format(lastRow.returnDollar),
+      },
+      {
         label: 'Current Balance',
         value: currencyFormatter.format(lastRow.endingBalance),
       },
     ];
 
-    const totalReturns = rows.reduce((sum, r) => sum + r.realizedDollar, 0);
+    const totalRealized = rows.reduce((sum, r) => sum + r.realizedDollar, 0);
+    const totalTotal = rows.reduce((sum, r) => sum + r.returnDollar, 0);
 
     const historical = [
       {
@@ -188,7 +183,11 @@ export default function Home() {
       },
       {
         label: 'Realized Return',
-        value: currencyFormatter.format(totalReturns),
+        value: currencyFormatter.format(totalRealized),
+      },
+      {
+        label: 'Total Return',
+        value: currencyFormatter.format(totalTotal),
       },
       {
         label: 'Ending Balance',
