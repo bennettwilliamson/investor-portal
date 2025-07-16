@@ -106,7 +106,7 @@ export default function Home() {
     sortedKeys.forEach((key, idx) => {
       const grp = groups.get(key)!;
       let contributionDollar = 0;
-      let cashDistDollar = 0;     // cash distributions to investor
+      let incomePaidDollar = 0;     // cash earnings paid to investor
       let redemptionGaapDollar = 0;
       let redemptionNavDollar = 0;
       let taxDollar = 0; // captured but excluded from GAAP & returns per latest mapping
@@ -124,8 +124,7 @@ export default function Home() {
         if (type === 'Contribution - Equity') {
           contributionDollar += tx.amount;
         } else if (type === 'Income Paid') {
-          // Cash distributions that count toward realised earnings
-          cashDistDollar += tx.amount;
+          incomePaidDollar += tx.amount;
         } else if (type === 'Income Reinvestment') {
           // Reinvested income is also realised earnings but remains in the fund
           incomeReinvestDollar += tx.amount;
@@ -139,12 +138,11 @@ export default function Home() {
         } else if (type.startsWith('Unrealized Gains/Losses')) {
           unrealizedDollar += tx.amount;
         } else {
-          // Fallback: treat as realised earnings (e.g. other adjustments)
-          cashDistDollar += tx.amount;
+          // Ignore other transaction types for realised earnings
         }
       });
 
-      const realizedDollar = cashDistDollar + incomeReinvestDollar;
+      const realizedDollar = incomePaidDollar + incomeReinvestDollar;
 
       // GAAP capital movements: GAAP = previous + contributions - cash withdrawals/redemptions + income reinvestment + tax adjustments
       const gaapEnd =
