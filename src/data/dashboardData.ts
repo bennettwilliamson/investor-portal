@@ -1,181 +1,203 @@
-// Import the raw transaction-level dataset provided by the client. The file name contains a space, which is valid in an import path.
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import rawTransactions from './equity_boe v2.json';
+import rawTransactions from './equity_bennett_williamson.json';
 
-/**
- * Schema for a single raw transaction record coming from SS&C export.
- */
-interface RawTransaction {
-  Actual_Transaction_Amount: string; // e.g. "2,551.71"
-  Effective_Date: string;            // e.g. "Tue, 30 Jun 2015 00:00:00 GMT"
-  Transaction_Type: string;          // e.g. "Distribution - Preferred Return"
-  Investor: string;                  // e.g. "Stelck Boeger 1998 Revocable Trust (i2)"
+// ---------------- Types ----------------
+interface Transaction {
+  Actual_Transaction_Amount: string; // numeric string with commas & potentially negative sign
+  Transaction_Type: string;
+  Effective_Date: string;
+  Tran_Date?: string;
+  Investor: string;
 }
 
-/** Helper: parse a formatted currency string (with commas) into a number */
-const parseAmount = (value: string): number => parseFloat(value.replace(/,/g, ''));
+interface QuarterRow {
+  period: number; // sequential across dataset (1,2,...)
+  label: string; // e.g. "2024 Q4"
+  year: number;
+  quarter: number; // 1..4 (alias for BalanceFlow)
+  quarterNum: number; // duplicate for compatibility with existing helper in page.tsx
+  beginningBalance: number;
+  returnRate: number; // decimal, e.g. 0.125
+  returnDollar: number;
+  action: 'Reinvested' | 'Distributed';
+  netFlow: number; // contributions (+) or withdrawals (-)
+  endingBalance: number;
+}
 
-/** Helper: determine calendar quarter (1-4) given a JS Date */
-const quarterOf = (d: Date): number => Math.floor(d.getUTCMonth() / 3) + 1;
+// ---------------- Helpers ----------------
+const parseAmount = (val: string): number => parseFloat(val.replace(/,/g, ''));
 
-/**
- * Aggregate the raw transactions to a quarterly dataset compatible with the
- * components that power the dashboard charts.
- */
-function buildQuarterlyData(transactions: RawTransaction[]) {
-  // 1. Group by year-quarter.
-  const buckets = new Map<string, RawTransaction[]>();
+const getQuarterKey = (d: Date) => {
+  const year = d.getUTCFullYear();
+  const q = Math.floor(d.getUTCMonth() / 3) + 1;
+  return { key: `${year} Q${q}`, year, q } as const;
+};
 
-  transactions.forEach((tx) => {
-    const date = new Date(tx.Effective_Date);
-    const y = date.getUTCFullYear();
-    const q = quarterOf(date);
-    const key = `${y}-Q${q}`;
-    if (!buckets.has(key)) buckets.set(key, []);
-    buckets.get(key)!.push(tx);
+// ---------------- Transform ----------------
+function buildQuarterlyData(transactions: Transaction[]): QuarterRow[] {
+  // Group transactions by quarter key
+  const groups: Record<string, {
+    year: number;
+    q: number;
+    transactions: Transaction[];
+  }> = {};
+
+  transactions.forEach((t) => {
+    // Prefer Effective_Date, else Tran_Date
+    const dateStr = t.Effective_Date ?? t.Tran_Date ?? '';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return; // skip invalid
+
+    const { key, year, q } = getQuarterKey(date);
+    if (!groups[key]) {
+      groups[key] = { year, q, transactions: [] };
+    }
+    groups[key].transactions.push(t);
   });
 
-  // 2. Sort the buckets chronologically.
-  const orderedKeys = Array.from(buckets.keys()).sort((a, b) => {
-    const [ay, aq] = a.split('-Q').map(Number);
-    const [by, bq] = b.split('-Q').map(Number);
-    return ay === by ? aq - bq : ay - by;
+  // Sort keys chronologically
+  const sortedKeys = Object.keys(groups).sort((a, b) => {
+    const [ay, aq] = a.split(' ').map((v) => (v.startsWith('Q') ? parseInt(v.slice(1), 10) : parseInt(v, 10)));
+    const [by, bq] = b.split(' ').map((v) => (v.startsWith('Q') ? parseInt(v.slice(1), 10) : parseInt(v, 10)));
+    if (ay !== by) return ay - by;
+    return aq - bq;
   });
 
-  const quarterlyRows: any[] = [];
-  let runningBalance = 0;
-  let periodIdx = 1;
+  const rows: QuarterRow[] = [];
+  let beginningBalance = 0;
 
-  orderedKeys.forEach((key) => {
-    const rows = buckets.get(key)!;
-    const [yearStr, quarterStr] = key.split('-Q');
-    const year = Number(yearStr);
-    const quarterNum = Number(quarterStr);
+  sortedKeys.forEach((key, index) => {
+    const { year, q } = groups[key];
+    const quarterTransactions = groups[key].transactions;
 
-    let contributions = 0;
-    let distributions = 0;
+    let returnDollar = 0;
+    let netFlow = 0; // contributions / withdrawals
+    let hasDistributions = false;
+    let hasReinvestment = false;
 
-    rows.forEach((tx) => {
-      const amt = parseAmount(tx.Actual_Transaction_Amount);
-      if (tx.Transaction_Type.startsWith('Contribution')) {
-        contributions += amt;
-      } else if (tx.Transaction_Type.startsWith('Distribution') || tx.Transaction_Type.startsWith('Income')) {
-        distributions += amt;
+    quarterTransactions.forEach((tr) => {
+      const amt = parseAmount(tr.Actual_Transaction_Amount);
+      const type = tr.Transaction_Type ?? '';
+
+      if (type.startsWith('Contribution')) {
+        netFlow += amt; // contribution increases balance
+      } else if (type.startsWith('Distribution')) {
+        returnDollar += amt; // treated as realized return
+        hasDistributions = true;
+      } else if (type.startsWith('Income Reinvestment')) {
+        returnDollar += amt;
+        hasReinvestment = true;
+      } else if (type.includes('Unrealized')) {
+        returnDollar += amt; // could be negative
+      } else if (type.includes('Tax')) {
+        returnDollar += amt; // could be negative
       }
     });
 
-    const beginningBalance = runningBalance;
-    const returnDollar = distributions;
-    const returnRate = beginningBalance > 0 ? returnDollar / beginningBalance : 0;
+    const action: 'Reinvested' | 'Distributed' = hasDistributions && !hasReinvestment ? 'Distributed' : 'Reinvested';
 
-    // If there was any cash distribution treat it as "Distributed", otherwise assume reinvested.
-    const action: 'Reinvested' | 'Distributed' = returnDollar > 0 ? 'Distributed' : 'Reinvested';
-
-    // Returns are *not* added to ending balance when distributed.
-    const afterReturn = action === 'Reinvested' ? beginningBalance + returnDollar : beginningBalance;
-
-    const netFlow = contributions; // Positive contributions only (no withdrawal data in export)
+    // Calculate ending balance
+    let afterReturn = beginningBalance;
+    if (action === 'Reinvested') {
+      afterReturn += returnDollar;
+    }
     const endingBalance = afterReturn + netFlow;
 
-    quarterlyRows.push({
-      quarter: periodIdx,
-      quarterLabel: `${year} Q${quarterNum}`,
-      period: periodIdx,
-      label: `${year} Q${quarterNum}`,
+    const returnRate = beginningBalance !== 0 ? returnDollar / beginningBalance : 0;
+
+    rows.push({
+      period: index + 1,
+      label: key,
       year,
-      quarterNum,
+      quarter: q, // alias for BalanceFlow fallback
+      quarterNum: q,
       beginningBalance,
       returnRate,
       returnDollar,
       action,
       netFlow,
       endingBalance,
-    });
+    } as any);
 
-    runningBalance = endingBalance;
-    periodIdx += 1;
+    // Prepare for next iteration
+    beginningBalance = endingBalance;
   });
 
-  return quarterlyRows;
+  return rows;
 }
 
-// Derive aggregated dataset once at module initialisation.
-const quarterlyData = buildQuarterlyData(rawTransactions as unknown as RawTransaction[]);
-
-// ---- Derive summary & metadata ----
-const investorRaw = (rawTransactions[0] as RawTransaction).Investor ?? 'Investor';
-// Welcome banner uses the surname – assume second word in investor name string.
-const investorSurname = investorRaw.split(' ')[1] ?? investorRaw.split(' ')[0];
-
-const lastRow = quarterlyData[quarterlyData.length - 1] ?? {
-  year: new Date().getUTCFullYear(),
-  quarterNum: 0,
-  endingBalance: 0,
-  returnDollar: 0,
+// ---------------- Build equityData ----------------
+const quarterlyData = buildQuarterlyData(rawTransactions as unknown as Transaction[]);
+const latest = quarterlyData[quarterlyData.length - 1] ?? {
   returnRate: 0,
+  returnDollar: 0,
+  endingBalance: 0,
 };
+
+const investorName = (rawTransactions[0] as any)?.Investor?.split(' (')[0] ?? 'Investor';
+const currentQuarterLabel = latest?.label ?? '';
 
 const equityData = {
   investorInfo: {
-    name: investorSurname,
-    currentQuarter: `${lastRow.year} Q${lastRow.quarterNum}`,
-    currentYear: lastRow.year,
+    name: investorName,
+    currentQuarter: currentQuarterLabel,
+    currentYear: latest?.year ?? new Date().getUTCFullYear(),
   },
   historicalSummary: {
     beginningBalance: quarterlyData[0]?.beginningBalance ?? 0,
-    realizedReturn: quarterlyData.reduce((acc, r) => acc + r.returnDollar, 0),
-    endingBalance: lastRow.endingBalance,
+    realizedReturn: quarterlyData.reduce((sum, r) => sum + r.returnDollar, 0),
+    endingBalance: latest?.endingBalance ?? 0,
   },
   quarterlyData,
 };
 
-// ---- Prepare data projections consumed by page.tsx ----
-const percentFormatter = new Intl.NumberFormat('en-US', {
-  style: 'percent',
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
-
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
-
-const stats = (() => {
-  const latest = quarterlyData[quarterlyData.length - 1];
-  if (!latest) return [] as never[];
-  return [
-    { label: 'Realized Return (%)', value: percentFormatter.format(latest.returnRate) },
-    { label: 'Realized Return ($)', value: currencyFormatter.format(latest.returnDollar) },
-    { label: 'Current Balance', value: currencyFormatter.format(latest.endingBalance) },
-  ];
-})();
-
-const historical = [
-  {
-    label: 'Beginning Balance',
-    value: currencyFormatter.format(equityData.historicalSummary.beginningBalance),
-  },
-  {
-    label: 'Realized Return',
-    value: currencyFormatter.format(equityData.historicalSummary.realizedReturn),
-  },
-  {
-    label: 'Ending Balance',
-    value: currencyFormatter.format(equityData.historicalSummary.endingBalance),
-  },
-];
-
+// ---------------- Dashboard Data ----------------
 const dashboardData = {
   welcome: {
-    line1: `Welcome ${investorSurname},`,
-    line2: `Here are your ${equityData.investorInfo.currentQuarter} numbers.`,
+    line1: `Welcome ${investorName.split(' ')[0]},`,
+    line2: `Here are your ${currentQuarterLabel} numbers.`,
   },
-  stats,
-  historical,
+  stats: (() => {
+    const percentFormatter = new Intl.NumberFormat('en-US', {
+      style: 'percent',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    const currencyFormatter = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+    return [
+      { label: 'Realized Return (%)', value: percentFormatter.format(latest.returnRate) },
+      { label: 'Realized Return ($)', value: currencyFormatter.format(latest.returnDollar) },
+      { label: 'Current Balance', value: currencyFormatter.format(latest.endingBalance) },
+    ];
+  })(),
+  historical: [
+    {
+      label: 'Beginning Balance',
+      value: `$${equityData.historicalSummary.beginningBalance.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`,
+    },
+    {
+      label: 'Realized Return',
+      value: `$${equityData.historicalSummary.realizedReturn.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`,
+    },
+    {
+      label: 'Ending Balance',
+      value: `$${equityData.historicalSummary.endingBalance.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`,
+    },
+  ],
 };
 
 export default dashboardData;
