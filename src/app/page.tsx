@@ -58,7 +58,7 @@ export default function Home() {
     const transactions = (equityData as any[]).map((t) => ({
       ...t,
       amount: parseAmount(t.Actual_Transaction_Amount as string),
-      date: new Date(t.Effective_Date as string),
+      date: new Date((t as any).Tran_Date ?? t.Effective_Date as string),
     })) as Array<{
       amount: number;
       date: Date;
@@ -245,6 +245,8 @@ export default function Home() {
 
   // NEW: balance mode toggle (GAAP vs NAV)
   const [balanceMode, setBalanceMode] = React.useState<'gaap' | 'nav'>('nav');
+  // Toggle for Returns chart: realised vs total
+  const [returnMode, setReturnMode] = React.useState<'realised' | 'total'>('total');
 
   return (
     <>
@@ -275,7 +277,7 @@ export default function Home() {
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
             }}>
               {/* Header */}
-              <div style={{ marginBottom: '1rem' }}>
+              <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <h2 style={{
                   margin: 0,
                   fontSize: '30px',
@@ -285,22 +287,34 @@ export default function Home() {
                 }}>
                   Your Historical Returns
                 </h2>
-                <div style={{
-                  marginTop: 4,
-                  width: 180,
-                  height: 2,
-                  backgroundColor: '#008bce'
-                }} />
+                <div style={{ display: 'flex', border: '1px solid #555', borderRadius: 20, overflow: 'hidden' }}>
+                  {['realised', 'total'].map((key) => (
+                    <button
+                      key={key}
+                      onClick={() => setReturnMode(key as 'realised' | 'total')}
+                      style={{
+                        padding: '4px 12px',
+                        background: returnMode === key ? '#008bce' : 'transparent',
+                        color: returnMode === key ? '#fff' : '#ccc',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontSize: 14,
+                      }}
+                    >
+                      {key === 'realised' ? 'REALISED' : 'TOTAL'}
+                    </button>
+                  ))}
+                </div>
               </div>
               <ReturnComboChart data={rows.map((r) => ({
                 quarter: r.period,
                 quarterLabel: r.label,
                 beginningBalance: r.beginningBalance,
-                returnRate: r.returnRate,
-                returnDollar: r.returnDollar,
+                returnRate: returnMode === 'realised' ? r.realizedRate : r.returnRate,
+                returnDollar: returnMode === 'realised' ? r.realizedDollar : r.returnDollar,
                 action: r.action,
                 netFlow: r.netFlow,
-                endingBalance: r.endingBalance,
+                endingBalance: returnMode === 'realised' ? r.gaapEnd : r.navEnd,
               }))} />
             </div>
 
