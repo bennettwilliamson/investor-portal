@@ -118,15 +118,11 @@ export default function Home() {
 
         if (type === 'Contribution - Equity') {
           contributionDollar += tx.amount;
-        } else if (
-          type === 'Distribution - Preferred Return' ||
-          type === 'Distribution - Excess Distributable Cash' ||
-          type === 'Distribution - Realized Gain/Loss' ||
-          type === 'Distribution - Adj' ||
-          type === 'Income Paid'
-        ) {
+        } else if (type === 'Income Paid') {
+          // Cash distributions that count toward realised earnings
           cashDistDollar += tx.amount;
         } else if (type === 'Income Reinvestment') {
+          // Reinvested income is also realised earnings but remains in the fund
           incomeReinvestDollar += tx.amount;
           action = 'Reinvested';
         } else if (type === 'Redemption - GAAP') {

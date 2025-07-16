@@ -256,7 +256,7 @@ export default function ReturnCombo(props: Props) {
 
     const returnValue = viewMode === 'dollar'
         ? currencyFormatter.format(selectedData.returnDollar)
-        : `${(selectedData.returnRate * 100).toFixed(2)}%`;
+        : `${(selectedData.returnRate * 4 * 100).toFixed(2)}%`;
 
     // ---------- Refs & state for connector paths ----------
     const containerRef = React.useRef<HTMLDivElement>(null);
