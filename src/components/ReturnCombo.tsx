@@ -175,11 +175,16 @@ const DottedCursor: React.FC<
     // Compute coordinates every render
     const cx = x + (width ?? 0) / 2;
     const barTopY = points && points.length > 0 ? points[0].y : 0;
+    const currentPayload = points && points.length > 0 ? (points[0] as any).payload : null;
+    const lastPayloadRef = React.useRef<any>();
 
-    // Immediately inform parent of cursor position each render so overlay connectors/bubble stay in sync
-    if (onPositionUpdate) {
-        onPositionUpdate({ x: cx, y: barTopY });
-    }
+    // Notify parent *after* render commit to avoid nested updates
+    React.useEffect(() => {
+        if (onPositionUpdate && currentPayload && currentPayload !== lastPayloadRef.current) {
+            onPositionUpdate({ x: cx, y: barTopY });
+            lastPayloadRef.current = currentPayload;
+        }
+    }, [cx, barTopY, onPositionUpdate, currentPayload]);
 
     return (
         <g>
