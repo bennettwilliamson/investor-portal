@@ -16,6 +16,13 @@ import { SignedIn, SignedOut, SignIn } from "@clerk/nextjs";
 export default function Home() {
   const { welcome, stats, historical } = dashboardData;
 
+  // Prepare chart datasets
+  const returnData = equityData.quarterlyData;
+  const balanceData = equityData.quarterlyData.map((row) => ({
+    ...row,
+    quarter: row.quarterNum ?? (((row.period - 1) % 4) + 1)
+  }));
+
   return (
     <>
       {/* Show dashboard only when the user is signed in */}
@@ -45,7 +52,7 @@ export default function Home() {
                 padding: '2rem',
                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
               }}>
-                <ReturnComboChart data={equityData.quarterlyData} />
+                <ReturnComboChart data={returnData} />
               </div>
             </div>
 
@@ -60,7 +67,7 @@ export default function Home() {
                 padding: '2rem',
                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
               }}>
-                <BalanceFlowChart data={equityData.quarterlyData} />
+                <BalanceFlowChart data={balanceData} />
               </div>
             </div>
           </section>

@@ -184,11 +184,13 @@ export default function ReturnCombo(props: Props) {
         return () => clearTimeout(timer);
     }, []);
 
-    // Resolve dataset: use caller-supplied data if present, otherwise fall back to internal simulation.
-    const data = React.useMemo<QuarterData[]>(() => {
-        if (props.data && props.data.length) return props.data;
-        return generateSimulation();
-    }, [props.data]);
+    // Resolve dataset: rely solely on caller-supplied data – no simulation fallback.
+    const data = React.useMemo<QuarterData[]>(() => (props.data ?? []), [props.data]);
+
+    // If no data supplied, render a simple placeholder.
+    if (!data.length) {
+        return <div style={{ color: '#FFFFFF', fontFamily: 'sans-serif' }}>No data available</div>;
+    }
 
     const visibleData = React.useMemo(() => {
         switch (timeFrame) {

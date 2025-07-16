@@ -262,11 +262,13 @@ export default function BalanceFlowChart(props: Props) {
     const [activeBarIndex, setActiveBarIndex] = React.useState<number | null>(null);
     const [hoverPeriod, setHoverPeriod] = React.useState<number | null>(null);
 
-    // Resolve the dataset: prefer caller-supplied data, otherwise fall back to the internal simulation.
-    const data = React.useMemo<PeriodData[]>(() => {
-        if (props.data && props.data.length) return props.data
-        return generateSimulation()
-    }, [props.data])
+    // Resolve the dataset: rely solely on caller-supplied data.
+    const data = React.useMemo<PeriodData[]>(() => (props.data ?? []), [props.data]);
+
+    // If no data provided, render placeholder.
+    if (!data.length) {
+        return <div style={{ color: '#FFFFFF', fontFamily: 'sans-serif' }}>No data available</div>;
+    }
 
     // Slice data according to selected time-frame
     const visibleData = React.useMemo(() => {
