@@ -352,7 +352,7 @@ export default function ReturnCombo(props: Props) {
                     {/* Realised / Total toggle */}
                     <div style={{ display: 'flex', background: DARK_BLUE, padding: 2, borderRadius: 9999 }}>
                         {([
-                            { key: 'realised', label: 'REALISED' },
+                            { key: 'realised', label: 'REALIZED' },
                             { key: 'total', label: 'TOTAL' },
                         ] as const).map(({ key, label }) => (
                             <button
