@@ -121,9 +121,9 @@ export default function Home() {
                   },
                   // Enlarge the logo container by 50% while keeping Clerk functionality intact
                   logoBox: {
-                    transform: 'scale(2)',
+                    transform: 'scale(3)',
                     transformOrigin: 'top center',
-                    marginBottom: '1rem'
+                    marginBottom: '0.5rem'
                   },
                   card: {
                     width: '100%',
