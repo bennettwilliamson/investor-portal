@@ -295,24 +295,6 @@ export default function Home() {
                 }}>
                   Your Historical Returns
                 </h2>
-                <div style={{ display: 'flex', border: '1px solid #555', borderRadius: 20, overflow: 'hidden' }}>
-                  {['realised', 'total'].map((key) => (
-                    <button
-                      key={key}
-                      onClick={() => setReturnMode(key as 'realised' | 'total')}
-                      style={{
-                        padding: '4px 12px',
-                        background: returnMode === key ? '#008bce' : 'transparent',
-                        color: returnMode === key ? '#fff' : '#ccc',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontSize: 14,
-                      }}
-                    >
-                      {key === 'realised' ? 'REALISED' : 'TOTAL'}
-                    </button>
-                  ))}
-                </div>
               </div>
               <ReturnComboChart data={rows.map((r) => ({
                 quarter: r.period,
@@ -323,7 +305,7 @@ export default function Home() {
                 action: r.action,
                 netFlow: r.netFlow,
                 endingBalance: returnMode === 'realised' ? r.gaapEnd : r.navEnd,
-              }))} />
+              }))} returnMode={returnMode} onReturnModeChange={setReturnMode} />
             </div>
 
             {/* Balance Flow Chart */}

@@ -32,6 +32,10 @@ interface Props {
      */
     data?: QuarterData[];
     style?: React.CSSProperties;
+    /** Current return mode (realised vs total) */
+    returnMode?: 'realised' | 'total';
+    /** Callback when user switches return mode */
+    onReturnModeChange?: (mode: 'realised' | 'total') => void;
 }
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
@@ -194,7 +198,7 @@ const DottedCursor: React.FC<
 };
 
 export default function ReturnCombo(props: Props) {
-    const { style } = props;
+    const { style, returnMode = 'total', onReturnModeChange } = props;
     const [viewMode, setViewMode] = React.useState<'dollar' | 'percent'>('dollar');
     type TimeFrameKey = 'all' | '1yr' | '5yr';
     const [timeFrame, setTimeFrame] = React.useState<TimeFrameKey>('all');
@@ -345,6 +349,21 @@ export default function ReturnCombo(props: Props) {
                 </div>
                 {/* Toggle controls */}
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, pointerEvents: 'auto' }}>
+                    {/* Realised / Total toggle */}
+                    <div style={{ display: 'flex', background: DARK_BLUE, padding: 2, borderRadius: 9999 }}>
+                        {([
+                            { key: 'realised', label: 'REALISED' },
+                            { key: 'total', label: 'TOTAL' },
+                        ] as const).map(({ key, label }) => (
+                            <button
+                                key={key}
+                                onClick={() => onReturnModeChange && onReturnModeChange(key)}
+                                style={{ padding: `${TOGGLE_PILL_VERT + 2}px ${TOGGLE_PILL_HORZ + 6}px`, background: returnMode === key ? ACCENT_BLUE : 'transparent', color: '#FFFFFF', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Utile Regular, sans-serif', fontSize: 18, borderRadius: 9999, transition: 'background 0.25s ease, color 0.25s ease' }}
+                            >
+                                {label}
+                            </button>
+                        ))}
+                    </div>
                     {/* Time-frame toggle */}
                     <div style={{ display: 'flex', background: DARK_BLUE, padding: 2, borderRadius: 9999 }}>
                         {TIMEFRAME_OPTIONS.map(({ key, label }) => (
