@@ -123,7 +123,7 @@ export default function Home() {
                   logoBox: {
                     transform: 'scale(3)',
                     transformOrigin: 'top center',
-                    marginTop: '0.5rem',
+                    marginTop: '1.25rem',
                     marginBottom: '0.5rem'
                   },
                   card: {
@@ -148,6 +148,8 @@ export default function Home() {
                   },
                   alternativeMethodsBlockButton: {
                     color: '#ffffff',
+                    fontSize: '1rem',
+                    fontWeight: '500',
                     '&:hover': {
                       color: '#dddddd'
                     }
@@ -175,7 +177,9 @@ export default function Home() {
                     }
                   },
                   formFieldLabel: {
-                    color: '#ccc'
+                    color: '#e6e7e8',
+                    fontSize: '1rem',
+                    fontWeight: '500'
                   },
                   footerActionLink: {
                     color: '#008bce',
