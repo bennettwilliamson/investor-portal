@@ -46,6 +46,9 @@ interface AggregatedRow {
   action: 'Reinvested' | 'Distributed';
   netFlow: number;
   endingBalance: number;
+  // ----- NEW BALANCE FIELDS -----
+  gaapEnd: number; // GAAP capital account at end of quarter
+  navEnd: number;  // GAAP + unrealised at end
 }
 
 export default function Home() {
@@ -91,60 +94,78 @@ export default function Home() {
     });
 
     const rows: AggregatedRow[] = [];
-    let beginningBalance = 0;
+    let gaapBegin = 0; // GAAP capital at quarter start
 
     sortedKeys.forEach((key, idx) => {
       const grp = groups.get(key)!;
-      let realizedDollar = 0;   // cash events
-      let unrealizedDollar = 0; // non-cash fair-value changes & adjustments
-      let netFlow = 0;
+      let contributionDollar = 0;
+      let cashDistDollar = 0;     // cash distributions to investor
+      let redemptionDollar = 0;
+      let taxDollar = 0;
+      let incomeReinvestDollar = 0; // realised but reinvested
+      let unrealizedDollar = 0;     // mark-to-market change
+
       let action: 'Reinvested' | 'Distributed' = 'Distributed';
 
       grp.transactions.forEach((tx) => {
         const type = tx.Transaction_Type as string;
 
         if (type === 'Contribution - Equity') {
-          // --- Cash in (new capital) ---
-          netFlow += tx.amount;
-        } else if (type.startsWith('Distribution') || type === 'Income Paid') {
-          // --- Cash distributed out to investor ---
-          netFlow -= tx.amount;           // cash leaves the fund
-          realizedDollar += tx.amount;    // still realised earnings
+          contributionDollar += tx.amount;
+        } else if (
+          type === 'Distribution - Preferred Return' ||
+          type === 'Distribution - Excess Distributable Cash' ||
+          type === 'Distribution - Realized Gain/Loss' ||
+          type === 'Distribution - Adj' ||
+          type === 'Income Paid'
+        ) {
+          cashDistDollar += tx.amount;
         } else if (type === 'Income Reinvestment') {
-          // --- Earnings that stay in the fund but are still realised ---
-          realizedDollar += tx.amount;    // no netFlow change
-          action = 'Reinvested';          // marks quarter as reinvested
-        } else if (type === 'Unrealized Gains/Losses') {
-          // --- Fair-value movement ---
-          unrealizedDollar += tx.amount;  // affects total return only
+          incomeReinvestDollar += tx.amount;
+          action = 'Reinvested';
+        } else if (type.startsWith('Redemption')) {
+          redemptionDollar += tx.amount;
+        } else if (type === 'Tax Increase/Decrease') {
+          taxDollar += tx.amount;
+        } else if (type.startsWith('Unrealized Gains/Losses')) {
+          unrealizedDollar += tx.amount;
         } else {
-          // --- Misc adjustments (tax, accounting, etc.) treated as realised ---
-          realizedDollar += tx.amount;
+          // Fallback: treat as realised earnings (e.g. other adjustments)
+          cashDistDollar += tx.amount;
         }
       });
 
-      const totalReturnDollar = realizedDollar + unrealizedDollar;
-      const endingBalance = beginningBalance + totalReturnDollar + netFlow;
+      const realizedDollar = cashDistDollar + incomeReinvestDollar;
 
-      const realizedRate = beginningBalance > 0 ? realizedDollar / beginningBalance : 0;
-      const totalReturnRate = beginningBalance > 0 ? totalReturnDollar / beginningBalance : 0;
+      // GAAP capital movements
+      const gaapEnd =
+        gaapBegin + contributionDollar - cashDistDollar - redemptionDollar - taxDollar + incomeReinvestDollar;
+
+      const navEnd = gaapEnd + unrealizedDollar;
+
+      const denominator = gaapBegin > 0 ? gaapBegin : 0;
+      const realizedRate = denominator > 0 ? realizedDollar / denominator : 0;
+      const totalReturnDollar = realizedDollar + unrealizedDollar;
+      const totalReturnRate = denominator > 0 ? totalReturnDollar / denominator : 0;
 
       rows.push({
         period: idx + 1,
         year: grp.year,
         quarter: grp.quarter,
         label: `${grp.year} Q${grp.quarter}`,
-        beginningBalance,
+        beginningBalance: gaapBegin, // keep for chart back-compat
         realizedDollar,
         realizedRate,
         returnDollar: totalReturnDollar, // total
         returnRate: totalReturnRate,     // total
         action,
-        netFlow,
-        endingBalance,
+        netFlow: contributionDollar - cashDistDollar - redemptionDollar - taxDollar, // for charts
+        gaapEnd,
+        navEnd,
+        endingBalance: navEnd,
       });
 
-      beginningBalance = endingBalance;
+      gaapBegin = gaapEnd; // next quarter starts with this GAAP balance
     });
 
     // ----- Metrics -----
@@ -168,8 +189,12 @@ export default function Home() {
         value: currencyFormatter.format(lastRow.returnDollar),
       },
       {
-        label: 'Current Balance',
-        value: currencyFormatter.format(lastRow.endingBalance),
+        label: 'GAAP Balance',
+        value: currencyFormatter.format(lastRow.gaapEnd),
+      },
+      {
+        label: 'NAV Balance',
+        value: currencyFormatter.format(lastRow.navEnd),
       },
     ];
 
@@ -190,8 +215,12 @@ export default function Home() {
         value: currencyFormatter.format(totalTotal),
       },
       {
-        label: 'Ending Balance',
-        value: currencyFormatter.format(lastRow.endingBalance),
+        label: 'Ending GAAP Balance',
+        value: currencyFormatter.format(lastRow.gaapEnd),
+      },
+      {
+        label: 'Ending NAV Balance',
+        value: currencyFormatter.format(lastRow.navEnd),
       },
     ];
 
