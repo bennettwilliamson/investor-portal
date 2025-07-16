@@ -95,13 +95,15 @@ export default function Home() {
 
     const rows: AggregatedRow[] = [];
     let gaapBegin = 0; // GAAP capital at quarter start
+    let cumulativeUnreal = 0; // Track cumulative unrealized gains/losses
 
     sortedKeys.forEach((key, idx) => {
       const grp = groups.get(key)!;
       let contributionDollar = 0;
       let cashDistDollar = 0;     // cash distributions to investor
-      let redemptionDollar = 0;
-      let taxDollar = 0;
+      let redemptionGaapDollar = 0;
+      let redemptionNavDollar = 0;
+      let taxDollar = 0; // captured but excluded from GAAP & returns per latest mapping
       let incomeReinvestDollar = 0; // realised but reinvested
       let unrealizedDollar = 0;     // mark-to-market change
 
@@ -123,8 +125,10 @@ export default function Home() {
         } else if (type === 'Income Reinvestment') {
           incomeReinvestDollar += tx.amount;
           action = 'Reinvested';
-        } else if (type.startsWith('Redemption')) {
-          redemptionDollar += tx.amount;
+        } else if (type === 'Redemption - GAAP') {
+          redemptionGaapDollar += tx.amount;
+        } else if (type === 'Redemption - NAV') {
+          redemptionNavDollar += tx.amount;
         } else if (type === 'Tax Increase/Decrease') {
           taxDollar += tx.amount;
         } else if (type.startsWith('Unrealized Gains/Losses')) {
@@ -137,11 +141,12 @@ export default function Home() {
 
       const realizedDollar = cashDistDollar + incomeReinvestDollar;
 
-      // GAAP capital movements
+      // GAAP capital movements: GAAP = previous + contributions - cash withdrawals/redemptions + income reinvestment + tax adjustments
       const gaapEnd =
-        gaapBegin + contributionDollar - cashDistDollar - redemptionDollar - taxDollar + incomeReinvestDollar;
+        gaapBegin + contributionDollar + incomeReinvestDollar - redemptionGaapDollar;
 
-      const navEnd = gaapEnd + unrealizedDollar;
+      cumulativeUnreal += unrealizedDollar - redemptionNavDollar;
+      const navEnd = gaapEnd + cumulativeUnreal;
 
       const denominator = gaapBegin > 0 ? gaapBegin : 0;
       const realizedRate = denominator > 0 ? realizedDollar / denominator : 0;
@@ -159,13 +164,14 @@ export default function Home() {
         returnDollar: totalReturnDollar, // total
         returnRate: totalReturnRate,     // total
         action,
-        netFlow: contributionDollar - cashDistDollar - redemptionDollar - taxDollar, // for charts
+        netFlow: contributionDollar - cashDistDollar - redemptionGaapDollar - redemptionNavDollar - taxDollar, // for charts
         gaapEnd,
         navEnd,
         endingBalance: navEnd,
       });
 
       gaapBegin = gaapEnd; // next quarter starts with this GAAP balance
+      // cumulativeUnreal persists across quarters
     });
 
     // ----- Metrics -----
