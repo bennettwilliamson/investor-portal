@@ -15,6 +15,7 @@ interface QuarterRow {
   year: number;
   quarter: number; // 1..4 (alias for BalanceFlow)
   quarterNum: number; // duplicate for compatibility with existing helper in page.tsx
+  quarterLabel: string; // formatted label like "2024 Q4"
   beginningBalance: number;
   returnRate: number; // decimal, e.g. 0.125
   returnDollar: number;
@@ -110,6 +111,7 @@ function buildQuarterlyData(transactions: Transaction[]): QuarterRow[] {
       year,
       quarter: q, // alias for BalanceFlow fallback
       quarterNum: q,
+      quarterLabel: key,
       beginningBalance,
       returnRate,
       returnDollar,
