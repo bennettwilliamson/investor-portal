@@ -336,7 +336,7 @@ export default function ReturnCombo(props: Props) {
             }}
         >
             {/* Header row */}
-            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', width: '100%', padding: '0 0 8px 0', pointerEvents: 'none' }}>
+            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', width: '100%', padding: '0 0 48px 0', pointerEvents: 'none' }}>
                 <div style={{ display: 'flex', gap: 16 }}>
                     {(() => {
                         const cardBase: React.CSSProperties = { background: DARK_BLUE, borderRadius: 8, padding: '12px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 140, textAlign: 'center' };
@@ -520,27 +520,30 @@ export default function ReturnCombo(props: Props) {
             </div>
 
             {/* SVG overlay for connector curves */}
-            {cursorPos && cardAnchors && (
-                <>
-                    <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
-                        {cardAnchors.map((anchor) => {
-                            const breakY = anchor.y + 10;
-                            const d = `M ${cursorPos.x} ${cursorPos.y} L ${cursorPos.x} ${breakY} L ${anchor.x} ${breakY} L ${anchor.x} ${anchor.y}`;
-                            return <path key={anchor.id} d={d} stroke="#666666" strokeWidth={1} fill="none" />;
-                        })}
-                    </svg>
-                    {cardAnchors.length > 0 && (
+            {cursorPos && cardAnchors.length > 0 && (() => {
+                const busY = Math.min(...cardAnchors.map(a => a.y)) + 24; // Position bus line below all cards
+                const minX = Math.min(...cardAnchors.map(a => a.x));
+                const maxX = Math.max(...cardAnchors.map(a => a.x));
+
+                return (
+                    <>
+                        <svg
+                            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
+                        >
+                            {/* Main vertical line from cursor to bus */}
+                            <path d={`M ${cursorPos.x} ${cursorPos.y} V ${busY}`} stroke="#666666" strokeWidth={1} fill="none" />
+                            {/* Horizontal bus line */}
+                            <path d={`M ${minX} ${busY} H ${maxX}`} stroke="#666666" strokeWidth={1} fill="none" />
+                            {/* Stems from cards to bus */}
+                            {cardAnchors.map((anchor) => (
+                                <path key={anchor.id} d={`M ${anchor.x} ${anchor.y} V ${busY}`} stroke="#666666" strokeWidth={1} fill="none" />
+                            ))}
+                        </svg>
                         <div
                             style={{
                                 position: 'absolute',
                                 left: cursorPos.x,
-                                top: (() => {
-                                    if (containerRef.current) {
-                                        const breakY = cardAnchors[0].y + 10;
-                                        return breakY + 12; // offset
-                                    }
-                                    return 0;
-                                })(),
+                                top: busY + 12,
                                 transform: 'translateX(-50%)',
                                 background: '#666666',
                                 color: '#FFFFFF',
@@ -554,9 +557,9 @@ export default function ReturnCombo(props: Props) {
                         >
                             {selectedData.quarterLabel}
                         </div>
-                    )}
-                </>
-            )}
+                    </>
+                );
+            })()}
         </div>
     );
 } 

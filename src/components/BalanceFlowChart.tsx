@@ -499,7 +499,7 @@ export default function BalanceFlowChart(props: Props) {
                     alignItems: 'flex-start',
                     justifyContent: 'space-between',
                     width: '100%',
-                    padding: '0 0 8px 0',
+                    padding: '0 0 48px 0', // Increased padding to make space for the bus line
                     pointerEvents: 'none',
                 }}
             >
@@ -817,27 +817,30 @@ export default function BalanceFlowChart(props: Props) {
             </div>
 
             {/* SVG overlay for connector curves */}
-            {cursorPos && cardAnchors && (
-                <>
-                    <svg
-                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
-                    >
-                        {cardAnchors.map((anchor) => {
-                            const breakY = anchor.y + 10;
-                            const d = `M ${cursorPos.x} ${cursorPos.y} L ${cursorPos.x} ${breakY} L ${anchor.x} ${breakY} L ${anchor.x} ${anchor.y}`;
-                            return <path key={anchor.id} d={d} stroke="#666666" strokeWidth={1} fill="none" />;
-                        })}
-                    </svg>
-                    {cardAnchors.length > 0 && (
+            {cursorPos && cardAnchors.length > 0 && (() => {
+                const busY = Math.min(...cardAnchors.map(a => a.y)) + 24; // Position bus line below all cards
+                const minX = Math.min(...cardAnchors.map(a => a.x));
+                const maxX = Math.max(...cardAnchors.map(a => a.x));
+
+                return (
+                    <>
+                        <svg
+                            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
+                        >
+                            {/* Main vertical line from cursor to bus */}
+                            <path d={`M ${cursorPos.x} ${cursorPos.y} V ${busY}`} stroke="#666666" strokeWidth={1} fill="none" />
+                            {/* Horizontal bus line */}
+                            <path d={`M ${minX} ${busY} H ${maxX}`} stroke="#666666" strokeWidth={1} fill="none" />
+                            {/* Stems from cards to bus */}
+                            {cardAnchors.map((anchor) => (
+                                <path key={anchor.id} d={`M ${anchor.x} ${anchor.y} V ${busY}`} stroke="#666666" strokeWidth={1} fill="none" />
+                            ))}
+                        </svg>
                         <div
                             style={{
                                 position: 'absolute',
                                 left: cursorPos.x,
-                                top: (() => {
-                                    const anchor0 = cardAnchors[0];
-                                    const breakY  = anchor0.y + 10;
-                                    return breakY + 12; // offset below elbow
-                                })(),
+                                top: busY + 12,
                                 transform: 'translateX(-50%)',
                                 background: '#666666',
                                 color: '#FFFFFF',
@@ -851,9 +854,9 @@ export default function BalanceFlowChart(props: Props) {
                         >
                             {selectedData.label}
                         </div>
-                    )}
-                </>
-            )}
+                    </>
+                );
+            })()}
         </div>
     );
 } 
