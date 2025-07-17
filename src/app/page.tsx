@@ -160,15 +160,9 @@ export default function Home() {
       cumulativeUnreal += unrealizedDollar - redemptionNavDollar;
       const navEnd = gaapEnd + cumulativeUnreal;
 
-      // ----- Denominator: GAAP capital account *excluding* any contributions/withdrawals after Jan-1-2025 -----
-      let baselineGaap: number | null = null;
-      if (!baselineGaap && new Date(grp.year, (grp.quarter - 1) * 3, 1) >= new Date('2025-01-01T00:00:00Z')) {
-        baselineGaap = gaapBegin;
-      }
-
-      const denominator = new Date(grp.year, (grp.quarter - 1) * 3, 1) >= new Date('2025-01-01T00:00:00Z') && baselineGaap !== null
-        ? baselineGaap
-        : gaapBegin;
+      // Denominator = GAAP at quarter start minus any GAAP redemptions executed during the quarter (to exclude withdrawals)
+      const denominatorBase = gaapBegin;
+      const denominator = denominatorBase - redemptionGaapDollar;
 
       const realizedRate = denominator > 0 ? realizedDollar / denominator : 0;
       const totalReturnDollar = realizedDollar + unrealizedDollar;
