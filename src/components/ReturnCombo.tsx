@@ -522,7 +522,7 @@ export default function ReturnCombo(props: Props) {
 
             {/* SVG overlay for connector curves */}
             {cursorPos && cardAnchors.length > 0 && (() => {
-                const busY = Math.max(...cardAnchors.map(a => a.y)) + 8;
+                const busY = Math.max(...cardAnchors.map(a => a.y)) + 24;
                 const minX = Math.min(...cardAnchors.map(a => a.x));
                 const maxX = Math.max(...cardAnchors.map(a => a.x));
 
@@ -537,7 +537,24 @@ export default function ReturnCombo(props: Props) {
                                 <path key={anchor.id} d={`M ${anchor.x} ${anchor.y} V ${busY}`} stroke="#666666" strokeWidth={1} fill="none" />
                             ))}
                         </svg>
-                        {/* Removed bubble label */}
+                        <div
+                            style={{
+                                position: 'absolute',
+                                left: cursorPos.x,
+                                top: busY + 12,
+                                transform: 'translateX(-50%)',
+                                background: '#333333',
+                                color: '#FFFFFF',
+                                padding: '4px 8px',
+                                borderRadius: 4,
+                                fontSize: 12,
+                                fontFamily: 'Utile Regular, sans-serif',
+                                whiteSpace: 'nowrap',
+                                pointerEvents: 'none',
+                            }}
+                        >
+                            {selectedData.quarterLabel}
+                        </div>
                     </>
                 );
             })()}
