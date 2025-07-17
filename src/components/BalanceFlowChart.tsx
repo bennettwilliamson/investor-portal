@@ -415,8 +415,8 @@ export default function BalanceFlowChart(props: Props) {
             ref={containerRef}
             style={{
                 ...style,
-                display: 'flex',
-                flexDirection: 'column',
+                display: 'grid',
+                gridTemplateRows: 'auto 1fr auto',
                 width: '100%',
                 height: '100%',
                 fontFamily: 'Utile Regular, sans-serif',
