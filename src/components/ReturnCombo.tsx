@@ -337,7 +337,11 @@ export default function ReturnCombo(props: Props) {
                                 <div style={cardBase} ref={returnCardRef}>
                                     <div style={valueStyle}>{returnValue}</div>
                                     <div style={lineStyle} />
-                                    <div style={labelStyle}>{viewMode === 'dollar' ? 'Realized Return ($)' : 'Realized Return (%)'}</div>
+                                    <div style={labelStyle}>
+                                        {returnMode === 'realised'
+                                            ? (viewMode === 'dollar' ? 'Realized Return ($)' : 'Realized Return (%)')
+                                            : (viewMode === 'dollar' ? 'Total Return ($)' : 'Total Return (%)')}
+                                    </div>
                                 </div>
                                 <div style={cardBase} ref={endingCardRef}>
                                     <div style={valueStyle}>{currencyFormatter.format(selectedData.endingBalance)}</div>
@@ -353,8 +357,8 @@ export default function ReturnCombo(props: Props) {
                     {/* Realised / Total toggle */}
                     <div style={{ display: 'flex', background: DARK_BLUE, padding: 2, borderRadius: 9999 }}>
                         {([
-                            { key: 'realised', label: 'REALISED' },
-                            { key: 'total', label: 'TOTAL' },
+                            { key: 'realised', label: 'Realized' },
+                            { key: 'total', label: 'Total' },
                         ] as const).map(({ key, label }) => (
                             <button
                                 key={key}
