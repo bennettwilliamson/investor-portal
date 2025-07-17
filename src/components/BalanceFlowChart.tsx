@@ -217,6 +217,35 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, onUpdate
     return null;
 };
 
+const DottedCursor: React.FC<
+    any & { onPositionUpdate?: (pos: { x: number; y: number }) => void; showBelow?: boolean }
+> = ({ x, width, height, points, onPositionUpdate, showBelow }) => {
+    // For some chart types (e.g., ComposedChart), x can be undefined – fall back to points array
+    let cx: number = 0;
+    if (points && points.length > 0 && typeof (points[0] as any).x === "number") {
+        cx = (points[0] as any).x;
+    } else if (typeof x === "number") {
+        cx = x + ((width ?? 0) / 2);
+    }
+
+    const pointY = points && points.length > 0 ? (points[0] as any).y : 0;
+
+    // Use a ref to avoid re-triggering updates if the position hasn't changed.
+    const lastReportedPosition = React.useRef<{ x: number, y: number } | null>(null);
+
+    React.useEffect(() => {
+        if (onPositionUpdate) {
+            const newPos = { x: cx, y: pointY };
+            if (lastReportedPosition.current?.x !== newPos.x || lastReportedPosition.current?.y !== newPos.y) {
+                onPositionUpdate(newPos);
+                lastReportedPosition.current = newPos;
+            }
+        }
+    }, [cx, pointY, onPositionUpdate]);
+
+    return <g />; // We will draw all lines in the main SVG overlay for consistency
+};
+
 // ---------------- Main Component ----------------
 export default function BalanceFlowChart(props: Props) {
     const { style, balanceMode = 'nav', onBalanceModeChange } = props;
@@ -285,6 +314,27 @@ export default function BalanceFlowChart(props: Props) {
         }
     }, [visibleData]);
 
+    const handleCursorPosition = React.useCallback(
+        (posRelToChart: { x: number; y: number }) => {
+            if (!chartAreaRef.current || !containerRef.current) return;
+            const chartRect = chartAreaRef.current.getBoundingClientRect();
+            const containerRect = containerRef.current.getBoundingClientRect();
+            setCursorPos({
+                x: chartRect.left - containerRect.left + posRelToChart.x,
+                y: chartRect.top - containerRect.top + posRelToChart.y,
+            });
+        },
+        [],
+    );
+
+    // This key changes only when the set of visible cards changes, breaking the render loop.
+    const cardLayoutKey = React.useMemo(() => {
+        const hasContrib = selectedData.contributionDollar > 0;
+        const hasRedG = balanceMode === 'gaap' && selectedData.redemptionGaapDollar > 0;
+        const hasRedN = balanceMode === 'nav' && selectedData.redemptionNavDollar > 0;
+        return `begin-end-${hasContrib}-${hasRedG}-${hasRedN}`;
+    }, [selectedData, balanceMode]);
+
     // Measure card anchors once after mount and on resize – avoid tying to reactive props to prevent update loops
     React.useLayoutEffect(() => {
         const updateAnchors = () => {
@@ -314,7 +364,7 @@ export default function BalanceFlowChart(props: Props) {
         updateAnchors();
         window.addEventListener('resize', updateAnchors);
         return () => window.removeEventListener('resize', updateAnchors);
-    }, []);
+    }, [cardLayoutKey]);
 
     // Compute dynamic Y-axis ticks aiming for 5–8 labels
     const baseStep = 100_000;
@@ -637,18 +687,6 @@ export default function BalanceFlowChart(props: Props) {
                                     const p = visibleData[state.activeTooltipIndex];
                                     if (p) setHoverPeriod(p.period);
                                 }
-
-                                if (state.activeCoordinate) {
-                                    // `activeCoordinate` is relative to the chart's inner SVG. We need to make it relative to the container.
-                                    if (chartAreaRef.current && containerRef.current) {
-                                        const chartRect = chartAreaRef.current.getBoundingClientRect();
-                                        const containerRect = containerRef.current.getBoundingClientRect();
-                                        setCursorPos({
-                                            x: chartRect.left - containerRect.left + state.activeCoordinate.x,
-                                            y: chartRect.top - containerRect.top + state.activeCoordinate.y,
-                                        });
-                                    }
-                                }
                             }
                         }}
                         onMouseLeave={() => {
@@ -731,9 +769,9 @@ export default function BalanceFlowChart(props: Props) {
                             content={(tooltipProps) => (
                                 <CustomTooltip {...(tooltipProps as any)} onUpdate={setSelectedData} />
                             )}
-                            cursor={{ stroke: '#666666', strokeWidth: 1 }}
+                            cursor={<DottedCursor onPositionUpdate={handleCursorPosition} />}
                             labelFormatter={(label) => `${label}`}
-                            position={{ y: -20 }}
+                            position={{ y: 0 }}
                             isAnimationActive={false}
                         />
                     </ComposedChart>
@@ -766,7 +804,7 @@ export default function BalanceFlowChart(props: Props) {
 
             {/* SVG overlay for connector curves */}
             {cursorPos && cardAnchors.length > 0 && (() => {
-                const busY = Math.min(...cardAnchors.map(a => a.y)) + 24; // Position bus line below all cards
+                const busY = Math.max(...cardAnchors.map(a => a.y)) + 24; // Position bus line below all cards
                 const minX = Math.min(...cardAnchors.map(a => a.x));
                 const maxX = Math.max(...cardAnchors.map(a => a.x));
 
@@ -790,11 +828,11 @@ export default function BalanceFlowChart(props: Props) {
                                 left: cursorPos.x,
                                 top: busY + 12,
                                 transform: 'translateX(-50%)',
-                                background: '#666666',
+                                background: '#333333',
                                 color: '#FFFFFF',
                                 padding: '4px 8px',
                                 borderRadius: 4,
-                                fontSize: 16,
+                                fontSize: 12,
                                 fontFamily: 'Utile Regular, sans-serif',
                                 whiteSpace: 'nowrap',
                                 pointerEvents: 'none',

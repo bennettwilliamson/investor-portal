@@ -173,6 +173,29 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, onUpdate
     return null;
 };
 
+const DottedCursor: React.FC<
+    any & { onPositionUpdate?: (pos: { x: number; y: number }) => void }
+> = ({ x, width, height, points, onPositionUpdate }) => {
+    // Compute coordinates every render
+    const cx = x + (width ?? 0) / 2;
+    const barTopY = points && points.length > 0 ? points[0].y : 0;
+    
+    const lastReportedPosition = React.useRef<{ x: number, y: number } | null>(null);
+
+    React.useEffect(() => {
+        if (onPositionUpdate) {
+            const newPos = { x: cx, y: barTopY };
+            if (lastReportedPosition.current?.x !== newPos.x || lastReportedPosition.current?.y !== newPos.y) {
+                onPositionUpdate(newPos);
+                lastReportedPosition.current = newPos;
+            }
+        }
+    }, [cx, barTopY, onPositionUpdate]);
+
+
+    return <g />;
+};
+
 export default function ReturnCombo(props: Props) {
     const { style, returnMode = 'total', onReturnModeChange } = props;
     const [viewMode, setViewMode] = React.useState<'dollar' | 'percent'>('dollar');
@@ -255,6 +278,16 @@ export default function ReturnCombo(props: Props) {
     const [cursorPos, setCursorPos] = React.useState<{ x: number; y: number } | null>(null);
     const [activeBarIndex, setActiveBarIndex] = React.useState<number | null>(null);
     const [cardAnchors, setCardAnchors] = React.useState<Array<{ id: string; x: number; y: number }>>([]);
+
+    const handleCursorPosition = React.useCallback((posRelToChart: { x: number; y: number }) => {
+        if (!chartAreaRef.current || !containerRef.current) return;
+        const chartRect = chartAreaRef.current.getBoundingClientRect();
+        const containerRect = containerRef.current.getBoundingClientRect();
+        setCursorPos({
+            x: chartRect.left - containerRect.left + posRelToChart.x,
+            y: chartRect.top - containerRect.top + posRelToChart.y,
+        });
+    }, []);
 
     React.useLayoutEffect(() => {
         const updateAnchors = () => {
@@ -416,16 +449,6 @@ export default function ReturnCombo(props: Props) {
                         onMouseMove={(state: any) => {
                             if (state && state.isTooltipActive) {
                                 setActiveBarIndex(state.activeTooltipIndex);
-                                if (state.activeCoordinate) {
-                                    if (chartAreaRef.current && containerRef.current) {
-                                        const chartRect = chartAreaRef.current.getBoundingClientRect();
-                                        const containerRect = containerRef.current.getBoundingClientRect();
-                                        setCursorPos({
-                                            x: chartRect.left - containerRect.left + state.activeCoordinate.x,
-                                            y: chartRect.top - containerRect.top + state.activeCoordinate.y,
-                                        });
-                                    }
-                                }
                             }
                         }}
                         onMouseLeave={() => {
@@ -454,9 +477,9 @@ export default function ReturnCombo(props: Props) {
                             content={(tooltipProps) => (
                                 <CustomTooltip {...(tooltipProps as any)} onUpdate={setSelectedData} />
                             )}
-                            cursor={{ stroke: '#666666', strokeWidth: 1 }}
+                            cursor={<DottedCursor onPositionUpdate={handleCursorPosition} />}
                             labelFormatter={(label) => `${label}`}
-                            position={{ y: -20 }}
+                            position={{ y: 0 }}
                             isAnimationActive={false}
                         />
                         <Bar
@@ -498,7 +521,7 @@ export default function ReturnCombo(props: Props) {
 
             {/* SVG overlay for connector curves */}
             {cursorPos && cardAnchors.length > 0 && (() => {
-                const busY = Math.min(...cardAnchors.map(a => a.y)) + 24; // Position bus line below all cards
+                const busY = Math.max(...cardAnchors.map(a => a.y)) + 24;
                 const minX = Math.min(...cardAnchors.map(a => a.x));
                 const maxX = Math.max(...cardAnchors.map(a => a.x));
 
@@ -507,11 +530,8 @@ export default function ReturnCombo(props: Props) {
                         <svg
                             style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
                         >
-                            {/* Main vertical line from cursor to bus */}
                             <path d={`M ${cursorPos.x} ${cursorPos.y} V ${busY}`} stroke="#666666" strokeWidth={1} fill="none" />
-                            {/* Horizontal bus line */}
                             <path d={`M ${minX} ${busY} H ${maxX}`} stroke="#666666" strokeWidth={1} fill="none" />
-                            {/* Stems from cards to bus */}
                             {cardAnchors.map((anchor) => (
                                 <path key={anchor.id} d={`M ${anchor.x} ${anchor.y} V ${busY}`} stroke="#666666" strokeWidth={1} fill="none" />
                             ))}
@@ -522,11 +542,11 @@ export default function ReturnCombo(props: Props) {
                                 left: cursorPos.x,
                                 top: busY + 12,
                                 transform: 'translateX(-50%)',
-                                background: '#666666',
+                                background: '#333333',
                                 color: '#FFFFFF',
                                 padding: '4px 8px',
                                 borderRadius: 4,
-                                fontSize: 16,
+                                fontSize: 12,
                                 fontFamily: 'Utile Regular, sans-serif',
                                 whiteSpace: 'nowrap',
                                 pointerEvents: 'none',
