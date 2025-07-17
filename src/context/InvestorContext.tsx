@@ -1,3 +1,5 @@
+"use client";
+
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 // ---- Static imports of each investor JSON file ----
