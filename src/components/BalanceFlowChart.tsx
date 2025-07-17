@@ -217,58 +217,6 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, onUpdate
     return null;
 };
 
-const DottedCursor: React.FC<
-    any & { onPositionUpdate?: (pos: { x: number; y: number }) => void; showBelow?: boolean }
-> = ({ x, width, height, points, onPositionUpdate, showBelow }) => {
-    // For some chart types (e.g., ComposedChart), x can be undefined – fall back to points array
-    let cx: number = 0;
-    if (points && points.length > 0 && typeof (points[0] as any).x === "number") {
-        cx = (points[0] as any).x;
-    } else if (typeof x === "number") {
-        cx = x + ((width ?? 0) / 2);
-    }
-
-    const pointY = points && points.length > 0 ? (points[0] as any).y : 0;
-    const dotRadius = 6;
-
-    let dashedEndY = height;
-    if (showBelow && points) {
-        const barInfo = (points as any[]).find((p) => typeof p.height === "number") as any;
-        if (barInfo && barInfo.y > pointY) {
-            dashedEndY = barInfo.y - 1;
-        }
-    }
-
-    const dashStartY = pointY + dotRadius;
-
-    const currentPayload = points && points.length > 0 ? (points[0] as any).payload : null;
-    const lastPayloadRef = React.useRef<any>();
-
-    // Notify parent after render commit to avoid nested updates loop
-    React.useEffect(() => {
-        if (onPositionUpdate && currentPayload && currentPayload !== lastPayloadRef.current) {
-            onPositionUpdate({ x: cx, y: pointY });
-            lastPayloadRef.current = currentPayload;
-        }
-    }, [cx, pointY, onPositionUpdate, currentPayload]);
-
-    return (
-        <g>
-            {showBelow && (
-                <line
-                    x1={cx}
-                    y1={dashStartY}
-                    x2={cx}
-                    y2={dashedEndY}
-                    stroke="#666666"
-                    strokeWidth={1}
-                    strokeDasharray="3 3"
-                />
-            )}
-        </g>
-    );
-};
-
 // ---------------- Main Component ----------------
 export default function BalanceFlowChart(props: Props) {
     const { style, balanceMode = 'nav', onBalanceModeChange } = props;
@@ -336,19 +284,6 @@ export default function BalanceFlowChart(props: Props) {
             setSelectedData(visibleData[visibleData.length - 1]);
         }
     }, [visibleData]);
-
-    const handleCursorPosition = React.useCallback(
-        (posRelToChart: { x: number; y: number }) => {
-            if (!chartAreaRef.current || !containerRef.current) return;
-            const chartRect = chartAreaRef.current.getBoundingClientRect();
-            const containerRect = containerRef.current.getBoundingClientRect();
-            setCursorPos({
-                x: chartRect.left - containerRect.left + posRelToChart.x,
-                y: chartRect.top - containerRect.top + posRelToChart.y,
-            });
-        },
-        [],
-    );
 
     // Measure card anchors once after mount and on resize – avoid tying to reactive props to prevent update loops
     React.useLayoutEffect(() => {
@@ -702,6 +637,18 @@ export default function BalanceFlowChart(props: Props) {
                                     const p = visibleData[state.activeTooltipIndex];
                                     if (p) setHoverPeriod(p.period);
                                 }
+
+                                if (state.activeCoordinate) {
+                                    // `activeCoordinate` is relative to the chart's inner SVG. We need to make it relative to the container.
+                                    if (chartAreaRef.current && containerRef.current) {
+                                        const chartRect = chartAreaRef.current.getBoundingClientRect();
+                                        const containerRect = containerRef.current.getBoundingClientRect();
+                                        setCursorPos({
+                                            x: chartRect.left - containerRect.left + state.activeCoordinate.x,
+                                            y: chartRect.top - containerRect.top + state.activeCoordinate.y,
+                                        });
+                                    }
+                                }
                             }
                         }}
                         onMouseLeave={() => {
@@ -784,9 +731,10 @@ export default function BalanceFlowChart(props: Props) {
                             content={(tooltipProps) => (
                                 <CustomTooltip {...(tooltipProps as any)} onUpdate={setSelectedData} />
                             )}
-                            cursor={<DottedCursor onPositionUpdate={handleCursorPosition} showBelow={false} />}
+                            cursor={{ stroke: '#666666', strokeWidth: 1 }}
                             labelFormatter={(label) => `${label}`}
-                            position={{ y: 0 }}
+                            position={{ y: -20 }}
+                            isAnimationActive={false}
                         />
                     </ComposedChart>
                 </ResponsiveContainer>

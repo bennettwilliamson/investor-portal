@@ -173,30 +173,6 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, onUpdate
     return null;
 };
 
-const DottedCursor: React.FC<
-    any & { onPositionUpdate?: (pos: { x: number; y: number }) => void }
-> = ({ x, width, height, points, onPositionUpdate }) => {
-    // Compute coordinates every render
-    const cx = x + (width ?? 0) / 2;
-    const barTopY = points && points.length > 0 ? points[0].y : 0;
-    const currentPayload = points && points.length > 0 ? (points[0] as any).payload : null;
-    const lastPayloadRef = React.useRef<any>();
-
-    // Notify parent *after* render commit to avoid nested updates
-    React.useEffect(() => {
-        if (onPositionUpdate && currentPayload && currentPayload !== lastPayloadRef.current) {
-            onPositionUpdate({ x: cx, y: barTopY });
-            lastPayloadRef.current = currentPayload;
-        }
-    }, [cx, barTopY, onPositionUpdate, currentPayload]);
-
-    return (
-        <g>
-            <line x1={cx} y1={0} x2={cx} y2={height} stroke="#666666" strokeWidth={1} />
-        </g>
-    );
-};
-
 export default function ReturnCombo(props: Props) {
     const { style, returnMode = 'total', onReturnModeChange } = props;
     const [viewMode, setViewMode] = React.useState<'dollar' | 'percent'>('dollar');
@@ -279,16 +255,6 @@ export default function ReturnCombo(props: Props) {
     const [cursorPos, setCursorPos] = React.useState<{ x: number; y: number } | null>(null);
     const [activeBarIndex, setActiveBarIndex] = React.useState<number | null>(null);
     const [cardAnchors, setCardAnchors] = React.useState<Array<{ id: string; x: number; y: number }>>([]);
-
-    const handleCursorPosition = React.useCallback((posRelToChart: { x: number; y: number }) => {
-        if (!chartAreaRef.current || !containerRef.current) return;
-        const chartRect = chartAreaRef.current.getBoundingClientRect();
-        const containerRect = containerRef.current.getBoundingClientRect();
-        setCursorPos({
-            x: chartRect.left - containerRect.left + posRelToChart.x,
-            y: chartRect.top - containerRect.top + posRelToChart.y,
-        });
-    }, []);
 
     React.useLayoutEffect(() => {
         const updateAnchors = () => {
@@ -450,6 +416,16 @@ export default function ReturnCombo(props: Props) {
                         onMouseMove={(state: any) => {
                             if (state && state.isTooltipActive) {
                                 setActiveBarIndex(state.activeTooltipIndex);
+                                if (state.activeCoordinate) {
+                                    if (chartAreaRef.current && containerRef.current) {
+                                        const chartRect = chartAreaRef.current.getBoundingClientRect();
+                                        const containerRect = containerRef.current.getBoundingClientRect();
+                                        setCursorPos({
+                                            x: chartRect.left - containerRect.left + state.activeCoordinate.x,
+                                            y: chartRect.top - containerRect.top + state.activeCoordinate.y,
+                                        });
+                                    }
+                                }
                             }
                         }}
                         onMouseLeave={() => {
@@ -478,9 +454,10 @@ export default function ReturnCombo(props: Props) {
                             content={(tooltipProps) => (
                                 <CustomTooltip {...(tooltipProps as any)} onUpdate={setSelectedData} />
                             )}
-                            cursor={<DottedCursor onPositionUpdate={handleCursorPosition} />}
+                            cursor={{ stroke: '#666666', strokeWidth: 1 }}
                             labelFormatter={(label) => `${label}`}
-                            position={{ y: 0 }}
+                            position={{ y: -20 }}
+                            isAnimationActive={false}
                         />
                         <Bar
                             dataKey={viewMode === 'dollar' ? 'returnDollar' : 'returnPercentValue'}
