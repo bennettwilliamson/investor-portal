@@ -412,7 +412,7 @@ export default function ReturnCombo(props: Props) {
             </div>
 
             {/* Chart area */}
-            <div style={{ flex: 1, position: 'relative', padding: 0, paddingBottom: 0 }} ref={chartAreaRef}>
+            <div style={{ position: 'relative', padding: 0, paddingBottom: 0, minHeight: 0 }} ref={chartAreaRef}>
                 <div style={{ display: 'none' }}>
                     {/* Time-frame toggle */}
                     <div style={{ display: 'flex', background: DARK_BLUE, padding: 2, borderRadius: 9999 }}>
@@ -442,7 +442,7 @@ export default function ReturnCombo(props: Props) {
                         ))}
                     </div>
                 </div>
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height={400}>
                     <BarChart
                         data={chartData}
                         margin={{ top: 48, right: 24, left: 24, bottom: 8 }}

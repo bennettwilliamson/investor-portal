@@ -642,7 +642,7 @@ export default function BalanceFlowChart(props: Props) {
             </div>
 
             {/* Chart area */}
-            <div style={{ flex: 1, position: 'relative', padding: 0, paddingBottom: 0 }} ref={chartAreaRef}>
+            <div style={{ position: 'relative', padding: 0, paddingBottom: 0, minHeight: 0 }} ref={chartAreaRef}>
                 <div style={{ display: 'none' }}>
                     {/* Time-frame toggle */}
                     <div
@@ -677,7 +677,7 @@ export default function BalanceFlowChart(props: Props) {
                         ))}
                     </div>
                 </div>
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height={400}>
                     <ComposedChart
                         data={visibleData}
                         margin={{ top: 24, right: 0, left: 0, bottom: 8 }}
