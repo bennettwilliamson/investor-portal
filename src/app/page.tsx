@@ -2,7 +2,7 @@
 
 import Header from '@/components/Header';
 import StatCard from '@/components/StatCard';
-import equityData from '@/data/brian_schmidt.json';
+import { useInvestor } from '@/context/InvestorContext';
 import styles from './page.module.scss';
 
 // Chart components (client-side rendered)
@@ -58,6 +58,9 @@ interface AggregatedRow {
 }
 
 export default function Home() {
+  // Get currently selected investor's raw transaction rows
+  const { equityData } = useInvestor();
+
   // Parse and aggregate transactions by quarter using memoisation to avoid recomputation
   const { rows, stats, historical, welcome } = React.useMemo(() => {
     // Convert raw transactions
@@ -254,7 +257,7 @@ export default function Home() {
     };
 
     return { rows, stats, historical, welcome };
-  }, []);
+  }, [equityData]);
 
   // NEW: balance mode toggle (GAAP vs NAV)
   const [balanceMode, setBalanceMode] = React.useState<'gaap' | 'nav'>('nav');

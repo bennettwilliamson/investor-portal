@@ -84,3 +84,19 @@
     color: #000;
   }
 } 
+
+// ---- Investor select (dev) ----
+.investorSelect {
+  background: #2a2a2a;
+  border: 1px solid #444;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  margin-right: 1rem;
+
+  &:hover {
+    border-color: var(--color-primary);
+  }
+} 

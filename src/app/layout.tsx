@@ -8,6 +8,7 @@ import {
   SignedOut,
   UserButton,
 } from "@clerk/nextjs";
+import { InvestorProvider } from '@/context/InvestorContext';
 
 export const metadata = {
   title: "Alturas Real Estate Fund - Investor Portal",
@@ -31,7 +32,11 @@ export default function RootLayout({
       }}
     >
       <html lang="en">
-        <body>{children}</body>
+        <body>
+          <InvestorProvider>
+            {children}
+          </InvestorProvider>
+        </body>
       </html>
     </ClerkProvider>
   );
