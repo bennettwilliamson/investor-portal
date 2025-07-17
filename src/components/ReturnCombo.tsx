@@ -301,6 +301,8 @@ export default function ReturnCombo(props: Props) {
                 anchors.push({ id, x: rect.left - containerRect.left + rect.width / 2, y: rect.top - containerRect.top + rect.height });
             });
 
+            anchors.sort((a, b) => a.id.localeCompare(b.id));
+
             setCardAnchors((prev) => {
                 if (
                     prev.length === anchors.length &&
@@ -315,7 +317,7 @@ export default function ReturnCombo(props: Props) {
         updateAnchors();
         window.addEventListener('resize', updateAnchors);
         return () => window.removeEventListener('resize', updateAnchors);
-    }, [selectedData, timeFrame, viewMode, returnMode]);
+    }, []);
 
     return (
         <div

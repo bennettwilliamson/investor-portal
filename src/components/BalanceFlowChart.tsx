@@ -350,7 +350,7 @@ export default function BalanceFlowChart(props: Props) {
         [],
     );
 
-    // Re-measure anchors on mount, resize, or when card refs change
+    // Measure card anchors once after mount and on resize – avoid tying to reactive props to prevent update loops
     React.useLayoutEffect(() => {
         const updateAnchors = () => {
             if (!containerRef.current) return;
@@ -363,7 +363,8 @@ export default function BalanceFlowChart(props: Props) {
                 anchors.push({ id, x: rect.left - containerRect.left + rect.width / 2, y: rect.top - containerRect.top + rect.height });
             });
 
-            // Update state only if something actually moved/changed
+            anchors.sort((a, b) => a.id.localeCompare(b.id));
+
             setCardAnchors((prev) => {
                 if (
                     prev.length === anchors.length &&
@@ -378,7 +379,7 @@ export default function BalanceFlowChart(props: Props) {
         updateAnchors();
         window.addEventListener('resize', updateAnchors);
         return () => window.removeEventListener('resize', updateAnchors);
-    }, [selectedData, timeFrame, balanceMode]);
+    }, []);
 
     // Compute dynamic Y-axis ticks aiming for 5–8 labels
     const baseStep = 100_000;
