@@ -10,7 +10,7 @@ interface Params {
 
 export async function GET(_req: Request, { params }: Params) {
   const { name } = params;
-  const filePath = path.join(process.cwd(), "src", "data", `${name}.json`);
+  const filePath = path.join(process.cwd(), "public", "data", `${name}.json`);
   try {
     const data = await fs.readFile(filePath, "utf8");
     // Return raw json string with correct content-type

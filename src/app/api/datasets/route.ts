@@ -5,7 +5,7 @@ import fs from "fs/promises";
 import path from "path";
 
 export async function GET() {
-  const dataDir = path.join(process.cwd(), "src", "data");
+  const dataDir = path.join(process.cwd(), "public", "data");
   try {
     const files: string[] = await fs.readdir(dataDir);
     const jsonFiles = files
