@@ -127,25 +127,27 @@ export default function Home() {
 
         if (type === 'Contribution - Equity') {
           contributionDollar += tx.amount;
-        } else if (type === 'Income Paid') {
+        }
+        // ----- Realised earnings components -----
+        else if (type.startsWith('Income Paid')) {
+          // Includes both "Income Paid" and any "Income Paid - Adj" variants
           incomePaidDollar += tx.amount;
-        } else if (type === 'Income Reinvestment') {
-          // Reinvested income is also realised earnings but remains in the fund
+        } else if (type.startsWith('Income Reinvestment')) {
+          // Includes "Income Reinvestment" and "Income Reinvestment - Adj"
           incomeReinvestDollar += tx.amount;
           action = 'Reinvested';
-        } else if (type.startsWith('Distribution -')) {
-          // All cash distributions to the investor are considered realised returns
-          incomePaidDollar += tx.amount;
+        // ----- Unrealised component -----
+        } else if (type.startsWith('Unrealized Gains/Losses')) {
+          // Includes both base and "- Adj" variants
+          unrealizedDollar += tx.amount;
         } else if (type === 'Redemption - GAAP') {
           redemptionGaapDollar += tx.amount;
         } else if (type === 'Redemption - NAV') {
           redemptionNavDollar += tx.amount;
         } else if (type === 'Tax Increase/Decrease') {
           taxDollar += tx.amount;
-        } else if (type.startsWith('Unrealized Gains/Losses')) {
-          unrealizedDollar += tx.amount;
         } else {
-          // Ignore other transaction types for realised earnings
+          // Ignore other transaction types for return calculations
         }
       });
 
@@ -158,8 +160,16 @@ export default function Home() {
       cumulativeUnreal += unrealizedDollar - redemptionNavDollar;
       const navEnd = gaapEnd + cumulativeUnreal;
 
-      // Use GAAP beginning balance as denominator per user requirement
-      const denominator = gaapBegin > 0 ? gaapBegin : 0;
+      // ----- Denominator: GAAP capital account *excluding* any contributions/withdrawals after Jan-1-2025 -----
+      let baselineGaap: number | null = null;
+      if (!baselineGaap && new Date(grp.year, (grp.quarter - 1) * 3, 1) >= new Date('2025-01-01T00:00:00Z')) {
+        baselineGaap = gaapBegin;
+      }
+
+      const denominator = new Date(grp.year, (grp.quarter - 1) * 3, 1) >= new Date('2025-01-01T00:00:00Z') && baselineGaap !== null
+        ? baselineGaap
+        : gaapBegin;
+
       const realizedRate = denominator > 0 ? realizedDollar / denominator : 0;
       const totalReturnDollar = realizedDollar + unrealizedDollar;
       const totalReturnRate = denominator > 0 ? totalReturnDollar / denominator : 0;
