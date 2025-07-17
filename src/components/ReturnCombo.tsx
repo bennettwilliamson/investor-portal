@@ -260,18 +260,20 @@ export default function ReturnCombo(props: Props) {
 
     // ---------- Refs & state for connector paths ----------
     const containerRef = React.useRef<HTMLDivElement>(null);
-    const chartAreaRef = React.useRef<HTMLDivElement>(null);
-    const returnCardRef = React.useRef<HTMLDivElement>(null);
-    const beginningCardRef = React.useRef<HTMLDivElement>(null);
-    const endingCardRef = React.useRef<HTMLDivElement>(null);
+    const chartAreaRef  = React.useRef<HTMLDivElement>(null);
+
+    // Store refs to each metric card in a map so we can measure them dynamically
+    const cardRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
+    const setCardRef = React.useCallback(
+        (id: string) => (el: HTMLDivElement | null) => {
+            cardRefs.current[id] = el;
+        },
+        [],
+    );
 
     const [cursorPos, setCursorPos] = React.useState<{ x: number; y: number } | null>(null);
     const [activeBarIndex, setActiveBarIndex] = React.useState<number | null>(null);
-    const [cardAnchors, setCardAnchors] = React.useState({
-        return: null as { x: number; y: number } | null,
-        begin: null as { x: number; y: number } | null,
-        end: null as { x: number; y: number } | null,
-    });
+    const [cardAnchors, setCardAnchors] = React.useState<Array<{ id: string; x: number; y: number }>>([]);
 
     const handleCursorPosition = React.useCallback((posRelToChart: { x: number; y: number }) => {
         if (!chartAreaRef.current || !containerRef.current) return;
@@ -284,24 +286,22 @@ export default function ReturnCombo(props: Props) {
     }, []);
 
     React.useLayoutEffect(() => {
-        function updateAnchors() {
+        const updateAnchors = () => {
             if (!containerRef.current) return;
             const containerRect = containerRef.current.getBoundingClientRect();
-            const getAnchor = (ref: React.RefObject<HTMLDivElement>) => {
-                if (!ref.current) return null;
-                const rect = ref.current.getBoundingClientRect();
-                return { x: rect.left - containerRect.left + rect.width / 2, y: rect.top - containerRect.top + rect.height };
-            };
-            setCardAnchors({
-                return: getAnchor(returnCardRef),
-                begin: getAnchor(beginningCardRef),
-                end: getAnchor(endingCardRef),
+            const anchors: Array<{ id: string; x: number; y: number }> = [];
+            Object.entries(cardRefs.current).forEach(([id, el]) => {
+                if (!el) return;
+                const rect = el.getBoundingClientRect();
+                anchors.push({ id, x: rect.left - containerRect.left + rect.width / 2, y: rect.top - containerRect.top + rect.height });
             });
-        }
+            setCardAnchors(anchors);
+        };
+
         updateAnchors();
         window.addEventListener('resize', updateAnchors);
         return () => window.removeEventListener('resize', updateAnchors);
-    }, []);
+    }, [selectedData, timeFrame, viewMode, returnMode]);
 
     return (
         <div
@@ -329,17 +329,17 @@ export default function ReturnCombo(props: Props) {
                         const labelStyle: React.CSSProperties = { fontSize: 14, color: '#C0C0C0' };
                         return (
                             <>
-                                <div style={cardBase} ref={beginningCardRef}>
+                                <div style={cardBase} ref={setCardRef('begin')}>
                                     <div style={valueStyle}>{currencyFormatter.format(selectedData.beginningBalance)}</div>
                                     <div style={lineStyle} />
                                     <div style={labelStyle}>Beginning Balance</div>
                                 </div>
-                                <div style={cardBase} ref={returnCardRef}>
+                                <div style={cardBase} ref={setCardRef('return')}>
                                     <div style={valueStyle}>{returnValue}</div>
                                     <div style={lineStyle} />
                                     <div style={labelStyle}>{viewMode === 'dollar' ? 'Realized Return ($)' : 'Realized Return (%)'}</div>
                                 </div>
-                                <div style={cardBase} ref={endingCardRef}>
+                                <div style={cardBase} ref={setCardRef('end')}>
                                     <div style={valueStyle}>{currencyFormatter.format(selectedData.endingBalance)}</div>
                                     <div style={lineStyle} />
                                     <div style={labelStyle}>Ending Balance</div>
@@ -507,16 +507,37 @@ export default function ReturnCombo(props: Props) {
             {cursorPos && cardAnchors && (
                 <>
                     <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
-                        {(['return', 'begin', 'end'] as const).map((key) => {
-                            const anchor = (cardAnchors as any)[key];
-                            if (!anchor) return null;
+                        {cardAnchors.map((anchor) => {
                             const breakY = anchor.y + 10;
                             const d = `M ${cursorPos.x} ${cursorPos.y} L ${cursorPos.x} ${breakY} L ${anchor.x} ${breakY} L ${anchor.x} ${anchor.y}`;
-                            return <path key={key} d={d} stroke="#666666" strokeWidth={1} fill="none" />;
+                            return <path key={anchor.id} d={d} stroke="#666666" strokeWidth={1} fill="none" />;
                         })}
                     </svg>
-                    {cardAnchors.return && (
-                        <div style={{ position: 'absolute', left: cursorPos.x, top: (() => { if (containerRef.current && cardAnchors.return) { const breakY = cardAnchors.return.y + 10; const offset = 12; return breakY + offset; } return 0; })(), transform: 'translateX(-50%)', background: '#666666', color: '#FFFFFF', padding: '4px 8px', borderRadius: 4, fontSize: 16, fontFamily: 'Utile Regular, sans-serif', whiteSpace: 'nowrap', pointerEvents: 'none' }}>{selectedData.quarterLabel}</div>
+                    {cardAnchors.length > 0 && (
+                        <div
+                            style={{
+                                position: 'absolute',
+                                left: cursorPos.x,
+                                top: (() => {
+                                    if (containerRef.current) {
+                                        const breakY = cardAnchors[0].y + 10;
+                                        return breakY + 12; // offset
+                                    }
+                                    return 0;
+                                })(),
+                                transform: 'translateX(-50%)',
+                                background: '#666666',
+                                color: '#FFFFFF',
+                                padding: '4px 8px',
+                                borderRadius: 4,
+                                fontSize: 16,
+                                fontFamily: 'Utile Regular, sans-serif',
+                                whiteSpace: 'nowrap',
+                                pointerEvents: 'none',
+                            }}
+                        >
+                            {selectedData.quarterLabel}
+                        </div>
                     )}
                 </>
             )}
