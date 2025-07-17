@@ -2,7 +2,7 @@
 
 import Header from '@/components/Header';
 import StatCard from '@/components/StatCard';
-import equityData from '@/data/brian_schmidt.json';
+import { useDataset } from '@/contexts/DatasetContext';
 import styles from './page.module.scss';
 
 // Chart components (client-side rendered)
@@ -58,6 +58,25 @@ interface AggregatedRow {
 }
 
 export default function Home() {
+  // Show loading state while dataset is being fetched
+  const { data: equityData, loading: datasetLoading } = useDataset();
+  if (datasetLoading) {
+    return (
+      <main className={styles.main} style={{ color: '#fff', padding: '2rem' }}>
+        Loading dataset...
+      </main>
+    );
+  }
+
+  // Empty state if no data
+  if (!equityData || equityData.length === 0) {
+    return (
+      <main className={styles.main} style={{ color: '#fff', padding: '2rem' }}>
+        No data available.
+      </main>
+    );
+  }
+
   // Parse and aggregate transactions by quarter using memoisation to avoid recomputation
   const { rows, stats, historical, welcome } = React.useMemo(() => {
     // Convert raw transactions
@@ -254,7 +273,7 @@ export default function Home() {
     };
 
     return { rows, stats, historical, welcome };
-  }, []);
+  }, [equityData]);
 
   // NEW: balance mode toggle (GAAP vs NAV)
   const [balanceMode, setBalanceMode] = React.useState<'gaap' | 'nav'>('nav');

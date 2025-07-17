@@ -8,6 +8,7 @@ import {
   SignedOut,
   UserButton,
 } from "@clerk/nextjs";
+import { DatasetProvider } from '@/contexts/DatasetContext';
 
 export const metadata = {
   title: "Alturas Real Estate Fund - Investor Portal",
@@ -31,7 +32,9 @@ export default function RootLayout({
       }}
     >
       <html lang="en">
-        <body>{children}</body>
+        <body>
+          <DatasetProvider>{children}</DatasetProvider>
+        </body>
       </html>
     </ClerkProvider>
   );

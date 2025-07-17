@@ -5,8 +5,11 @@ import Image from 'next/image';
 import styles from './Header.module.scss';
 // Added Clerk auth component imports
 import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { useDataset } from '@/contexts/DatasetContext';
 
 export default function Header() {
+  const { datasets, selected, selectDataset } = useDataset();
+
   return (
     <header className={styles.header}>
       <div className={styles.container}>
@@ -26,6 +29,20 @@ export default function Header() {
             <Link href="#">Documents</Link>
             <Link href="#">Requests</Link>
             <Link href="#">Profile</Link>
+            {/* Dataset dropdown */}
+            {datasets.length > 0 && (
+              <select
+                value={selected ?? ''}
+                onChange={(e) => selectDataset(e.target.value)}
+                style={{ marginLeft: '1rem', padding: '0.25rem 0.5rem', borderRadius: '4px' }}
+              >
+                {datasets.map((name) => (
+                  <option key={name} value={name}>
+                    {name.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+                  </option>
+                ))}
+              </select>
+            )}
           </nav>
           {/* Show user button when signed in */}
           <SignedIn>
