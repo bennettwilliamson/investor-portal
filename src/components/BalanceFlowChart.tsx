@@ -281,13 +281,18 @@ export default function BalanceFlowChart(props: Props) {
 
     // Map of cardId → DOM element so we can measure their positions
     const cardRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
-    // Helper factory: returns a stable callback ref for a given id
-    const setCardRef = React.useCallback(
-        (id: string) => (el: HTMLDivElement | null) => {
-            cardRefs.current[id] = el;
-        },
-        [],
-    );
+    // Helper: returns the SAME callback instance for a given id
+    const setCardRef = React.useMemo(() => {
+        const cache = new Map<string, (el: HTMLDivElement | null) => void>();
+        return (id: string) => {
+            if (!cache.has(id)) {
+                cache.set(id, (el: HTMLDivElement | null) => {
+                    cardRefs.current[id] = el;
+                });
+            }
+            return cache.get(id)!;
+        };
+    }, []);
 
     const [cursorPos, setCursorPos] = React.useState<{ x: number; y: number } | null>(null);
     const [cardAnchors, setCardAnchors] = React.useState<Array<{ id: string; x: number; y: number }>>([]);
@@ -351,17 +356,23 @@ export default function BalanceFlowChart(props: Props) {
             if (!containerRef.current) return;
             const containerRect = containerRef.current.getBoundingClientRect();
 
-            const newAnchors: Array<{ id: string; x: number; y: number }> = [];
+            const anchors: Array<{ id: string; x: number; y: number }> = [];
             Object.entries(cardRefs.current).forEach(([id, el]) => {
                 if (!el) return;
                 const rect = el.getBoundingClientRect();
-                newAnchors.push({
-                    id,
-                    x: rect.left - containerRect.left + rect.width / 2,
-                    y: rect.top - containerRect.top + rect.height,
-                });
+                anchors.push({ id, x: rect.left - containerRect.left + rect.width / 2, y: rect.top - containerRect.top + rect.height });
             });
-            setCardAnchors(newAnchors);
+
+            // Update state only if something actually moved/changed
+            setCardAnchors((prev) => {
+                if (
+                    prev.length === anchors.length &&
+                    prev.every((p, i) => p.id === anchors[i].id && p.x === anchors[i].x && p.y === anchors[i].y)
+                ) {
+                    return prev;
+                }
+                return anchors;
+            });
         };
 
         updateAnchors();

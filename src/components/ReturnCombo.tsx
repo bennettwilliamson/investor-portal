@@ -264,12 +264,17 @@ export default function ReturnCombo(props: Props) {
 
     // Store refs to each metric card in a map so we can measure them dynamically
     const cardRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
-    const setCardRef = React.useCallback(
-        (id: string) => (el: HTMLDivElement | null) => {
-            cardRefs.current[id] = el;
-        },
-        [],
-    );
+    const setCardRef = React.useMemo(() => {
+        const cache = new Map<string, (el: HTMLDivElement | null) => void>();
+        return (id: string) => {
+            if (!cache.has(id)) {
+                cache.set(id, (el: HTMLDivElement | null) => {
+                    cardRefs.current[id] = el;
+                });
+            }
+            return cache.get(id)!;
+        };
+    }, []);
 
     const [cursorPos, setCursorPos] = React.useState<{ x: number; y: number } | null>(null);
     const [activeBarIndex, setActiveBarIndex] = React.useState<number | null>(null);
@@ -295,7 +300,16 @@ export default function ReturnCombo(props: Props) {
                 const rect = el.getBoundingClientRect();
                 anchors.push({ id, x: rect.left - containerRect.left + rect.width / 2, y: rect.top - containerRect.top + rect.height });
             });
-            setCardAnchors(anchors);
+
+            setCardAnchors((prev) => {
+                if (
+                    prev.length === anchors.length &&
+                    prev.every((p, i) => p.id === anchors[i].id && p.x === anchors[i].x && p.y === anchors[i].y)
+                ) {
+                    return prev;
+                }
+                return anchors;
+            });
         };
 
         updateAnchors();
