@@ -794,7 +794,7 @@ export default function BalanceFlowChart(props: Props) {
             {/* Legend */}
             <div
                 style={{
-                    padding: '24px 0 0 0',
+                    padding: '16px 0 0 24px',
                     display: 'flex',
                     flexDirection: 'row',
                     gap: '16px',
