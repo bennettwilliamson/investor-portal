@@ -25,7 +25,7 @@ export default function RootLayout({
       localization={{
         signIn: {
           start: {
-            title: 'Sign In To Your Investor Portal',
+            title: 'Sign In To The Investor Portal',
             subtitle: '',
           }
         }
