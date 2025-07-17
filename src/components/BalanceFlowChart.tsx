@@ -277,18 +277,20 @@ export default function BalanceFlowChart(props: Props) {
 
     // ---------- Refs & state used for dynamic connector paths ----------
     const containerRef = React.useRef<HTMLDivElement>(null);
-    const chartAreaRef = React.useRef<HTMLDivElement>(null);
+    const chartAreaRef         = React.useRef<HTMLDivElement>(null);
 
-    const beginningCardRef = React.useRef<HTMLDivElement>(null);
-    const endingCardRef = React.useRef<HTMLDivElement>(null);
-    const returnCardRef = React.useRef<HTMLDivElement>(null);
+    // Map of cardId → DOM element so we can measure their positions
+    const cardRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
+    // Helper factory: returns a stable callback ref for a given id
+    const setCardRef = React.useCallback(
+        (id: string) => (el: HTMLDivElement | null) => {
+            cardRefs.current[id] = el;
+        },
+        [],
+    );
 
     const [cursorPos, setCursorPos] = React.useState<{ x: number; y: number } | null>(null);
-    const [cardAnchors, setCardAnchors] = React.useState({
-        return: null as { x: number; y: number } | null,
-        begin: null as { x: number; y: number } | null,
-        end: null as { x: number; y: number } | null,
-    });
+    const [cardAnchors, setCardAnchors] = React.useState<Array<{ id: string; x: number; y: number }>>([]);
 
     const [activeBarIndex, setActiveBarIndex] = React.useState<number | null>(null);
     const [hoverPeriod, setHoverPeriod] = React.useState<number | null>(null);
@@ -343,31 +345,29 @@ export default function BalanceFlowChart(props: Props) {
         [],
     );
 
+    // Re-measure anchors on mount, resize, or when card refs change
     React.useLayoutEffect(() => {
-        function updateAnchors() {
+        const updateAnchors = () => {
             if (!containerRef.current) return;
             const containerRect = containerRef.current.getBoundingClientRect();
 
-            const getAnchor = (ref: React.RefObject<HTMLDivElement>) => {
-                if (!ref.current) return null;
-                const rect = ref.current.getBoundingClientRect();
-                return {
+            const newAnchors: Array<{ id: string; x: number; y: number }> = [];
+            Object.entries(cardRefs.current).forEach(([id, el]) => {
+                if (!el) return;
+                const rect = el.getBoundingClientRect();
+                newAnchors.push({
+                    id,
                     x: rect.left - containerRect.left + rect.width / 2,
                     y: rect.top - containerRect.top + rect.height,
-                };
-            };
-
-            setCardAnchors({
-                return: getAnchor(returnCardRef),
-                begin: getAnchor(beginningCardRef),
-                end: getAnchor(endingCardRef),
+                });
             });
-        }
+            setCardAnchors(newAnchors);
+        };
 
         updateAnchors();
         window.addEventListener('resize', updateAnchors);
         return () => window.removeEventListener('resize', updateAnchors);
-    }, []);
+    }, [selectedData, timeFrame, balanceMode]);
 
     // Compute dynamic Y-axis ticks aiming for 5–8 labels
     const baseStep = 100_000;
@@ -521,12 +521,12 @@ export default function BalanceFlowChart(props: Props) {
                         };
                         return (
                             <>
-                                <div style={cardBase} ref={beginningCardRef}>
+                                <div style={cardBase} ref={setCardRef('begin')}>
                                     <div style={valueStyle}>{currencyFormatter.format(selectedData.beginningBalance)}</div>
                                     <div style={lineStyle} />
                                     <div style={labelStyle}>Beginning Balance</div>
                                 </div>
-                                <div style={cardBase} ref={endingCardRef}>
+                                <div style={cardBase} ref={setCardRef('end')}>
                                     <div style={valueStyle}>{currencyFormatter.format(selectedData.endingBalance)}</div>
                                     <div style={lineStyle} />
                                     <div style={labelStyle}>Ending Balance</div>
@@ -535,7 +535,7 @@ export default function BalanceFlowChart(props: Props) {
                                     const cards: JSX.Element[] = [];
                                     if (selectedData.contributionDollar > 0) {
                                         cards.push(
-                                            <div style={cardBase} key="contrib">
+                                            <div style={cardBase} key="contrib" ref={setCardRef('contrib')}>
                                                 <div style={valueStyle}>{currencyFormatter.format(selectedData.contributionDollar)}</div>
                                                 <div style={lineStyle} />
                                                 <div style={labelStyle}>Contribution</div>
@@ -544,7 +544,7 @@ export default function BalanceFlowChart(props: Props) {
                                     }
                                     if (balanceMode === 'gaap' && selectedData.redemptionGaapDollar > 0) {
                                         cards.push(
-                                            <div style={cardBase} key="redG">
+                                            <div style={cardBase} key="redG" ref={setCardRef('redG')}>
                                                 <div style={valueStyle}>{currencyFormatter.format(selectedData.redemptionGaapDollar)}</div>
                                                 <div style={lineStyle} />
                                                 <div style={labelStyle}>Redemption (GAAP)</div>
@@ -553,7 +553,7 @@ export default function BalanceFlowChart(props: Props) {
                                     }
                                     if (balanceMode === 'nav' && selectedData.redemptionNavDollar > 0) {
                                         cards.push(
-                                            <div style={cardBase} key="redN">
+                                            <div style={cardBase} key="redN" ref={setCardRef('redN')}>
                                                 <div style={valueStyle}>{currencyFormatter.format(selectedData.redemptionNavDollar)}</div>
                                                 <div style={lineStyle} />
                                                 <div style={labelStyle}>Redemption (NAV)</div>
@@ -644,7 +644,7 @@ export default function BalanceFlowChart(props: Props) {
             </div>
 
             {/* Chart area */}
-            <div style={{ flex: 1, position: 'relative', padding: 0, paddingBottom: 64 }} ref={chartAreaRef}>
+            <div style={{ flex: 1, position: 'relative', padding: 0, paddingBottom: 0 }} ref={chartAreaRef}>
                 <div style={{ display: 'none' }}>
                     {/* Time-frame toggle */}
                     <div
@@ -782,10 +782,7 @@ export default function BalanceFlowChart(props: Props) {
             {/* Legend */}
             <div
                 style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 24,
-                    padding: 0,
+                    padding: '24px 0 0 0',
                     display: 'flex',
                     flexDirection: 'row',
                     gap: '16px',
@@ -813,23 +810,21 @@ export default function BalanceFlowChart(props: Props) {
                     <svg
                         style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
                     >
-                        {(['return', 'begin', 'end'] as const).map((key) => {
-                            const anchor = (cardAnchors as any)[key];
-                            if (!anchor) return null;
+                        {cardAnchors.map((anchor) => {
                             const breakY = anchor.y + 10;
                             const d = `M ${cursorPos.x} ${cursorPos.y} L ${cursorPos.x} ${breakY} L ${anchor.x} ${breakY} L ${anchor.x} ${anchor.y}`;
-                            return <path key={key} d={d} stroke="#666666" strokeWidth={1} fill="none" />;
+                            return <path key={anchor.id} d={d} stroke="#666666" strokeWidth={1} fill="none" />;
                         })}
                     </svg>
-                    {cardAnchors.return && (
+                    {cardAnchors.length > 0 && (
                         <div
                             style={{
                                 position: 'absolute',
                                 left: cursorPos.x,
                                 top: (() => {
-                                    const breakY = cardAnchors.return!.y + 10;
-                                    const offset = 12;
-                                    return breakY + offset;
+                                    const anchor0 = cardAnchors[0];
+                                    const breakY  = anchor0.y + 10;
+                                    return breakY + 12; // offset below elbow
                                 })(),
                                 transform: 'translateX(-50%)',
                                 background: '#666666',
