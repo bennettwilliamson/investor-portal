@@ -325,6 +325,7 @@ export default function ReturnCombo(props: Props) {
                 ...style,
                 display: 'grid',
                 gridTemplateRows: 'auto 1fr auto',
+                rowGap: 24,
                 width: '100%',
                 height: '100%',
                 fontFamily: 'Utile Regular, sans-serif',
