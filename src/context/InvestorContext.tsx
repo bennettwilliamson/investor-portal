@@ -5,6 +5,7 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 // ---- Static imports of each investor JSON file ----
 import brianData from '@/data/brian_schmidt.json';
 import bennettData from '@/data/equity_bennett_williamson.json';
+import boeData from '@/data/equity_boe.json';
 
 // Map of available investors (extend as needed)
 export const investors = {
@@ -15,6 +16,10 @@ export const investors = {
   bennett: {
     name: 'Bennett Williamson',
     data: bennettData as any[],
+  },
+  boe: {
+    name: 'Stelck Boeger',
+    data: boeData as any[],
   },
 } as const;
 

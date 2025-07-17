@@ -133,6 +133,9 @@ export default function Home() {
           // Reinvested income is also realised earnings but remains in the fund
           incomeReinvestDollar += tx.amount;
           action = 'Reinvested';
+        } else if (type.startsWith('Distribution -')) {
+          // All cash distributions to the investor are considered realised returns
+          incomePaidDollar += tx.amount;
         } else if (type === 'Redemption - GAAP') {
           redemptionGaapDollar += tx.amount;
         } else if (type === 'Redemption - NAV') {
