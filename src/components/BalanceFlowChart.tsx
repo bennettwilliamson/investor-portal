@@ -498,7 +498,7 @@ export default function BalanceFlowChart(props: Props) {
                 style={{
                     display: 'flex',
                     flexDirection: 'row',
-                    alignItems: 'flex-start',
+                    alignItems: 'flex-end',
                     justifyContent: 'space-between',
                     width: '100%',
                     padding: '0 0 8px 0',
