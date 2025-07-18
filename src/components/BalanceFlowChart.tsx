@@ -318,6 +318,9 @@ export default function BalanceFlowChart(props: Props) {
     const [activeBarIndex, setActiveBarIndex] = React.useState<number | null>(null);
     const [hoverPeriod, setHoverPeriod] = React.useState<number | null>(null);
 
+    // New: track the bar that has been explicitly clicked ("frozen" selection).
+    const [freezeIndex, setFreezeIndex] = React.useState<number | null>(null);
+
     // Resolve the dataset: prefer caller-supplied data, otherwise fall back to the internal simulation.
     const data = React.useMemo<PeriodData[]>(() => {
         if (props.data && props.data.length) return props.data
@@ -341,18 +344,24 @@ export default function BalanceFlowChart(props: Props) {
         }
     }, [data, timeFrame]);
 
-    const hasFlow = React.useMemo(() => {
-        if (activeBarIndex === null) return false;
-        const row = visibleData[activeBarIndex];
-        return !!row && row.netFlow !== 0;
-    }, [activeBarIndex, visibleData]);
-
     const [selectedData, setSelectedData] = React.useState<PeriodData>(() => visibleData[visibleData.length - 1]);
+
+    // Helper to update the metric cards only when no bar is frozen.
+    const handleTooltipUpdate = React.useCallback(
+        (row: PeriodData) => {
+            if (freezeIndex === null) {
+                setSelectedData(row);
+            }
+        },
+        [freezeIndex],
+    );
 
     React.useEffect(() => {
         if (visibleData.length > 0) {
             setSelectedData(visibleData[visibleData.length - 1]);
         }
+        // Clear any frozen selection when the visible dataset changes (e.g., timeframe switch).
+        setFreezeIndex(null);
     }, [visibleData]);
 
     // Ensure the data used for the cursor/ReferenceLines is always in sync with the bar the user is hovering.
@@ -363,6 +372,8 @@ export default function BalanceFlowChart(props: Props) {
         }
         return selectedData;
     }, [activeBarIndex, visibleData, selectedData]);
+
+    const hasFlow = React.useMemo(() => currentHoverData.netFlow !== 0, [currentHoverData]);
 
     // Compute dynamic Y-axis ticks aiming for 5–8 labels
     const baseStep = 100_000;
@@ -682,7 +693,18 @@ export default function BalanceFlowChart(props: Props) {
             </div>
 
             {/* Chart area */}
-            <div style={{ flex: 1, position: 'relative', padding: 0 }} ref={chartAreaRef}>
+            <div
+                style={{ flex: 1, position: 'relative', padding: 0 }}
+                ref={chartAreaRef}
+                onClick={() => {
+                    if (freezeIndex !== null) {
+                        setFreezeIndex(null);
+                        setSelectedData(visibleData[visibleData.length - 1]);
+                        setHoverPeriod(null);
+                        setActiveBarIndex(null);
+                    }
+                }}
+            >
                 <div style={{ display: 'none' }}>
                     {/* Time-frame toggle */}
                     <div
@@ -722,6 +744,9 @@ export default function BalanceFlowChart(props: Props) {
                         data={visibleData}
                         margin={{ top: 24, right: 0, left: 0, bottom: 8 }}
                         onMouseMove={(state: any) => {
+                            // Ignore hover updates when a bar is frozen via click.
+                            if (freezeIndex !== null) return;
+
                             if (state && state.isTooltipActive) {
                                 setActiveBarIndex(state.activeTooltipIndex);
                                 if (state.activeTooltipIndex != null) {
@@ -731,7 +756,9 @@ export default function BalanceFlowChart(props: Props) {
                             }
                         }}
                         onMouseLeave={() => {
-                            setSelectedData(visibleData[visibleData.length - 1]);
+                            if (freezeIndex === null) {
+                                setSelectedData(visibleData[visibleData.length - 1]);
+                            }
                             setActiveBarIndex(null);
                             setHoverPeriod(null);
                         }}
@@ -812,7 +839,24 @@ export default function BalanceFlowChart(props: Props) {
                                 <Cell
                                     key={`cell-${index}`}
                                     fill={entry.netFlow >= 0 ? COLORS.Reinvested : COLORS.Distributed}
-                                    fillOpacity={activeBarIndex !== null && index !== activeBarIndex ? 0.1 : 1}
+                                    fillOpacity={freezeIndex !== null && index !== freezeIndex ? 0.1 : 1}
+                                    onClick={(e) => {
+                                        // Prevent the click from bubbling to the overlay reset handler.
+                                        e.stopPropagation();
+
+                                        if (freezeIndex === index) {
+                                            // Clicking the same bar toggles off the freeze.
+                                            setFreezeIndex(null);
+                                            setSelectedData(visibleData[visibleData.length - 1]);
+                                            setHoverPeriod(null);
+                                            setActiveBarIndex(null);
+                                        } else {
+                                            setFreezeIndex(index);
+                                            setSelectedData(entry);
+                                            setHoverPeriod(entry.period);
+                                            setActiveBarIndex(null);
+                                        }
+                                    }}
                                 />
                             ))}
                         </Bar>
@@ -830,7 +874,7 @@ export default function BalanceFlowChart(props: Props) {
                         <Tooltip
                             // Cast tooltip props to any to bypass Recharts' loose generic typing
                             content={(tooltipProps) => (
-                                <CustomTooltip {...(tooltipProps as any)} onUpdate={setSelectedData} />
+                                <CustomTooltip {...(tooltipProps as any)} onUpdate={handleTooltipUpdate} />
                             )}
                             cursor={<DottedCursor showBelow={false} label={currentHoverData.label} chartWidth={chartWidth} /> as any}
                             labelFormatter={(label) => `${label}`}
