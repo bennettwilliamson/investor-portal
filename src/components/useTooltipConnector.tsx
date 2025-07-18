@@ -64,14 +64,11 @@ export function useTooltipConnector({
         style={{
           position: 'absolute',
           left: cursorPos.x,
-          top: cursorPos.y, // Top of the chart area
-          /*
-           * Centre horizontally and shift the label up by 100% of its height so that
-           * its bottom edge rests directly on the tooltip line. This creates a flush
-           * connection with no visible gap.
-           */
+          top: cursorPos.y, // Start at the very top of the chart area
+          // Centre horizontally and shift up by the label height so the bottom of the label
+          // sits flush with the top of the cursor line.
           transform: 'translate(-50%, -100%)',
-          background: '#666666', // Same colour as the tooltip line
+          background: '#666666', // Same color as cursor line
           color: '#FFFFFF',
           padding: '4px 8px',
           borderRadius: 4,

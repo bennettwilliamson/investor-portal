@@ -297,10 +297,6 @@ export default function Home() {
                   fontWeight: 400,
                   color: '#E6E7E8',
                   fontFamily: 'Utile Regular, sans-serif'
-                  ,
-                  display: 'inline-block', // allow border width to match text width
-                  paddingBottom: '4px',
-                  borderBottom: '2px solid #008bce'
                 }}>
                   Your Historical Returns
                 </h2>
@@ -334,10 +330,6 @@ export default function Home() {
                   fontWeight: 400,
                   color: '#E6E7E8',
                   fontFamily: 'Utile Regular, sans-serif'
-                  ,
-                  display: 'inline-block',
-                  paddingBottom: '4px',
-                  borderBottom: '2px solid #008bce'
                 }}>
                   Your Historical Balance
                 </h2>

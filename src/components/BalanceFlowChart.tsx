@@ -343,6 +343,9 @@ export default function BalanceFlowChart(props: Props) {
         { max: 0, min: 0 },
     );
 
+    // NEW: Always give the axis a small buffer below the smallest data value
+    const axisMinValue = Math.floor((valuesExtent.min - baseStep) / baseStep) * baseStep;
+
     let upperTick = Math.ceil(valuesExtent.max / baseStep) * baseStep;
     let lowerTick = Math.floor(valuesExtent.min / baseStep) * baseStep;
 
@@ -732,8 +735,8 @@ export default function BalanceFlowChart(props: Props) {
                             axisLine={false}
                             tickLine={false}
                             tick={axisTickStyle}
-                            domain={[lowerTick, upperTick]}
-                            ticks={yTicks}
+                            domain={[axisMinValue, upperTick]}
+                            tickCount={8}
                         />
                         <defs>
                             <linearGradient id="balanceGradient" x1="0" y1="0" x2="0" y2="1">
@@ -767,7 +770,7 @@ export default function BalanceFlowChart(props: Props) {
             </div>
 
             {/* Legend below chart */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: 18, pointerEvents: 'none' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: 24, pointerEvents: 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 12, height: 12, backgroundColor: COLORS.Reinvested, borderRadius: 2 }} />
                     <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Contribution</span>
