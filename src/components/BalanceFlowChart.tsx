@@ -620,7 +620,7 @@ export default function BalanceFlowChart(props: Props) {
                         style={{
                             display: 'flex',
                             background: DARK_BLUE,
-                            padding: 2,
+                            padding: 4,
                             borderRadius: 9999,
                         }}
                     >
@@ -651,7 +651,7 @@ export default function BalanceFlowChart(props: Props) {
                         style={{
                             display: 'flex',
                             background: DARK_BLUE,
-                            padding: 2,
+                            padding: 4,
                             borderRadius: 9999,
                         }}
                     >
@@ -689,7 +689,7 @@ export default function BalanceFlowChart(props: Props) {
                         style={{
                             display: 'flex',
                             background: DARK_BLUE,
-                            padding: 2,
+                            padding: 4,
                             borderRadius: 9999,
                         }}
                     >

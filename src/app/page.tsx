@@ -264,7 +264,7 @@ export default function Home() {
           </section>
 
           {/* ---- Charts ---- */}
-          <section style={{ marginTop: '3rem', width: '100%' }}>
+          <section style={{ marginTop: '1.5rem', width: '100%' }}>
             {/* Return Combo Chart */}
             <div style={{
               width: '100%',

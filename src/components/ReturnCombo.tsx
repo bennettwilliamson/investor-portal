@@ -337,7 +337,7 @@ export default function ReturnCombo(props: Props) {
                         </div>
                     </div>
                     {/* Realized / Total toggle */}
-                    <div style={{ display: 'flex', background: DARK_BLUE, padding: 2, borderRadius: 9999 }}>
+                    <div style={{ display: 'flex', background: DARK_BLUE, padding: 4, borderRadius: 9999, order: 1 }}>
                         {([
                             { key: 'realized', label: 'Realized' },
                             { key: 'total', label: 'Total' },
@@ -352,7 +352,7 @@ export default function ReturnCombo(props: Props) {
                         ))}
                     </div>
                     {/* Time-frame toggle */}
-                    <div style={{ display: 'flex', background: DARK_BLUE, padding: 2, borderRadius: 9999 }}>
+                    <div style={{ display: 'flex', background: DARK_BLUE, padding: 4, borderRadius: 9999, order: 2 }}>
                         {TIMEFRAME_OPTIONS.map(({ key, label }) => (
                             <button
                                 key={key}
@@ -364,7 +364,7 @@ export default function ReturnCombo(props: Props) {
                         ))}
                     </div>
                     {/* Dollar / Percent toggle */}
-                    <div style={{ display: 'flex', background: DARK_BLUE, padding: 2, borderRadius: 9999 }}>
+                    <div style={{ display: 'flex', background: DARK_BLUE, padding: 4, borderRadius: 9999, order: 0 }}>
                         {([
                             { key: 'dollar', label: '$' },
                             { key: 'percent', label: '%' },
@@ -386,7 +386,7 @@ export default function ReturnCombo(props: Props) {
                 {/* Hidden duplicate toggle controls - keeping existing implementation */}
                 <div style={{ display: 'none' }}>
                     {/* Time-frame toggle */}
-                    <div style={{ display: 'flex', background: DARK_BLUE, padding: 2, borderRadius: 9999 }}>
+                    <div style={{ display: 'flex', background: DARK_BLUE, padding: 4, borderRadius: 9999 }}>
                         {TIMEFRAME_OPTIONS.map(({ key, label }) => (
                             <button
                                 key={key}
@@ -398,7 +398,7 @@ export default function ReturnCombo(props: Props) {
                         ))}
                     </div>
                     {/* Dollar / Percent toggle */}
-                    <div style={{ display: 'flex', background: DARK_BLUE, padding: 2, borderRadius: 9999 }}>
+                    <div style={{ display: 'flex', background: DARK_BLUE, padding: 4, borderRadius: 9999 }}>
                         {([
                             { key: 'dollar', label: '$' },
                             { key: 'percent', label: '%' },
