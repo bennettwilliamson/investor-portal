@@ -208,9 +208,11 @@ interface CursorProps {
     points?: any[];
     showBelow?: boolean;
     label?: string; // injected externally to ensure we always have the date text
+    /** Total pixel width of the chart area – used to keep the label inside bounds */
+    chartWidth?: number;
 }
 
-const DottedCursor: React.FC<CursorProps> = ({ x, width, height = 0, points, showBelow, label = '' }) => {
+const DottedCursor: React.FC<CursorProps> = ({ x, width, height = 0, points, showBelow, label = '', chartWidth }) => {
     // For some chart types (e.g., ComposedChart), x can be undefined – fall back to points array
     let cx: number = 0;
     if (points && points.length > 0 && typeof (points[0] as any).x === "number") {
@@ -247,13 +249,24 @@ const DottedCursor: React.FC<CursorProps> = ({ x, width, height = 0, points, sho
     const rectWidth = textWidth + PADDING_X * 2;
     const rectHeight = FONT_SIZE + PADDING_Y * 2;
 
+    // Clamp the cursor so that the label never overflows the chart boundaries.
+    let adjustedCx = cx;
+    if (chartWidth && chartWidth > 0) {
+        const halfRect = rectWidth / 2;
+        if (adjustedCx - halfRect < 0) {
+            adjustedCx = halfRect; // flush against left edge
+        } else if (adjustedCx + halfRect > chartWidth) {
+            adjustedCx = chartWidth - halfRect; // flush against right edge
+        }
+    }
+
     return (
         <g>
             {showBelow && (
                 <line
-                    x1={cx}
+                    x1={adjustedCx}
                     y1={dashStartY}
-                    x2={cx}
+                    x2={adjustedCx}
                     y2={dashedEndY}
                     stroke={CURSOR_COLOR}
                     strokeWidth={1}
@@ -263,7 +276,7 @@ const DottedCursor: React.FC<CursorProps> = ({ x, width, height = 0, points, sho
 
             {/* Always render the solid portion of the line above (handled by ReferenceLine). Add label at the top */}
             {labelText && (
-                <g transform={`translate(${cx}, 0)`} pointerEvents="none">
+                <g transform={`translate(${adjustedCx}, 0)`} pointerEvents="none">
                     <rect
                         x={-rectWidth / 2}
                         y={0}
@@ -398,6 +411,22 @@ export default function BalanceFlowChart(props: Props) {
     // ---------------- Responsive X-axis tick selection ----------------
     const chartContainerRef = React.useRef<HTMLDivElement>(null);
     const [visibleTicks, setVisibleTicks] = React.useState<number[]>([]);
+
+    // Track chart width so we can keep the tooltip label inside bounds
+    const [chartWidth, setChartWidth] = React.useState<number>(0);
+
+    React.useEffect(() => {
+        const el = chartAreaRef.current;
+        if (!el) return;
+
+        const updateWidth = () => setChartWidth(el.offsetWidth);
+        updateWidth();
+
+        const ro = new ResizeObserver(updateWidth);
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, []);
+
     const isOneYear = timeFrame === '1yr';
     const isAllTime = timeFrame === 'all';
 
@@ -795,7 +824,7 @@ export default function BalanceFlowChart(props: Props) {
                             content={(tooltipProps) => (
                                 <CustomTooltip {...(tooltipProps as any)} onUpdate={setSelectedData} />
                             )}
-                            cursor={<DottedCursor showBelow={false} label={currentHoverData.label} /> as any}
+                            cursor={<DottedCursor showBelow={false} label={currentHoverData.label} chartWidth={chartWidth} /> as any}
                             labelFormatter={(label) => `${label}`}
                             position={{ y: 0 }}
                         />
