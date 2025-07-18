@@ -112,6 +112,7 @@ export default function Home() {
       // ----- Flow buckets -----
       let addGaap = 0;        // Contributions / transfers in that increase GAAP
       let subtractGaap = 0;   // Redemptions / transfers out that reduce GAAP
+      let redemptionNavDollar = 0; // NAV-only redemption bucket
 
       let incomePaidDollar = 0;     // cash earnings paid to investor (realised)
       let incomeReinvestDollar = 0; // realised but reinvested
