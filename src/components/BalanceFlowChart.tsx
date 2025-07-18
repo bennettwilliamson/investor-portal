@@ -430,16 +430,15 @@ export default function BalanceFlowChart(props: Props) {
         <div
             ref={containerRef}
             style={{
-                ...style,
                 display: 'flex',
                 flexDirection: 'column',
                 width: '100%',
-                height: '100%',
                 fontFamily: 'Utile Regular, sans-serif',
                 boxSizing: 'border-box',
                 background: 'transparent',
                 color: '#FFFFFF',
                 position: 'relative',
+                ...(style || {}),
             }}
         >
             {/* Header cards */}

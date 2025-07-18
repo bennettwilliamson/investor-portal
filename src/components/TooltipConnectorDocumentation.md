@@ -1,29 +1,28 @@
-# Dynamic Tooltip Connector System
+# Dynamic Tooltip Date Label System
 
 ## Overview
 
-The `useTooltipConnector` hook provides a robust, reusable solution for creating dynamic line connections between chart tooltips and metric cards. This system creates visual "bus lines" that connect multiple metric cards to a moving tooltip, providing clear visual context for data relationships.
+The `useTooltipConnector` hook provides a simple, elegant solution for displaying date labels above chart tooltips. This system creates a small, styled date component that follows the tooltip cursor and stays perfectly centered above the vertical cursor line.
 
 ## How It Works
 
 ### Visual Design Pattern
 
 ```
-[Card 1]    [Card 2]    [Card 3]
-    |           |           |
-    |           |           |  <- Vertical lines from cards
-    +===========+===========+  <- Horizontal "bus line"
-                |
-            [Tooltip]            <- Connection to tooltip
+        [2024 Q1]  <- Date label component
+            |
+            |      <- Vertical cursor line
+        [Tooltip]  <- Chart tooltip
 ```
 
 ### Key Features
 
-1. **Dynamic Positioning** - Lines adjust in real-time as tooltip moves
-2. **Error Handling** - Graceful fallbacks if refs aren't available
-3. **Performance Optimized** - Debounced resize events and efficient re-renders
-4. **Type Safe** - Full TypeScript support with proper interfaces
-5. **Reusable** - Works with any chart component or custom implementation
+1. **Dynamic Positioning** - Date label follows cursor in real-time
+2. **Perfect Centering** - Always centered above the cursor line
+3. **Consistent Styling** - Background matches cursor line color (#666666)
+4. **Performance Optimized** - Lightweight implementation with minimal overhead
+5. **Type Safe** - Full TypeScript support with proper interfaces
+6. **Zero Dependencies** - No complex card tracking or SVG paths needed
 
 ## Usage
 
@@ -35,9 +34,7 @@ import { useTooltipConnector } from './useTooltipConnector';
 function MyChartComponent() {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const chartAreaRef = React.useRef<HTMLDivElement>(null);
-  const card1Ref = React.useRef<HTMLDivElement>(null);
-  const card2Ref = React.useRef<HTMLDivElement>(null);
-  const card3Ref = React.useRef<HTMLDivElement>(null);
+  const [selectedData, setSelectedData] = React.useState(/* your data */);
 
   const {
     handleCursorPosition,
@@ -46,20 +43,14 @@ function MyChartComponent() {
   } = useTooltipConnector({
     containerRef,
     chartAreaRef,
-    cardRefs: [
-      { ref: card1Ref, key: 'card1' },
-      { ref: card2Ref, key: 'card2' },
-      { ref: card3Ref, key: 'card3' },
-    ],
-    busLineOffset: 15, // Distance below cards for horizontal line
   });
 
   return (
     <div ref={containerRef}>
-      {/* Your metric cards with refs */}
-      <div ref={card1Ref}>Card 1</div>
-      <div ref={card2Ref}>Card 2</div>
-      <div ref={card3Ref}>Card 3</div>
+      {/* Your metric cards (no refs needed) */}
+      <div>Card 1</div>
+      <div>Card 2</div>
+      <div>Card 3</div>
       
       {/* Chart area */}
       <div ref={chartAreaRef}>
@@ -68,13 +59,14 @@ function MyChartComponent() {
           <BarChart>
             <Tooltip 
               cursor={<CustomCursor onPositionUpdate={handleCursorPosition} />}
+              content={<CustomTooltip onUpdate={setSelectedData} />}
             />
           </BarChart>
         </ResponsiveContainer>
       </div>
       
-      {/* Render the connector overlay */}
-      {renderConnectorOverlay()}
+      {/* Render the date label */}
+      {renderConnectorOverlay(selectedData.quarterLabel)}
     </div>
   );
 }
@@ -113,27 +105,15 @@ const DottedCursor: React.FC<any & {
 |----------|------|----------|-------------|
 | `containerRef` | `React.RefObject<HTMLDivElement>` | Yes | Reference to the container element |
 | `chartAreaRef` | `React.RefObject<HTMLDivElement>` | Yes | Reference to the chart area |
-| `cardRefs` | `ConnectorCardRef[]` | Yes | Array of card references with keys |
-| `busLineOffset` | `number` | No | Distance below cards for horizontal line (default: 10) |
-
-### `ConnectorCardRef`
-
-```tsx
-interface ConnectorCardRef {
-  ref: React.RefObject<HTMLDivElement>;
-  key: string; // Unique identifier for the card
-}
-```
 
 ## Hook Return Values
 
 | Property | Type | Description |
 |----------|------|-------------|
 | `cursorPos` | `ConnectorPosition \| null` | Current tooltip position |
-| `cardAnchors` | `CardAnchor[]` | Calculated card anchor positions |
 | `handleCursorPosition` | `(pos: ConnectorPosition) => void` | Function to update cursor position |
 | `resetPosition` | `() => void` | Function to clear cursor position |
-| `renderConnectorOverlay` | `() => React.ReactNode` | Function to render SVG overlay |
+| `renderConnectorOverlay` | `(dateLabel?: string) => React.ReactNode` | Function to render date label |
 
 ## Advanced Features
 
@@ -158,30 +138,37 @@ The hook includes comprehensive error handling:
 
 ## Styling Customization
 
-The connector lines can be customized by modifying the SVG path properties in the hook:
+The date label can be customized by modifying the div styles in the hook:
 
 ```tsx
 // In useTooltipConnector.tsx
-<path
-  d={path}
-  stroke="#666666"     // Line color
-  strokeWidth={1}      // Line thickness
-  fill="none"
-  opacity={0.8}        // Line transparency
-/>
+<div
+  style={{
+    background: '#666666',        // Background color (matches cursor line)
+    color: '#FFFFFF',            // Text color
+    padding: '4px 8px',          // Padding
+    borderRadius: 4,             // Border radius
+    fontSize: 12,                // Font size
+    fontFamily: 'Utile Regular, sans-serif', // Font family
+    border: '1px solid #777777', // Border
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)', // Shadow
+  }}
+>
+  {dateLabel}
+</div>
 ```
 
 ## Examples in Codebase
 
-- `ReturnCombo.tsx` - Bar chart implementation
-- `BalanceFlowChart.tsx` - Composed chart implementation  
-- `TooltipConnectorExample.tsx` - Standalone demo
+- `ReturnCombo.tsx` - Bar chart implementation with quarterly labels
+- `BalanceFlowChart.tsx` - Composed chart implementation with period labels
 
 ## Benefits
 
-1. **Visual Clarity** - Clear connection between data points and metrics
+1. **Visual Clarity** - Clear identification of data points with date context
 2. **Real-time Feedback** - Immediate visual response to user interaction
-3. **Consistent UX** - Standardized behavior across all chart components
-4. **Maintainable** - Centralized logic reduces code duplication
-5. **Extensible** - Easy to add new features or modify behavior
-6. **Robust** - Error handling prevents crashes from DOM issues 
+3. **Consistent UX** - Standardized date display across all chart components
+4. **Lightweight** - Minimal overhead with simple DOM elements
+5. **Maintainable** - Clean, simple implementation easy to understand
+6. **Robust** - Simplified logic reduces potential for errors
+7. **Accessible** - Uses semantic HTML elements instead of complex SVG 

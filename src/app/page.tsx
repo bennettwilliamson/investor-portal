@@ -281,13 +281,13 @@ export default function Home() {
           <section style={{ marginTop: '3rem', width: '100%' }}>
             {/* Return Combo Chart */}
             <div style={{
-              height: 560,
               width: '100%',
               marginBottom: '3rem',
               background: '#212121',
               borderRadius: '12px',
               padding: '0.75rem 2rem 2rem',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+              overflow: 'hidden'
             }}>
               {/* Header */}
               <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -301,7 +301,7 @@ export default function Home() {
                   Your Historical Returns
                 </h2>
               </div>
-              <ReturnComboChart data={rows.map((r) => ({
+              <ReturnComboChart style={{ height: 440 }} data={rows.map((r) => ({
                 quarter: r.period,
                 quarterLabel: r.label,
                 beginningBalance: r.beginningBalance,
@@ -315,12 +315,12 @@ export default function Home() {
 
             {/* Balance Flow Chart */}
             <div style={{
-              height: 560,
               width: '100%',
               background: '#212121',
               borderRadius: '12px',
               padding: '0.75rem 2rem 2rem',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+              overflow: 'hidden'
             }}>
               {/* Header */}
               <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -334,7 +334,7 @@ export default function Home() {
                   Your Historical Balance
                 </h2>
               </div>
-              <BalanceFlowChart data={(() => {
+              <BalanceFlowChart style={{ height: 440 }} data={(() => {
                 let prevNavEnd = 0;
                 return rows.map((r, idx) => {
                   const endingBalance = balanceMode === 'gaap' ? r.gaapEnd : r.navEnd;

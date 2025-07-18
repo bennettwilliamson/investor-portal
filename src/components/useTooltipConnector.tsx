@@ -35,9 +35,11 @@ export function useTooltipConnector({
         const chartRect = chartAreaRef.current.getBoundingClientRect();
         const containerRect = containerRef.current.getBoundingClientRect();
         
+        // Anchor the tooltip label to the very top of the cursor line (top of the chart area)
         setCursorPos({
           x: chartRect.left - containerRect.left + posRelToChart.x,
-          y: chartRect.top - containerRect.top + posRelToChart.y,
+          // We want the label positioned at the top of the chart, not relative to the hovered bar
+          y: chartRect.top - containerRect.top,
         });
       } catch (error) {
         console.error('Error updating cursor position:', error);
@@ -62,8 +64,10 @@ export function useTooltipConnector({
         style={{
           position: 'absolute',
           left: cursorPos.x,
-          top: cursorPos.y - 35, // Position above the cursor
-          transform: 'translateX(-50%)', // Center horizontally
+          top: cursorPos.y, // Start at the very top of the chart area
+          // Centre horizontally and shift up by the label height so the bottom of the label
+          // sits flush with the top of the cursor line.
+          transform: 'translate(-50%, -100%)',
           background: '#666666', // Same color as cursor line
           color: '#FFFFFF',
           padding: '4px 8px',
