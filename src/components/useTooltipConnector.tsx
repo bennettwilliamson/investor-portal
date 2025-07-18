@@ -1,5 +1,4 @@
 import React from 'react';
-import { createPortal } from 'react-dom';
 
 export interface ConnectorPosition {
   x: number;
@@ -7,7 +6,7 @@ export interface ConnectorPosition {
 }
 
 export interface UseTooltipConnectorProps {
-  containerRef: React.RefObject<HTMLDivElement>; // kept for backward-compatibility but no longer needed for positioning
+  containerRef: React.RefObject<HTMLDivElement>;
   chartAreaRef: React.RefObject<HTMLDivElement>;
 }
 
@@ -27,18 +26,27 @@ export function useTooltipConnector({
   // Handle cursor position updates from chart tooltip
   const handleCursorPosition = React.useCallback(
     (posRelToChart: ConnectorPosition) => {
-      if (!chartAreaRef.current) {
-        console.warn('Chart area ref not available for cursor positioning');
+      if (!chartAreaRef.current || !containerRef.current) {
+        console.warn('Chart area or container ref not available for cursor positioning');
         return;
       }
 
-      // Position horizontally at the cursor X, but always stick the label to the very top of the plot area (y = 0)
-      setCursorPos({
-        x: posRelToChart.x,
-        y: 0,
-      });
+      try {
+        const chartRect = chartAreaRef.current.getBoundingClientRect();
+        const containerRect = containerRef.current.getBoundingClientRect();
+        
+        // Anchor the tooltip label to the very top of the cursor line (top of the chart area)
+        setCursorPos({
+          x: chartRect.left - containerRect.left + posRelToChart.x,
+          // Use the Y position coming from the cursor so the label always touches
+          // the vertical cursor line, regardless of the chart’s internal margin.
+          y: chartRect.top - containerRect.top + posRelToChart.y,
+        });
+      } catch (error) {
+        console.error('Error updating cursor position:', error);
+      }
     },
-    [chartAreaRef]
+    [chartAreaRef, containerRef]
   );
 
   // Reset cursor position
@@ -48,18 +56,20 @@ export function useTooltipConnector({
 
   // Render the simple date label above the cursor line
   const renderConnectorOverlay = React.useCallback((dateLabel?: string): React.ReactNode => {
-    if (!cursorPos || !dateLabel || !chartAreaRef.current) {
+    if (!cursorPos || !dateLabel) {
       return null;
     }
 
-    const overlay = (
+    return (
       <div
         style={{
           position: 'absolute',
           left: cursorPos.x,
-          top: cursorPos.y,
+          top: cursorPos.y, // Start at the very top of the chart area
+          // Centre horizontally and shift up by the label height so the bottom of the label
+          // sits flush with the top of the cursor line.
           transform: 'translate(-50%, -100%)',
-          background: '#666666', // Same colour as cursor line
+          background: '#666666', // Same color as cursor line
           color: '#FFFFFF',
           padding: '4px 8px',
           borderRadius: 4,
@@ -67,7 +77,7 @@ export function useTooltipConnector({
           fontFamily: 'Utile Regular, sans-serif',
           whiteSpace: 'nowrap',
           pointerEvents: 'none',
-          zIndex: 15,
+          zIndex: 15, // Above other elements
           border: '1px solid #777777',
           boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
         }}
@@ -75,10 +85,7 @@ export function useTooltipConnector({
         {dateLabel}
       </div>
     );
-
-    // Mount directly inside the chart area so we don't need to account for outer margins/offsets
-    return createPortal(overlay, chartAreaRef.current);
-  }, [cursorPos, chartAreaRef]);
+  }, [cursorPos]);
 
   return {
     cursorPos,

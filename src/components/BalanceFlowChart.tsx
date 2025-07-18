@@ -346,7 +346,7 @@ export default function BalanceFlowChart(props: Props) {
     // NEW: Always give the axis a small buffer below the smallest data value
     const axisMinValue = Math.floor((valuesExtent.min - baseStep) / baseStep) * baseStep;
 
-    let upperTick = Math.ceil(valuesExtent.max / baseStep) * baseStep;
+    let upperTick = Math.ceil(valuesExtent.max / baseStep) * baseStep + baseStep; // add headroom
     let lowerTick = Math.floor(valuesExtent.min / baseStep) * baseStep;
 
     let step = baseStep;
