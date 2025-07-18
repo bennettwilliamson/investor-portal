@@ -135,6 +135,8 @@ export default function Home() {
       // ----- Flow buckets -----
       let addGaap = 0;        // Contributions / transfers in that increase GAAP
       let subtractGaap = 0;   // Redemptions / transfers out that reduce GAAP
+      let earlyAdd = 0;       // adds within first 5 days of quarter
+      let earlySub = 0;       // subtracts within first 5 days
       let redemptionNavDollar = 0; // NAV-only redemption bucket
 
       let incomePaidDollar = 0;     // cash earnings paid to investor (realised)
@@ -159,12 +161,14 @@ export default function Home() {
           type === 'Transfer In'
         ) {
           addGaap += tx.amount;
+          if (tx.date.getUTCDate() <= 5) earlyAdd += tx.amount;
         } else if (
           type === 'Redemption - GAAP' ||
           type === 'Taxes Paid Behalf of Investor - Reinvest' ||
           type === 'Transfer Out'
         ) {
           subtractGaap += tx.amount;
+          if (tx.date.getUTCDate() <= 5) earlySub += tx.amount;
         }
 
         // ---- REALISED EARNINGS ----
@@ -204,7 +208,9 @@ export default function Home() {
       if (quarterStart >= CUTOFF && baselineGaap === null) {
         baselineGaap = gaapBegin;
       }
-      const denominator = quarterStart >= CUTOFF && baselineGaap !== null ? baselineGaap : gaapBegin;
+      const denominator = quarterStart >= CUTOFF && baselineGaap !== null
+        ? baselineGaap
+        : gaapBegin + earlyAdd - earlySub;
 
       const realizedRate = denominator > 0 ? realizedDollar / denominator : 0;
       const totalReturnDollar = realizedDollar + unrealizedDollar;
