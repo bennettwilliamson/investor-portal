@@ -266,7 +266,7 @@ const DottedCursor: React.FC<CursorProps> = ({ x, width, height = 0, points, sho
                 <g transform={`translate(${cx}, 0)`} pointerEvents="none">
                     <rect
                         x={-rectWidth / 2}
-                        y={-rectHeight}
+                        y={0}
                         width={rectWidth}
                         height={rectHeight}
                         rx={4}
@@ -275,7 +275,7 @@ const DottedCursor: React.FC<CursorProps> = ({ x, width, height = 0, points, sho
                     />
                     <text
                         x={0}
-                        y={-rectHeight / 2}
+                        y={rectHeight / 2}
                         textAnchor="middle"
                         dominantBaseline="central"
                         fill="#FFFFFF"

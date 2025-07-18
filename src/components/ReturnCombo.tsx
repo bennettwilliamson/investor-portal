@@ -190,7 +190,7 @@ const DottedCursor: React.FC<RC_CursorProps> = ({ x = 0, width = 0, height = 0, 
                 <g transform={`translate(${cx}, 0)`}>
                     <rect
                         x={-rectWidth / 2}
-                        y={-rectHeight}
+                        y={0}
                         width={rectWidth}
                         height={rectHeight}
                         rx={4}
@@ -199,7 +199,7 @@ const DottedCursor: React.FC<RC_CursorProps> = ({ x = 0, width = 0, height = 0, 
                     />
                     <text
                         x={0}
-                        y={-rectHeight / 2}
+                        y={rectHeight / 2}
                         textAnchor="middle"
                         dominantBaseline="central"
                         fill="#FFFFFF"
