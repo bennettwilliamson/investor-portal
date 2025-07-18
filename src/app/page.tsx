@@ -190,30 +190,16 @@ export default function Home() {
 
     const stats = [
       {
-        label: 'GAAP Balance',
-        value: currencyFormatter.format(lastRow.gaapEnd),
-      },
-      {
         label: 'Realized Return (%)',
-        // Use simple annualisation (quarterly rate × 4) instead of compound growth
         value: percentFormatter.format(lastRow.realizedRate * 4),
       },
       {
         label: 'Total Return (%)',
-        // Simple annualisation for total return as well
         value: percentFormatter.format(lastRow.returnRate * 4),
       },
       {
         label: 'NAV Balance',
         value: currencyFormatter.format(lastRow.navEnd),
-      },
-      {
-        label: 'Realized Return ($)',
-        value: currencyFormatter.format(lastRow.realizedDollar),
-      },
-      {
-        label: 'Total Return ($)',
-        value: currencyFormatter.format(lastRow.returnDollar),
       },
     ];
 
