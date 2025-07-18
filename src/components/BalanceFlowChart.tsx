@@ -194,26 +194,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, onUpdate
         }
     }, [active, payload, onUpdate]);
 
-    // Render the period label so users can immediately identify the hovered quarter/year
-    if (active && payload && payload.length > 0) {
-        const row = payload[0].payload as PeriodData;
-        return (
-            <div
-                style={{
-                    background: '#262626',
-                    color: '#FFFFFF',
-                    padding: '4px 8px',
-                    borderRadius: 4,
-                    fontSize: 12,
-                    fontFamily: 'Utile Regular, sans-serif',
-                    whiteSpace: 'nowrap',
-                }}
-            >
-                {row.label}
-            </div>
-        );
-    }
-
+    // Suppress the default HTML tooltip – label is now drawn inside the SVG.
     return null;
 };
 

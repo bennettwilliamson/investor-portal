@@ -151,26 +151,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, onUpdate
         }
     }, [active, payload, onUpdate]);
 
-    // Show the quarter label in a minimal tooltip so users can quickly identify the period
-    if (active && payload && payload.length > 0) {
-        const row = payload[0].payload as QuarterData;
-        return (
-            <div
-                style={{
-                    background: '#262626',
-                    color: '#FFFFFF',
-                    padding: '4px 8px',
-                    borderRadius: 4,
-                    fontSize: 12,
-                    fontFamily: 'Utile Regular, sans-serif',
-                    whiteSpace: 'nowrap',
-                }}
-            >
-                {row.quarterLabel}
-            </div>
-        );
-    }
-
+    // Suppress the HTML tooltip – label now rendered inside SVG.
     return null;
 };
 
