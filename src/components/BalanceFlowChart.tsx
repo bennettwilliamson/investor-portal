@@ -276,14 +276,11 @@ export default function BalanceFlowChart(props: Props) {
     type TimeFrameKey = 'all' | '1yr' | '5yr';
     const [timeFrame, setTimeFrame] = React.useState<TimeFrameKey>('all');
 
-    // ---------- Refs and tooltip connector hook ----------
+    // ---------- Refs and tooltip date label hook ----------
     const containerRef = React.useRef<HTMLDivElement>(null);
     const chartAreaRef = React.useRef<HTMLDivElement>(null);
-    const beginningCardRef = React.useRef<HTMLDivElement>(null);
-    const endingCardRef = React.useRef<HTMLDivElement>(null);
-    const returnCardRef = React.useRef<HTMLDivElement>(null);
 
-    // Use the tooltip connector hook
+    // Use the simplified tooltip connector hook for date label
     const {
         handleCursorPosition,
         resetPosition,
@@ -291,12 +288,6 @@ export default function BalanceFlowChart(props: Props) {
     } = useTooltipConnector({
         containerRef,
         chartAreaRef,
-        cardRefs: [
-            { ref: beginningCardRef, key: 'beginning' },
-            { ref: endingCardRef, key: 'ending' },
-            { ref: returnCardRef, key: 'return' },
-        ],
-        busLineOffset: 15, // Space below cards for horizontal bus line
     });
 
     const [activeBarIndex, setActiveBarIndex] = React.useState<number | null>(null);
@@ -493,12 +484,12 @@ export default function BalanceFlowChart(props: Props) {
                         };
                         return (
                             <>
-                                <div style={cardBase} ref={beginningCardRef}>
+                                <div style={cardBase}>
                                     <div style={valueStyle}>{currencyFormatter.format(selectedData.beginningBalance)}</div>
                                     <div style={lineStyle} />
                                     <div style={labelStyle}>Beginning Balance</div>
                                 </div>
-                                <div style={cardBase} ref={endingCardRef}>
+                                <div style={cardBase}>
                                     <div style={valueStyle}>{currencyFormatter.format(selectedData.endingBalance)}</div>
                                     <div style={lineStyle} />
                                     <div style={labelStyle}>Ending Balance</div>
@@ -549,6 +540,30 @@ export default function BalanceFlowChart(props: Props) {
                         marginLeft: 'auto',
                     }}
                 >
+                    {/* Legend */}
+                    <div
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'row',
+                            gap: '16px',
+                            fontSize: '12px',
+                            lineHeight: '1.4',
+                            marginBottom: '8px',
+                        }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ width: '12px', height: '12px', backgroundColor: COLORS.Reinvested, borderRadius: '2px' }} />
+                            <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Contribution</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ width: '12px', height: '12px', backgroundColor: COLORS.Distributed, borderRadius: '2px' }} />
+                            <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Redemptions</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ width: '12px', height: '2px', backgroundColor: ACCENT_BLUE }} />
+                            <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Balance</span>
+                        </div>
+                    </div>
                     {/* GAAP / NAV toggle */}
                     <div
                         style={{
@@ -751,36 +766,8 @@ export default function BalanceFlowChart(props: Props) {
                     </ComposedChart>
                 </ResponsiveContainer>
             </div>
-            {/* Legend */}
-            <div
-                style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 24,
-                    padding: 0,
-                    display: 'flex',
-                    flexDirection: 'row',
-                    gap: '16px',
-                    fontSize: '12px',
-                    lineHeight: '1.4',
-                }}
-            >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '12px', height: '12px', backgroundColor: COLORS.Reinvested, borderRadius: '2px' }} />
-                    <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Contribution</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '12px', height: '12px', backgroundColor: COLORS.Distributed, borderRadius: '2px' }} />
-                    <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Redemptions</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '12px', height: '2px', backgroundColor: ACCENT_BLUE }} />
-                    <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Balance</span>
-                </div>
-            </div>
-
-            {/* Render the dynamic connector overlay */}
-            {renderConnectorOverlay()}
+            {/* Render the date label above cursor line */}
+            {renderConnectorOverlay(selectedData.label)}
         </div>
     );
 } 

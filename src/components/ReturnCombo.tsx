@@ -259,14 +259,11 @@ export default function ReturnCombo(props: Props) {
         ? currencyFormatter.format(selectedData.returnDollar)
         : `${(selectedData.returnRate * 4 * 100).toFixed(2)}%`;
 
-    // ---------- Refs for tooltip connector ----------
+    // ---------- Refs for tooltip date label ----------
     const containerRef = React.useRef<HTMLDivElement>(null);
     const chartAreaRef = React.useRef<HTMLDivElement>(null);
-    const returnCardRef = React.useRef<HTMLDivElement>(null);
-    const beginningCardRef = React.useRef<HTMLDivElement>(null);
-    const endingCardRef = React.useRef<HTMLDivElement>(null);
 
-    // Use the new tooltip connector hook
+    // Use the simplified tooltip connector hook for date label
     const {
         handleCursorPosition,
         resetPosition,
@@ -274,12 +271,6 @@ export default function ReturnCombo(props: Props) {
     } = useTooltipConnector({
         containerRef,
         chartAreaRef,
-        cardRefs: [
-            { ref: beginningCardRef, key: 'beginning' },
-            { ref: returnCardRef, key: 'return' },
-            { ref: endingCardRef, key: 'ending' },
-        ],
-        busLineOffset: 20, // Extra space below cards for the bus line
     });
 
     const [activeBarIndex, setActiveBarIndex] = React.useState<number | null>(null);
@@ -310,17 +301,17 @@ export default function ReturnCombo(props: Props) {
                         const labelStyle: React.CSSProperties = { fontSize: 14, color: '#C0C0C0' };
                         return (
                             <>
-                                <div style={cardBase} ref={beginningCardRef}>
+                                <div style={cardBase}>
                                     <div style={valueStyle}>{currencyFormatter.format(selectedData.beginningBalance)}</div>
                                     <div style={lineStyle} />
                                     <div style={labelStyle}>Beginning Balance</div>
                                 </div>
-                                <div style={cardBase} ref={returnCardRef}>
+                                <div style={cardBase}>
                                     <div style={valueStyle}>{returnValue}</div>
                                     <div style={lineStyle} />
                                     <div style={labelStyle}>{viewMode === 'dollar' ? 'Realized Return ($)' : 'Realized Return (%)'}</div>
                                 </div>
-                                <div style={cardBase} ref={endingCardRef}>
+                                <div style={cardBase}>
                                     <div style={valueStyle}>{currencyFormatter.format(selectedData.endingBalance)}</div>
                                     <div style={lineStyle} />
                                     <div style={labelStyle}>Ending Balance</div>
@@ -331,6 +322,17 @@ export default function ReturnCombo(props: Props) {
                 </div>
                 {/* Toggle controls - keeping existing implementation */}
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, pointerEvents: 'auto' }}>
+                    {/* Legend */}
+                    <div style={{ display: 'flex', flexDirection: 'row', gap: '24px', fontSize: '12px', lineHeight: '1.4', alignItems: 'center', marginBottom: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ width: '12px', height: '12px', backgroundColor: COLORS.Reinvested, borderRadius: '2px' }} />
+                            <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Reinvested Returns</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ width: '12px', height: '12px', backgroundColor: COLORS.Distributed, borderRadius: '2px' }} />
+                            <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Distributed Returns</span>
+                        </div>
+                    </div>
                     {/* Realised / Total toggle */}
                     <div style={{ display: 'flex', background: DARK_BLUE, padding: 2, borderRadius: 9999 }}>
                         {([
@@ -473,20 +475,8 @@ export default function ReturnCombo(props: Props) {
                 </ResponsiveContainer>
             </div>
 
-            {/* Legend */}
-            <div style={{ padding: '24px 0 0 0', display: 'flex', flexDirection: 'row', gap: '24px', fontSize: '12px', lineHeight: '1.4', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '12px', height: '12px', backgroundColor: COLORS.Reinvested, borderRadius: '2px' }} />
-                    <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Reinvested Returns</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '12px', height: '12px', backgroundColor: COLORS.Distributed, borderRadius: '2px' }} />
-                    <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Distributed Returns</span>
-                </div>
-            </div>
-
-            {/* Render the dynamic connector overlay */}
-            {renderConnectorOverlay()}
+            {/* Render the date label above cursor line */}
+            {renderConnectorOverlay(selectedData.quarterLabel)}
         </div>
     );
 } 
