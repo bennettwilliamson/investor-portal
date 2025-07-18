@@ -287,6 +287,7 @@ export default function ReturnCombo(props: Props) {
                 background: 'transparent',
                 color: '#FFFFFF',
                 position: 'relative',
+                height: 550,
                 ...(style || {}),
             }}
         >
