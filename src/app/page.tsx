@@ -86,9 +86,22 @@ export default function Home() {
       transactions: typeof transactions;
     }>();
 
+    function getQuarterKey(d: Date) {
+      let y = d.getUTCFullYear();
+      let q = Math.floor(d.getUTCMonth() / 3) + 1;
+      const CUTOFF_DAYS = 5; // transactions dated within first 5 days roll back
+      if (d.getUTCDate() <= CUTOFF_DAYS) {
+        q -= 1;
+        if (q === 0) {
+          q = 4;
+          y -= 1;
+        }
+      }
+      return { y, q } as const;
+    }
+
     transactions.forEach((tx) => {
-      const year = tx.date.getUTCFullYear();
-      const quarter = Math.floor(tx.date.getUTCMonth() / 3) + 1;
+      const { y: year, q: quarter } = getQuarterKey(tx.date);
       const key = `${year}-Q${quarter}`;
       if (!groups.has(key)) {
         groups.set(key, { year, quarter, transactions: [] });
