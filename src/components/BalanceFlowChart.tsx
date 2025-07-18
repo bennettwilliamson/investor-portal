@@ -466,7 +466,7 @@ export default function BalanceFlowChart(props: Props) {
             style={{
                 ...style,
                 display: 'grid',
-                gridTemplateRows: 'auto 1fr auto',
+                gridTemplateRows: 'auto auto 1fr',
                 rowGap: 24,
                 width: '100%',
                 height: '100%',
@@ -477,6 +477,30 @@ export default function BalanceFlowChart(props: Props) {
                 position: 'relative',
             }}
         >
+            {/* Legend */}
+            <div
+                style={{
+                    padding: '0 0 0 24px',
+                    display: 'flex',
+                    flexDirection: 'row',
+                    gap: '16px',
+                    fontSize: '12px',
+                    lineHeight: '1.4',
+                }}
+            >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '12px', height: '12px', backgroundColor: COLORS.Reinvested, borderRadius: '2px' }} />
+                    <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Contribution</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '12px', height: '12px', backgroundColor: COLORS.Distributed, borderRadius: '2px' }} />
+                    <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Redemptions</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '12px', height: '2px', backgroundColor: ACCENT_BLUE }} />
+                    <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Balance</span>
+                </div>
+            </div>
             {/* Header cards */}
             <div
                 style={{
@@ -778,30 +802,7 @@ export default function BalanceFlowChart(props: Props) {
                     </ComposedChart>
                 </ResponsiveContainer>
             </div>
-            {/* Legend */}
-            <div
-                style={{
-                    padding: '16px 0 0 24px',
-                    display: 'flex',
-                    flexDirection: 'row',
-                    gap: '16px',
-                    fontSize: '12px',
-                    lineHeight: '1.4',
-                }}
-            >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '12px', height: '12px', backgroundColor: COLORS.Reinvested, borderRadius: '2px' }} />
-                    <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Contribution</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '12px', height: '12px', backgroundColor: COLORS.Distributed, borderRadius: '2px' }} />
-                    <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Redemptions</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '12px', height: '2px', backgroundColor: ACCENT_BLUE }} />
-                    <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Balance</span>
-                </div>
-            </div>
+
 
             {/* SVG overlay for connector curves */}
             {cursorPos && cardAnchors.length > 0 && (() => {
