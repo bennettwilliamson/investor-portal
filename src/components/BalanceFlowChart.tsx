@@ -799,8 +799,15 @@ export default function BalanceFlowChart(props: Props) {
                             fill="url(#balanceGradient)"
                             fillOpacity={1}
                             isAnimationActive={false}
+                            animationDuration={0}
                         />
-                        <Bar dataKey="netFlow" name="Net Flow" barSize={20} isAnimationActive={false}>
+                        <Bar
+                            dataKey="netFlow"
+                            name="Net Flow"
+                            barSize={20}
+                            isAnimationActive={false}
+                            animationDuration={0}
+                        >
                             {visibleData.map((entry, index) => (
                                 <Cell
                                     key={`cell-${index}`}
@@ -817,6 +824,7 @@ export default function BalanceFlowChart(props: Props) {
                             strokeWidth={2}
                             dot={false}
                             isAnimationActive={false}
+                            animationDuration={0}
                         />
                         <ReferenceLine y={0} stroke="#666666" strokeWidth={1} />
                         <Tooltip
