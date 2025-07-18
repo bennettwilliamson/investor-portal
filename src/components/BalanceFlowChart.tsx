@@ -569,7 +569,7 @@ export default function BalanceFlowChart(props: Props) {
                             flexDirection: 'row',
                             gap: '16px',
                             fontSize: '12px',
-                            lineHeight: '1.4',
+                            lineHeight: '1.2',
                             marginBottom: '8px',
                         }}
                     >
@@ -789,7 +789,7 @@ export default function BalanceFlowChart(props: Props) {
             </div>
 
             {/* Legend below chart */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: 24, pointerEvents: 'none' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: 16, pointerEvents: 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 12, height: 2, backgroundColor: ACCENT_BLUE }} />
                     <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Balance</span>

@@ -285,7 +285,7 @@ export default function Home() {
               marginBottom: '3rem',
               background: '#212121',
               borderRadius: '12px',
-              padding: '0.75rem 2rem 2rem',
+              padding: '0.75rem 2rem 1.5rem',
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
               overflow: 'hidden'
             }}>
@@ -312,7 +312,7 @@ export default function Home() {
               width: '100%',
               background: '#212121',
               borderRadius: '12px',
-              padding: '0.75rem 2rem 2rem',
+              padding: '0.75rem 2rem 1.5rem',
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
               overflow: 'hidden'
             }}>
