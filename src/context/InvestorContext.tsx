@@ -6,6 +6,7 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 import brianData from '@/data/brian_schmidt.json';
 import bennettData from '@/data/equity_bennett_williamson.json';
 import boeData from '@/data/equity_boe.json';
+import kaiData from '@/data/kai_huang.json';
 
 // Map of available investors (extend as needed)
 export const investors = {
@@ -20,6 +21,10 @@ export const investors = {
   boe: {
     name: 'Stelck Boeger',
     data: boeData as any[],
+  },
+  kai: {
+    name: 'Kai Huang',
+    data: kaiData as any[],
   },
 } as const;
 
