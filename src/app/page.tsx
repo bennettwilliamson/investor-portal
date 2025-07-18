@@ -86,11 +86,21 @@ export default function Home() {
       transactions: typeof transactions;
     }>();
 
-    function getQuarterKey(d: Date) {
+    const EARNINGS_SHIFT_SET = new Set([
+      'Income Paid',
+      'Income Paid - Adj',
+      'Income Reinvestment',
+      'Income Reinvestment - Adj',
+      'Unrealized Gains/Losses',
+      'Unrealized Gains/Losses-Adj',
+    ]);
+
+    function getQuarterKeyWithType(d: Date, type: string) {
       let y = d.getUTCFullYear();
       let q = Math.floor(d.getUTCMonth() / 3) + 1;
-      const CUTOFF_DAYS = 5; // transactions dated within first 5 days roll back
-      if (d.getUTCDate() <= CUTOFF_DAYS) {
+      const CUTOFF_DAYS = 5;
+      // Only shift for earnings transactions; capital contributions/redemptions stay put
+      if (EARNINGS_SHIFT_SET.has(type) && d.getUTCDate() <= CUTOFF_DAYS) {
         q -= 1;
         if (q === 0) {
           q = 4;
@@ -101,7 +111,7 @@ export default function Home() {
     }
 
     transactions.forEach((tx) => {
-      const { y: year, q: quarter } = getQuarterKey(tx.date);
+      const { y: year, q: quarter } = getQuarterKeyWithType(tx.date, tx.Transaction_Type as string);
       const key = `${year}-Q${quarter}`;
       if (!groups.has(key)) {
         groups.set(key, { year, quarter, transactions: [] });
@@ -186,8 +196,15 @@ export default function Home() {
       cumulativeUnreal += unrealizedDollar - redemptionNavDollar;
       const navEnd = gaapEnd + cumulativeUnreal;
 
-      // Denominator = GAAP at quarter start minus any GAAP redemptions executed during the quarter (to exclude withdrawals)
-      const denominator = gaapBegin + addGaap - subtractGaap;
+      // Denominator logic per spec: use GAAP opening balance. For quarters starting on/after 2025-01-01
+      // lock to baseline GAAP captured at cut-off, excluding later contributions/redemptions.
+      const quarterStart = new Date(grp.year, (grp.quarter - 1) * 3, 1);
+      const CUTOFF = new Date('2025-01-01T00:00:00Z');
+      let baselineGaap: number | null = null;
+      if (quarterStart >= CUTOFF && baselineGaap === null) {
+        baselineGaap = gaapBegin;
+      }
+      const denominator = quarterStart >= CUTOFF && baselineGaap !== null ? baselineGaap : gaapBegin;
 
       const realizedRate = denominator > 0 ? realizedDollar / denominator : 0;
       const totalReturnDollar = realizedDollar + unrealizedDollar;
