@@ -128,9 +128,23 @@ export default function Home() {
 
     const rows: AggregatedRow[] = [];
     let gaapBegin = 0; // GAAP capital at quarter start
-    let cumulativeUnreal = 0; // Track cumulative unrealized gains/losses
+    let cumulativeUnreal = 0;
+    let prevRow: AggregatedRow | null = null;
+    let carryDelta = 0; // earlyAdd - earlySub of current quarter applied to previous ending
+    let baselineGaap: number | null = null;
 
     sortedKeys.forEach((key, idx) => {
+      // Apply carry-forward delta from this quarter’s early flows to previous quarter ending
+      if (prevRow) {
+        prevRow.gaapEnd += carryDelta;
+        prevRow.navEnd += carryDelta;
+        prevRow.endingBalance = prevRow.navEnd;
+      }
+
+      // Adjust gaapBegin for current quarter
+      gaapBegin += carryDelta;
+      carryDelta = 0;
+
       const grp = groups.get(key)!;
       // ----- Flow buckets -----
       let addGaap = 0;        // Contributions / transfers in that increase GAAP
@@ -174,6 +188,10 @@ export default function Home() {
         // ---- REALISED EARNINGS ----
         if (type.startsWith('Income Paid')) {
           incomePaidDollar += tx.amount;
+          // Negative income within first 5 days reduces GAAP baseline
+          if (tx.amount < 0 && tx.date.getUTCDate() <= 5) {
+            earlySub += Math.abs(tx.amount);
+          }
         } else if (type.startsWith('Income Reinvestment')) {
           // Includes "Income Reinvestment" and "Income Reinvestment - Adj"
           incomeReinvestDollar += tx.amount;
@@ -216,7 +234,7 @@ export default function Home() {
       const totalReturnDollar = realizedDollar + unrealizedDollar;
       const totalReturnRate = denominator > 0 ? totalReturnDollar / denominator : 0;
 
-      rows.push({
+      const rowObj: AggregatedRow = {
         period: idx + 1,
         year: grp.year,
         quarter: grp.quarter,
@@ -237,9 +255,15 @@ export default function Home() {
         gaapEnd,
         navEnd,
         endingBalance: navEnd,
-      });
+      };
 
-      gaapBegin = gaapEnd; // next quarter starts with this GAAP balance
+      rows.push(rowObj);
+
+      // Prepare for next iteration
+      carryDelta = earlyAdd - earlySub;
+      prevRow = rowObj;
+
+      gaapBegin = gaapEnd; // will be modified by carryDelta at next iteration
       // cumulativeUnreal persists across quarters
     });
 
