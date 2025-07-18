@@ -279,6 +279,29 @@ export default function ReturnCombo(props: Props) {
     const [activeBarIndex, setActiveBarIndex] = React.useState<number | null>(null);
     const [cardAnchors, setCardAnchors] = React.useState<Array<{ id: string; x: number; y: number }>>([]);
 
+    const updateAnchors = React.useCallback(() => {
+        if (!containerRef.current) return;
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const anchors: Array<{ id: string; x: number; y: number }> = [];
+        Object.entries(cardRefs.current).forEach(([id, el]) => {
+            if (!el) return;
+            const rect = el.getBoundingClientRect();
+            anchors.push({ id, x: rect.left - containerRect.left + rect.width / 2, y: rect.top - containerRect.top + rect.height });
+        });
+
+        anchors.sort((a, b) => a.id.localeCompare(b.id));
+
+        setCardAnchors((prev) => {
+            if (
+                prev.length === anchors.length &&
+                prev.every((p, i) => p.id === anchors[i].id && p.x === anchors[i].x && p.y === anchors[i].y)
+            ) {
+                return prev;
+            }
+            return anchors;
+        });
+    }, []);
+
     const handleCursorPosition = React.useCallback((posRelToChart: { x: number; y: number }) => {
         if (!chartAreaRef.current || !containerRef.current) return;
         const chartRect = chartAreaRef.current.getBoundingClientRect();
@@ -290,33 +313,25 @@ export default function ReturnCombo(props: Props) {
     }, []);
 
     React.useLayoutEffect(() => {
-        const updateAnchors = () => {
-            if (!containerRef.current) return;
-            const containerRect = containerRef.current.getBoundingClientRect();
-            const anchors: Array<{ id: string; x: number; y: number }> = [];
-            Object.entries(cardRefs.current).forEach(([id, el]) => {
-                if (!el) return;
-                const rect = el.getBoundingClientRect();
-                anchors.push({ id, x: rect.left - containerRect.left + rect.width / 2, y: rect.top - containerRect.top + rect.height });
-            });
-
-            anchors.sort((a, b) => a.id.localeCompare(b.id));
-
-            setCardAnchors((prev) => {
-                if (
-                    prev.length === anchors.length &&
-                    prev.every((p, i) => p.id === anchors[i].id && p.x === anchors[i].x && p.y === anchors[i].y)
-                ) {
-                    return prev;
-                }
-                return anchors;
-            });
-        };
-
         updateAnchors();
+    }, [updateAnchors, selectedData, viewMode, returnMode, timeFrame]);
+
+    React.useEffect(() => {
         window.addEventListener('resize', updateAnchors);
         return () => window.removeEventListener('resize', updateAnchors);
-    }, []);
+    }, [updateAnchors]);
+
+    React.useEffect(() => {
+        if (typeof ResizeObserver === 'undefined') return;
+        const observers: ResizeObserver[] = [];
+        Object.values(cardRefs.current).forEach((el) => {
+            if (!el) return;
+            const obs = new ResizeObserver(() => updateAnchors());
+            obs.observe(el);
+            observers.push(obs);
+        });
+        return () => observers.forEach((obs) => obs.disconnect());
+    }, [updateAnchors]);
 
     return (
         <div
