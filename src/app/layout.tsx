@@ -88,6 +88,17 @@ export default function RootLayout({
       },
       dividerLine: { backgroundColor: '#444' },
       dividerText: { color: '#888' },
+      // ----- UserButton popover -----
+      userButtonPopoverActionButton: {
+        color: '#ffffff',
+        '&:hover': { backgroundColor: '#2a2a2a' },
+      },
+      userButtonPopoverActionButtonIcon: {
+        color: '#ffffff',
+      },
+      userButtonPopoverActionButtonText: {
+        color: '#ffffff',
+      },
     },
     // Layout options
     layout: {

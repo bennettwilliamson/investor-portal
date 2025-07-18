@@ -239,7 +239,7 @@ const DottedCursor: React.FC<CursorProps> = ({ x, width, height = 0, points, sho
     }
 
     // Basic sizing heuristic
-    const FONT_SIZE = 12;
+    const FONT_SIZE = 16; // increased font size for better readability
     const PADDING_X = 8;
     const PADDING_Y = 4;
     const AVG_CHAR_WIDTH = FONT_SIZE * 0.6;
@@ -789,7 +789,7 @@ export default function BalanceFlowChart(props: Props) {
             </div>
 
             {/* Legend below chart */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: 16, pointerEvents: 'none' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: 12, pointerEvents: 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 12, height: 2, backgroundColor: ACCENT_BLUE }} />
                     <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Balance</span>
