@@ -97,18 +97,50 @@ export function useTooltipConnector({
 
     updateAnchors();
 
-    // Update on window resize
+    // Update on window resize with proper debouncing
+    let resizeTimeoutId: NodeJS.Timeout;
     const handleResize = () => {
-      // Debounce resize updates
-      const timeoutId = setTimeout(updateAnchors, 16); // ~60fps
-      return () => clearTimeout(timeoutId);
+      clearTimeout(resizeTimeoutId);
+      resizeTimeoutId = setTimeout(updateAnchors, 16); // ~60fps
     };
 
     window.addEventListener('resize', handleResize);
     return () => {
       window.removeEventListener('resize', handleResize);
+      clearTimeout(resizeTimeoutId);
     };
-  }, [containerRef, cardRefs, busLineOffset]);
+  }, [containerRef, busLineOffset]); // Removed cardRefs from dependencies to prevent infinite loops
+
+  // Update anchors when cardRefs change (separate effect to avoid infinite loops)
+  React.useEffect(() => {
+    const updateAnchors = () => {
+      if (!containerRef.current) return;
+      
+      try {
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const newAnchors: CardAnchor[] = [];
+
+        cardRefs.forEach(({ ref, key }) => {
+          if (ref.current) {
+            const rect = ref.current.getBoundingClientRect();
+            newAnchors.push({
+              key,
+              x: rect.left - containerRect.left + rect.width / 2,
+              y: rect.top - containerRect.top + rect.height,
+            });
+          }
+        });
+
+        setCardAnchors(newAnchors);
+      } catch (error) {
+        console.error('Error updating card anchors from cardRefs change:', error);
+      }
+    };
+
+    // Small delay to ensure refs are mounted
+    const timeoutId = setTimeout(updateAnchors, 10);
+    return () => clearTimeout(timeoutId);
+  }, [cardRefs.length]); // Only re-run when the number of cards changes
 
   // Render the connector overlay
   const renderConnectorOverlay = React.useCallback((): React.ReactNode => {
