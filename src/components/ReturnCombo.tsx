@@ -14,6 +14,7 @@ import {
     CartesianGrid,
     Line,
 } from 'recharts';
+import { useTooltipConnector } from './useTooltipConnector';
 
 interface QuarterData {
     quarter: number;
@@ -258,50 +259,30 @@ export default function ReturnCombo(props: Props) {
         ? currencyFormatter.format(selectedData.returnDollar)
         : `${(selectedData.returnRate * 4 * 100).toFixed(2)}%`;
 
-    // ---------- Refs & state for connector paths ----------
+    // ---------- Refs for tooltip connector ----------
     const containerRef = React.useRef<HTMLDivElement>(null);
     const chartAreaRef = React.useRef<HTMLDivElement>(null);
     const returnCardRef = React.useRef<HTMLDivElement>(null);
     const beginningCardRef = React.useRef<HTMLDivElement>(null);
     const endingCardRef = React.useRef<HTMLDivElement>(null);
 
-    const [cursorPos, setCursorPos] = React.useState<{ x: number; y: number } | null>(null);
-    const [activeBarIndex, setActiveBarIndex] = React.useState<number | null>(null);
-    const [cardAnchors, setCardAnchors] = React.useState({
-        return: null as { x: number; y: number } | null,
-        begin: null as { x: number; y: number } | null,
-        end: null as { x: number; y: number } | null,
+    // Use the new tooltip connector hook
+    const {
+        handleCursorPosition,
+        resetPosition,
+        renderConnectorOverlay,
+    } = useTooltipConnector({
+        containerRef,
+        chartAreaRef,
+        cardRefs: [
+            { ref: beginningCardRef, key: 'beginning' },
+            { ref: returnCardRef, key: 'return' },
+            { ref: endingCardRef, key: 'ending' },
+        ],
+        busLineOffset: 20, // Extra space below cards for the bus line
     });
 
-    const handleCursorPosition = React.useCallback((posRelToChart: { x: number; y: number }) => {
-        if (!chartAreaRef.current || !containerRef.current) return;
-        const chartRect = chartAreaRef.current.getBoundingClientRect();
-        const containerRect = containerRef.current.getBoundingClientRect();
-        setCursorPos({
-            x: chartRect.left - containerRect.left + posRelToChart.x,
-            y: chartRect.top - containerRect.top + posRelToChart.y,
-        });
-    }, []);
-
-    React.useLayoutEffect(() => {
-        function updateAnchors() {
-            if (!containerRef.current) return;
-            const containerRect = containerRef.current.getBoundingClientRect();
-            const getAnchor = (ref: React.RefObject<HTMLDivElement>) => {
-                if (!ref.current) return null;
-                const rect = ref.current.getBoundingClientRect();
-                return { x: rect.left - containerRect.left + rect.width / 2, y: rect.top - containerRect.top + rect.height };
-            };
-            setCardAnchors({
-                return: getAnchor(returnCardRef),
-                begin: getAnchor(beginningCardRef),
-                end: getAnchor(endingCardRef),
-            });
-        }
-        updateAnchors();
-        window.addEventListener('resize', updateAnchors);
-        return () => window.removeEventListener('resize', updateAnchors);
-    }, []);
+    const [activeBarIndex, setActiveBarIndex] = React.useState<number | null>(null);
 
     return (
         <div
@@ -348,7 +329,7 @@ export default function ReturnCombo(props: Props) {
                         );
                     })()}
                 </div>
-                {/* Toggle controls */}
+                {/* Toggle controls - keeping existing implementation */}
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, pointerEvents: 'auto' }}>
                     {/* Realised / Total toggle */}
                     <div style={{ display: 'flex', background: DARK_BLUE, padding: 2, borderRadius: 9999 }}>
@@ -397,6 +378,7 @@ export default function ReturnCombo(props: Props) {
 
             {/* Chart area */}
             <div style={{ flex: 1, position: 'relative', padding: 0, paddingBottom: 0 }} ref={chartAreaRef}>
+                {/* Hidden duplicate toggle controls - keeping existing implementation */}
                 <div style={{ display: 'none' }}>
                     {/* Time-frame toggle */}
                     <div style={{ display: 'flex', background: DARK_BLUE, padding: 2, borderRadius: 9999 }}>
@@ -438,7 +420,7 @@ export default function ReturnCombo(props: Props) {
                         }}
                         onMouseLeave={() => {
                             setSelectedData(visibleData[visibleData.length - 1]);
-                            setCursorPos(null);
+                            resetPosition();
                             setActiveBarIndex(null);
                         }}
                     >
@@ -503,23 +485,8 @@ export default function ReturnCombo(props: Props) {
                 </div>
             </div>
 
-            {/* SVG overlay for connector curves */}
-            {cursorPos && cardAnchors && (
-                <>
-                    <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
-                        {(['return', 'begin', 'end'] as const).map((key) => {
-                            const anchor = (cardAnchors as any)[key];
-                            if (!anchor) return null;
-                            const breakY = anchor.y + 10;
-                            const d = `M ${cursorPos.x} ${cursorPos.y} L ${cursorPos.x} ${breakY} L ${anchor.x} ${breakY} L ${anchor.x} ${anchor.y}`;
-                            return <path key={key} d={d} stroke="#666666" strokeWidth={1} fill="none" />;
-                        })}
-                    </svg>
-                    {cardAnchors.return && (
-                        <div style={{ position: 'absolute', left: cursorPos.x, top: (() => { if (containerRef.current && cardAnchors.return) { const breakY = cardAnchors.return.y + 10; const offset = 12; return breakY + offset; } return 0; })(), transform: 'translateX(-50%)', background: '#666666', color: '#FFFFFF', padding: '4px 8px', borderRadius: 4, fontSize: 16, fontFamily: 'Utile Regular, sans-serif', whiteSpace: 'nowrap', pointerEvents: 'none' }}>{selectedData.quarterLabel}</div>
-                    )}
-                </>
-            )}
+            {/* Render the dynamic connector overlay */}
+            {renderConnectorOverlay()}
         </div>
     );
 } 

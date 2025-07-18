@@ -16,6 +16,7 @@ import {
     ReferenceLine,
     Tooltip,
 } from 'recharts';
+import { useTooltipConnector } from './useTooltipConnector';
 
 // Types
 interface PeriodData {
@@ -275,19 +276,27 @@ export default function BalanceFlowChart(props: Props) {
     type TimeFrameKey = 'all' | '1yr' | '5yr';
     const [timeFrame, setTimeFrame] = React.useState<TimeFrameKey>('all');
 
-    // ---------- Refs & state used for dynamic connector paths ----------
+    // ---------- Refs and tooltip connector hook ----------
     const containerRef = React.useRef<HTMLDivElement>(null);
     const chartAreaRef = React.useRef<HTMLDivElement>(null);
-
     const beginningCardRef = React.useRef<HTMLDivElement>(null);
     const endingCardRef = React.useRef<HTMLDivElement>(null);
     const returnCardRef = React.useRef<HTMLDivElement>(null);
 
-    const [cursorPos, setCursorPos] = React.useState<{ x: number; y: number } | null>(null);
-    const [cardAnchors, setCardAnchors] = React.useState({
-        return: null as { x: number; y: number } | null,
-        begin: null as { x: number; y: number } | null,
-        end: null as { x: number; y: number } | null,
+    // Use the tooltip connector hook
+    const {
+        handleCursorPosition,
+        resetPosition,
+        renderConnectorOverlay,
+    } = useTooltipConnector({
+        containerRef,
+        chartAreaRef,
+        cardRefs: [
+            { ref: beginningCardRef, key: 'beginning' },
+            { ref: endingCardRef, key: 'ending' },
+            { ref: returnCardRef, key: 'return' },
+        ],
+        busLineOffset: 15, // Space below cards for horizontal bus line
     });
 
     const [activeBarIndex, setActiveBarIndex] = React.useState<number | null>(null);
@@ -330,44 +339,7 @@ export default function BalanceFlowChart(props: Props) {
         }
     }, [visibleData]);
 
-    const handleCursorPosition = React.useCallback(
-        (posRelToChart: { x: number; y: number }) => {
-            if (!chartAreaRef.current || !containerRef.current) return;
-            const chartRect = chartAreaRef.current.getBoundingClientRect();
-            const containerRect = containerRef.current.getBoundingClientRect();
-            setCursorPos({
-                x: chartRect.left - containerRect.left + posRelToChart.x,
-                y: chartRect.top - containerRect.top + posRelToChart.y,
-            });
-        },
-        [],
-    );
 
-    React.useLayoutEffect(() => {
-        function updateAnchors() {
-            if (!containerRef.current) return;
-            const containerRect = containerRef.current.getBoundingClientRect();
-
-            const getAnchor = (ref: React.RefObject<HTMLDivElement>) => {
-                if (!ref.current) return null;
-                const rect = ref.current.getBoundingClientRect();
-                return {
-                    x: rect.left - containerRect.left + rect.width / 2,
-                    y: rect.top - containerRect.top + rect.height,
-                };
-            };
-
-            setCardAnchors({
-                return: getAnchor(returnCardRef),
-                begin: getAnchor(beginningCardRef),
-                end: getAnchor(endingCardRef),
-            });
-        }
-
-        updateAnchors();
-        window.addEventListener('resize', updateAnchors);
-        return () => window.removeEventListener('resize', updateAnchors);
-    }, []);
 
     // Compute dynamic Y-axis ticks aiming for 5–8 labels
     const baseStep = 100_000;
@@ -694,7 +666,7 @@ export default function BalanceFlowChart(props: Props) {
                         }}
                         onMouseLeave={() => {
                             setSelectedData(visibleData[visibleData.length - 1]);
-                            setCursorPos(null);
+                            resetPosition();
                             setActiveBarIndex(null);
                             setHoverPeriod(null);
                         }}
@@ -807,46 +779,8 @@ export default function BalanceFlowChart(props: Props) {
                 </div>
             </div>
 
-            {/* SVG overlay for connector curves */}
-            {cursorPos && cardAnchors && (
-                <>
-                    <svg
-                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
-                    >
-                        {(['return', 'begin', 'end'] as const).map((key) => {
-                            const anchor = (cardAnchors as any)[key];
-                            if (!anchor) return null;
-                            const breakY = anchor.y + 10;
-                            const d = `M ${cursorPos.x} ${cursorPos.y} L ${cursorPos.x} ${breakY} L ${anchor.x} ${breakY} L ${anchor.x} ${anchor.y}`;
-                            return <path key={key} d={d} stroke="#666666" strokeWidth={1} fill="none" />;
-                        })}
-                    </svg>
-                    {cardAnchors.return && (
-                        <div
-                            style={{
-                                position: 'absolute',
-                                left: cursorPos.x,
-                                top: (() => {
-                                    const breakY = cardAnchors.return!.y + 10;
-                                    const offset = 12;
-                                    return breakY + offset;
-                                })(),
-                                transform: 'translateX(-50%)',
-                                background: '#666666',
-                                color: '#FFFFFF',
-                                padding: '4px 8px',
-                                borderRadius: 4,
-                                fontSize: 16,
-                                fontFamily: 'Utile Regular, sans-serif',
-                                whiteSpace: 'nowrap',
-                                pointerEvents: 'none',
-                            }}
-                        >
-                            {selectedData.label}
-                        </div>
-                    )}
-                </>
-            )}
+            {/* Render the dynamic connector overlay */}
+            {renderConnectorOverlay()}
         </div>
     );
 } 
