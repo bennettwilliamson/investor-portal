@@ -210,16 +210,20 @@ interface CursorProps {
     label?: string; // injected externally to ensure we always have the date text
     /** Total pixel width of the chart area – used to keep the label inside bounds */
     chartWidth?: number;
+    freeze?: boolean;
+    fixedX?: number | null;
 }
 
-const DottedCursor: React.FC<CursorProps> = ({ x, width, height = 0, points, showBelow, label = '', chartWidth }) => {
+const DottedCursor: React.FC<CursorProps> = ({ x, width, height = 0, points, showBelow, label = '', chartWidth, freeze = false, fixedX = null }) => {
     // For some chart types (e.g., ComposedChart), x can be undefined – fall back to points array
-    let cx: number = 0;
+    let cxRaw: number = 0;
     if (points && points.length > 0 && typeof (points[0] as any).x === "number") {
-        cx = (points[0] as any).x;
+        cxRaw = (points[0] as any).x;
     } else if (typeof x === "number") {
-        cx = x + ((width ?? 0) / 2);
+        cxRaw = x + ((width ?? 0) / 2);
     }
+
+    const cx = freeze && fixedX !== null ? fixedX : cxRaw;
 
     const pointY = points && points.length > 0 ? (points[0] as any).y : 0;
     const dotRadius = 6;
@@ -319,6 +323,9 @@ export default function BalanceFlowChart(props: Props) {
     // that freezes the hover behaviour until cleared.
     const [hoverBarIndex, setHoverBarIndex] = React.useState<number | null>(null);
     const [clickedBarIndex, setClickedBarIndex] = React.useState<number | null>(null);
+
+    const [cursorX, setCursorX] = React.useState<number | null>(null);
+    const [frozenCursorX, setFrozenCursorX] = React.useState<number | null>(null);
 
     const [hoverPeriod, setHoverPeriod] = React.useState<number | null>(null);
 
@@ -498,6 +505,7 @@ export default function BalanceFlowChart(props: Props) {
                     setClickedBarIndex(null);
                     setSelectedData(visibleData[visibleData.length - 1]);
                     setHoverPeriod(null);
+                    setFrozenCursorX(null);
                 }
             }}
             style={{
@@ -745,6 +753,9 @@ export default function BalanceFlowChart(props: Props) {
                             if (clickedBarIndex !== null) return; // freeze when clicked
                             if (state && state.isTooltipActive) {
                                 setHoverBarIndex(state.activeTooltipIndex);
+                                if (typeof state.chartX === 'number') {
+                                    setCursorX(state.chartX);
+                                }
                                 if (state.activeTooltipIndex != null) {
                                     const p = visibleData[state.activeTooltipIndex];
                                     if (p) setHoverPeriod(p.period);
@@ -842,6 +853,7 @@ export default function BalanceFlowChart(props: Props) {
                                         const p = visibleData[index];
                                         if (p) setHoverPeriod(p.period);
                                         setHoverBarIndex(null);
+                                        setFrozenCursorX(cursorX);
                                     }}
                                 />
                             ))}
@@ -862,7 +874,7 @@ export default function BalanceFlowChart(props: Props) {
                             content={(tooltipProps) => (
                                 <CustomTooltip {...(tooltipProps as any)} onUpdate={handleTooltipUpdate} />
                             )}
-                            cursor={<DottedCursor showBelow={false} label={currentHoverData.label} chartWidth={chartWidth} /> as any}
+                            cursor={<DottedCursor showBelow={false} label={currentHoverData.label} chartWidth={chartWidth} freeze={clickedBarIndex !== null} fixedX={clickedBarIndex !== null ? frozenCursorX : null} /> as any}
                             labelFormatter={(label) => `${label}`}
                             position={{ y: 0 }}
                         />

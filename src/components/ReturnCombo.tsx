@@ -163,10 +163,13 @@ interface RC_CursorProps {
     height?: number;
     points?: any[];
     label?: string;
+    freeze?: boolean;
+    fixedX?: number | null;
 }
 
-const DottedCursor: React.FC<RC_CursorProps> = ({ x = 0, width = 0, height = 0, points, label = '' }) => {
-    const cx = x + (width ?? 0) / 2;
+const DottedCursor: React.FC<RC_CursorProps> = ({ x = 0, width = 0, height = 0, points, label = '', freeze = false, fixedX = null }) => {
+    const cxRaw = x + (width ?? 0) / 2;
+    const cx = freeze && fixedX !== null ? fixedX : cxRaw;
 
     let labelText = label;
     if (!labelText && points && points.length > 0 && typeof (points[0] as any).payload?.quarterLabel === 'string') {
@@ -284,6 +287,10 @@ export default function ReturnCombo(props: Props) {
     const [hoverBarIndex, setHoverBarIndex] = React.useState<number | null>(null);
     const [clickedBarIndex, setClickedBarIndex] = React.useState<number | null>(null);
 
+    // Track the X-coordinate of the last tooltip cursor so that we can freeze it when a bar is clicked.
+    const [cursorX, setCursorX] = React.useState<number | null>(null);
+    const [frozenCursorX, setFrozenCursorX] = React.useState<number | null>(null);
+
     // When tooltip reports a new quarter, update the selected data *only* if we
     // are NOT in a frozen (clicked) state.
     const handleTooltipUpdate = React.useCallback(
@@ -301,6 +308,7 @@ export default function ReturnCombo(props: Props) {
                 if (clickedBarIndex !== null) {
                     setClickedBarIndex(null);
                     setSelectedData(visibleData[visibleData.length - 1]);
+                    setFrozenCursorX(null);
                 }
             }}
             style={{
@@ -440,6 +448,9 @@ export default function ReturnCombo(props: Props) {
                             if (clickedBarIndex !== null) return;
                             if (state && state.isTooltipActive) {
                                 setHoverBarIndex(state.activeTooltipIndex);
+                                if (typeof state.chartX === 'number') {
+                                    setCursorX(state.chartX);
+                                }
                             }
                         }}
                         // Reset hover state when leaving the chart – but
@@ -470,7 +481,7 @@ export default function ReturnCombo(props: Props) {
                             content={(tooltipProps) => (
                                 <CustomTooltip {...(tooltipProps as any)} onUpdate={handleTooltipUpdate} />
                             )}
-                            cursor={<DottedCursor label={selectedData.quarterLabel} /> as any}
+                            cursor={<DottedCursor label={selectedData.quarterLabel} freeze={clickedBarIndex !== null} fixedX={clickedBarIndex !== null ? frozenCursorX : null} /> as any}
                             labelFormatter={(label) => `${label}`}
                             position={{ y: 0 }}
                         />
@@ -490,6 +501,7 @@ export default function ReturnCombo(props: Props) {
                                         // Prevent bubbling so the container-level handler doesn't immediately reset.
                                         e.stopPropagation();
                                         setClickedBarIndex(index);
+                                        setFrozenCursorX(cursorX);
                                         setSelectedData(visibleData[index]);
                                         setHoverBarIndex(null);
                                     }}
