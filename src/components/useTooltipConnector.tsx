@@ -38,9 +38,8 @@ export function useTooltipConnector({
         // Anchor the tooltip label to the very top of the cursor line (top of the chart area)
         setCursorPos({
           x: chartRect.left - containerRect.left + posRelToChart.x,
-          // Use the Y position coming from the cursor so the label always touches
-          // the vertical cursor line, regardless of the chart’s internal margin.
-          y: chartRect.top - containerRect.top + posRelToChart.y,
+          // We want the label positioned at the top of the chart, not relative to the hovered bar
+          y: chartRect.top - containerRect.top,
         });
       } catch (error) {
         console.error('Error updating cursor position:', error);
