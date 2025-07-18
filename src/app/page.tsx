@@ -187,8 +187,7 @@ export default function Home() {
       const navEnd = gaapEnd + cumulativeUnreal;
 
       // Denominator = GAAP at quarter start minus any GAAP redemptions executed during the quarter (to exclude withdrawals)
-      const denominatorBase = gaapBegin;
-      const denominator = denominatorBase - subtractGaap;
+      const denominator = gaapBegin + addGaap - subtractGaap;
 
       const realizedRate = denominator > 0 ? realizedDollar / denominator : 0;
       const totalReturnDollar = realizedDollar + unrealizedDollar;

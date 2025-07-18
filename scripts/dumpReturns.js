@@ -12,14 +12,23 @@ if (!fs.existsSync(file)) {
 const rowsRaw = JSON.parse(fs.readFileSync(file, 'utf8'));
 
 const parseAmount = (raw) => parseFloat(String(raw).replace(/,/g, ''));
-const quarterKey = (d) => `${d.getUTCFullYear()}-Q${Math.floor(d.getUTCMonth() / 3) + 1}`;
+function getQuarterKey(d){
+  let y=d.getUTCFullYear();
+  let q=Math.floor(d.getUTCMonth()/3)+1;
+  const CUTOFF_DAYS=5;
+  if(d.getUTCDate()<=CUTOFF_DAYS){
+    q-=1;
+    if(q===0){q=4;y-=1;}
+  }
+  return `${y}-Q${q}`;
+}
 
 // Group transactions by year-quarter
 const groups = new Map();
 for (const tx of rowsRaw) {
   const amount = parseAmount(tx.Actual_Transaction_Amount);
   const date = new Date(tx.Effective_Date || tx.Tran_Date);
-  const key = quarterKey(date);
+  const key = getQuarterKey(date);
   if (!groups.has(key)) {
     groups.set(key, { year: date.getUTCFullYear(), quarter: Math.floor(date.getUTCMonth() / 3) + 1, transactions: [] });
   }
@@ -62,10 +71,10 @@ for (const key of sortedKeys) {
   cumulativeUnreal += unreal - redeemNav;
   const navEnd = gaapEnd + cumulativeUnreal;
 
-  const denominator = gaapBegin - redeemGaap;
-  const realizedRate = denominator > 0 ? realizedDollar / denominator : 0;
+  const denominator = gaapBegin + contribution - redeemGaap; // matches page logic (addGaap - subtractGaap)
+  const realizedRate = denominator>0?realizedDollar/denominator:0;
   const totalReturnDollar = realizedDollar + unreal;
-  const totalReturnRate = denominator > 0 ? totalReturnDollar / denominator : 0;
+  const totalReturnRate = denominator>0?totalReturnDollar/denominator:0;
 
   rows.push({
     label: `${grp.year} Q${grp.quarter}`,
