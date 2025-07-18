@@ -33,10 +33,10 @@ interface Props {
      */
     data?: QuarterData[];
     style?: React.CSSProperties;
-    /** Current return mode (realised vs total) */
-    returnMode?: 'realised' | 'total';
+    /** Current return mode (realized vs total) */
+    returnMode?: 'realized' | 'total';
     /** Callback when user switches return mode */
-    onReturnModeChange?: (mode: 'realised' | 'total') => void;
+    onReturnModeChange?: (mode: 'realized' | 'total') => void;
 }
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
@@ -336,16 +336,16 @@ export default function ReturnCombo(props: Props) {
                             <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Distributed Returns</span>
                         </div>
                     </div>
-                    {/* Realised / Total toggle */}
+                    {/* Realized / Total toggle */}
                     <div style={{ display: 'flex', background: DARK_BLUE, padding: 2, borderRadius: 9999 }}>
                         {([
-                            { key: 'realised', label: 'REALISED' },
-                            { key: 'total', label: 'TOTAL' },
+                            { key: 'realized', label: 'Realized' },
+                            { key: 'total', label: 'Total' },
                         ] as const).map(({ key, label }) => (
                             <button
                                 key={key}
                                 onClick={() => onReturnModeChange && onReturnModeChange(key)}
-                                style={{ padding: `${TOGGLE_PILL_VERT + 2}px ${TOGGLE_PILL_HORZ + 6}px`, background: returnMode === key ? ACCENT_BLUE : 'transparent', color: '#FFFFFF', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Utile Regular, sans-serif', fontSize: 18, borderRadius: 9999, transition: 'background 0.25s ease, color 0.25s ease' }}
+                                style={{ padding: `${TOGGLE_PILL_VERT + 2}px ${TOGGLE_PILL_HORZ + 6}px`, background: returnMode === key ? ACCENT_BLUE : 'transparent', color: '#FFFFFF', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Utile Regular, sans-serif', fontSize: 16, borderRadius: 9999, transition: 'background 0.25s ease, color 0.25s ease' }}
                             >
                                 {label}
                             </button>
@@ -357,7 +357,7 @@ export default function ReturnCombo(props: Props) {
                             <button
                                 key={key}
                                 onClick={() => setTimeFrame(key)}
-                                style={{ padding: `${TOGGLE_PILL_VERT + 2}px ${TOGGLE_PILL_HORZ + 6}px`, background: timeFrame === key ? ACCENT_BLUE : 'transparent', color: '#FFFFFF', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Utile Regular, sans-serif', fontSize: 18, borderRadius: 9999, transition: 'background 0.25s ease, color 0.25s ease' }}
+                                style={{ padding: `${TOGGLE_PILL_VERT + 2}px ${TOGGLE_PILL_HORZ + 6}px`, background: timeFrame === key ? ACCENT_BLUE : 'transparent', color: '#FFFFFF', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Utile Regular, sans-serif', fontSize: 16, borderRadius: 9999, transition: 'background 0.25s ease, color 0.25s ease' }}
                             >
                                 {label}
                             </button>
@@ -372,7 +372,7 @@ export default function ReturnCombo(props: Props) {
                             <button
                                 key={key}
                                 onClick={() => setViewMode(key)}
-                                style={{ padding: `${TOGGLE_PILL_VERT + 2}px ${TOGGLE_PILL_HORZ + 6}px`, background: viewMode === key ? ACCENT_BLUE : 'transparent', color: '#FFFFFF', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Utile Regular, sans-serif', fontSize: 18, borderRadius: 9999, transition: 'background 0.25s ease, color 0.25s ease' }}
+                                style={{ padding: `${TOGGLE_PILL_VERT + 2}px ${TOGGLE_PILL_HORZ + 6}px`, background: viewMode === key ? ACCENT_BLUE : 'transparent', color: '#FFFFFF', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Utile Regular, sans-serif', fontSize: 16, borderRadius: 9999, transition: 'background 0.25s ease, color 0.25s ease' }}
                             >
                                 {label}
                             </button>
@@ -391,7 +391,7 @@ export default function ReturnCombo(props: Props) {
                             <button
                                 key={key}
                                 onClick={() => setTimeFrame(key)}
-                                style={{ padding: `${TOGGLE_PILL_VERT + 2}px ${TOGGLE_PILL_HORZ + 6}px`, background: timeFrame === key ? ACCENT_BLUE : 'transparent', color: '#FFFFFF', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Utile Regular, sans-serif', fontSize: 18, borderRadius: 9999, transition: 'background 0.25s ease, color 0.25s ease' }}
+                                style={{ padding: `${TOGGLE_PILL_VERT + 2}px ${TOGGLE_PILL_HORZ + 6}px`, background: timeFrame === key ? ACCENT_BLUE : 'transparent', color: '#FFFFFF', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Utile Regular, sans-serif', fontSize: 16, borderRadius: 9999, transition: 'background 0.25s ease, color 0.25s ease' }}
                             >
                                 {label}
                             </button>
@@ -406,7 +406,7 @@ export default function ReturnCombo(props: Props) {
                             <button
                                 key={key}
                                 onClick={() => setViewMode(key)}
-                                style={{ padding: `${TOGGLE_PILL_VERT + 2}px ${TOGGLE_PILL_HORZ + 6}px`, background: viewMode === key ? ACCENT_BLUE : 'transparent', color: '#FFFFFF', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Utile Regular, sans-serif', fontSize: 18, borderRadius: 9999, transition: 'background 0.25s ease, color 0.25s ease' }}
+                                style={{ padding: `${TOGGLE_PILL_VERT + 2}px ${TOGGLE_PILL_HORZ + 6}px`, background: viewMode === key ? ACCENT_BLUE : 'transparent', color: '#FFFFFF', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Utile Regular, sans-serif', fontSize: 16, borderRadius: 9999, transition: 'background 0.25s ease, color 0.25s ease' }}
                             >
                                 {label}
                             </button>

@@ -638,7 +638,7 @@ export default function BalanceFlowChart(props: Props) {
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     fontFamily: 'Utile Regular, sans-serif',
-                                    fontSize: 18,
+                                    fontSize: 16,
                                     borderRadius: 9999,
                                     transition: 'background 0.25s ease, color 0.25s ease',
                                 }}
@@ -669,7 +669,7 @@ export default function BalanceFlowChart(props: Props) {
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     fontFamily: 'Utile Regular, sans-serif',
-                                    fontSize: 18,
+                                    fontSize: 16,
                                     borderRadius: 9999,
                                     transition: 'background 0.25s ease, color 0.25s ease',
                                 }}
@@ -707,7 +707,7 @@ export default function BalanceFlowChart(props: Props) {
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     fontFamily: 'Utile Regular, sans-serif',
-                                    fontSize: 18,
+                                    fontSize: 16,
                                     borderRadius: 9999,
                                     transition: 'background 0.25s ease, color 0.25s ease',
                                 }}

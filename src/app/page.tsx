@@ -244,8 +244,8 @@ export default function Home() {
 
   // NEW: balance mode toggle (GAAP vs NAV)
   const [balanceMode, setBalanceMode] = React.useState<'gaap' | 'nav'>('nav');
-  // Toggle for Returns chart: realised vs total (default to realised per user feedback)
-  const [returnMode, setReturnMode] = React.useState<'realised' | 'total'>('realised');
+  // Toggle for Returns chart: realized vs total (default to realized per user feedback)
+  const [returnMode, setReturnMode] = React.useState<'realized' | 'total'>('realized');
 
   return (
     <>
@@ -285,11 +285,11 @@ export default function Home() {
                 quarter: r.period,
                 quarterLabel: r.label,
                 beginningBalance: r.beginningBalance,
-                returnRate: returnMode === 'realised' ? r.realizedRate : r.returnRate,
-                returnDollar: returnMode === 'realised' ? r.realizedDollar : r.returnDollar,
+                returnRate: returnMode === 'realized' ? r.realizedRate : r.returnRate,
+                returnDollar: returnMode === 'realized' ? r.realizedDollar : r.returnDollar,
                 action: r.action,
                 netFlow: r.netFlow,
-                endingBalance: returnMode === 'realised' ? r.gaapEnd : r.navEnd,
+                endingBalance: returnMode === 'realized' ? r.gaapEnd : r.navEnd,
               }))} returnMode={returnMode} onReturnModeChange={setReturnMode} />
             </div>
 
