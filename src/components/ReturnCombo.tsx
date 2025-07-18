@@ -449,19 +449,6 @@ export default function ReturnCombo(props: Props) {
                                 setSelectedData(visibleData[visibleData.length - 1]);
                                 setHoverBarIndex(null);
                             }}
-                        // Select a bar on click; clicking outside any bar
-                        // (state.activeTooltipIndex === undefined) clears
-                        // the selection.
-                        onClick={(state: any, e: any) => {
-                            if (state && typeof state.activeTooltipIndex === 'number') {
-                                setClickedBarIndex(state.activeTooltipIndex);
-                                setSelectedData(visibleData[state.activeTooltipIndex]);
-                                setHoverBarIndex(null);
-                                // Prevent the outer container from clearing the
-                                // selection immediately.
-                                if (e?.stopPropagation) e.stopPropagation();
-                            }
-                        }}
                     >
                         <XAxis dataKey="quarterLabel" axisLine={{ stroke: '#333333', strokeWidth: 1 }} tickLine={false} tick={axisTickStyle} />
                         <YAxis

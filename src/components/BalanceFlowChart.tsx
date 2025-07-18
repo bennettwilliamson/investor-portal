@@ -758,16 +758,6 @@ export default function BalanceFlowChart(props: Props) {
                             setHoverBarIndex(null);
                             setHoverPeriod(null);
                         }}
-                        onClick={(state: any, e: any) => {
-                            if (state && typeof state.activeTooltipIndex === 'number') {
-                                setClickedBarIndex(state.activeTooltipIndex);
-                                setSelectedData(visibleData[state.activeTooltipIndex]);
-                                const p = visibleData[state.activeTooltipIndex];
-                                if (p) setHoverPeriod(p.period);
-                                setHoverBarIndex(null);
-                                if (e?.stopPropagation) e.stopPropagation();
-                            }
-                        }}
                     >
                         {hoverPeriod !== null && (
                             <ReferenceLine
