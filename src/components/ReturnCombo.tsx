@@ -174,7 +174,7 @@ const DottedCursor: React.FC<RC_CursorProps> = ({ x = 0, width = 0, height = 0, 
     }
 
     // Sizing heuristics
-    const FONT_SIZE = 12;
+    const FONT_SIZE = 14; // standardized to 14px to match other chart
     const PADDING_X = 8;
     const PADDING_Y = 4;
     const AVG_CHAR_WIDTH = FONT_SIZE * 0.6;

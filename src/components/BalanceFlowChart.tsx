@@ -239,7 +239,7 @@ const DottedCursor: React.FC<CursorProps> = ({ x, width, height = 0, points, sho
     }
 
     // Basic sizing heuristic
-    const FONT_SIZE = 16; // increased font size for better readability
+    const FONT_SIZE = 14; // standardized to 14px as requested
     const PADDING_X = 8;
     const PADDING_Y = 4;
     const AVG_CHAR_WIDTH = FONT_SIZE * 0.6;
