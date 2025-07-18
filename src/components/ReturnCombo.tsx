@@ -288,9 +288,9 @@ export default function ReturnCombo(props: Props) {
     // are NOT in a frozen (clicked) state.
     const handleTooltipUpdate = React.useCallback(
         (q: QuarterData) => {
-            if (clickedBarIndex === null) {
-                setSelectedData(q);
-            }
+            if (clickedBarIndex !== null) return; // frozen – ignore
+            // Avoid infinite update loops by only updating when the quarter actually changes
+            setSelectedData((prev) => (prev && prev.quarter === q.quarter ? prev : q));
         },
         [clickedBarIndex]
     );

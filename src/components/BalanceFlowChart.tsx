@@ -483,9 +483,8 @@ export default function BalanceFlowChart(props: Props) {
     // Update handler for tooltip that honours the clickedBar freeze state
     const handleTooltipUpdate = React.useCallback(
         (row: PeriodData) => {
-            if (clickedBarIndex === null) {
-                setSelectedData(row);
-            }
+            if (clickedBarIndex !== null) return; // frozen – ignore
+            setSelectedData((prev) => (prev && prev.period === row.period ? prev : row));
         },
         [clickedBarIndex]
     );
