@@ -301,7 +301,7 @@ export default function Home() {
                   Your Historical Returns
                 </h2>
               </div>
-              <ReturnComboChart style={{ height: 440 }} data={rows.map((r) => ({
+              <ReturnComboChart style={{ height: 600 }} data={rows.map((r) => ({
                 quarter: r.period,
                 quarterLabel: r.label,
                 beginningBalance: r.beginningBalance,
@@ -334,7 +334,7 @@ export default function Home() {
                   Your Historical Balance
                 </h2>
               </div>
-              <BalanceFlowChart style={{ height: 440 }} data={(() => {
+              <BalanceFlowChart style={{ height: 600 }} data={(() => {
                 let prevNavEnd = 0;
                 return rows.map((r, idx) => {
                   const endingBalance = balanceMode === 'gaap' ? r.gaapEnd : r.navEnd;

@@ -539,10 +539,10 @@ export default function BalanceFlowChart(props: Props) {
                         marginLeft: 'auto',
                     }}
                 >
-                    {/* Legend */}
+                    {/* Legend (hidden – moved below chart) */}
                     <div
                         style={{
-                            display: 'flex',
+                            display: 'none',
                             flexDirection: 'row',
                             gap: '16px',
                             fontSize: '12px',
@@ -630,7 +630,7 @@ export default function BalanceFlowChart(props: Props) {
             </div>
 
             {/* Chart area */}
-            <div style={{ flex: 1, position: 'relative', padding: 0, paddingBottom: 64 }} ref={chartAreaRef}>
+            <div style={{ flex: 1, position: 'relative', padding: 0 }} ref={chartAreaRef}>
                 <div style={{ display: 'none' }}>
                     {/* Time-frame toggle */}
                     <div
@@ -765,6 +765,23 @@ export default function BalanceFlowChart(props: Props) {
                     </ComposedChart>
                 </ResponsiveContainer>
             </div>
+
+            {/* Legend below chart */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: 24, pointerEvents: 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 12, height: 12, backgroundColor: COLORS.Reinvested, borderRadius: 2 }} />
+                    <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Contribution</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 12, height: 12, backgroundColor: COLORS.Distributed, borderRadius: 2 }} />
+                    <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Redemptions</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 12, height: 2, backgroundColor: ACCENT_BLUE }} />
+                    <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Balance</span>
+                </div>
+            </div>
+
             {/* Render the date label above cursor line */}
             {renderConnectorOverlay(selectedData.label)}
         </div>

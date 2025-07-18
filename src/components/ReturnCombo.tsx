@@ -178,7 +178,9 @@ const DottedCursor: React.FC<
     any & { onPositionUpdate?: (pos: { x: number; y: number }) => void }
 > = ({ x, width, height, points, onPositionUpdate }) => {
     // Compute coordinates every render
-    const cx = x + (width ?? 0) / 2;
+    // BarChart has a left margin of 24px – subtract it to get the true position relative to the chart area container
+    const MARGIN_LEFT = 24;
+    const cx = x + (width ?? 0) / 2 - MARGIN_LEFT;
     const barTopY = points && points.length > 0 ? points[0].y : 0;
     const currentPayload = points && points.length > 0 ? (points[0] as any).payload : null;
     const lastPayloadRef = React.useRef<any>();
@@ -321,8 +323,8 @@ export default function ReturnCombo(props: Props) {
                 </div>
                 {/* Toggle controls - keeping existing implementation */}
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, pointerEvents: 'auto' }}>
-                    {/* Legend */}
-                    <div style={{ display: 'flex', flexDirection: 'row', gap: '24px', fontSize: '12px', lineHeight: '1.4', alignItems: 'center', marginBottom: '8px' }}>
+                    {/* Legend (hidden – moved below chart) */}
+                    <div style={{ display: 'none', flexDirection: 'row', gap: '24px', fontSize: '12px', lineHeight: '1.4', alignItems: 'center', marginBottom: '8px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <div style={{ width: '12px', height: '12px', backgroundColor: COLORS.Reinvested, borderRadius: '2px' }} />
                             <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Reinvested Returns</span>
@@ -472,6 +474,18 @@ export default function ReturnCombo(props: Props) {
                         />
                     </BarChart>
                 </ResponsiveContainer>
+            </div>
+
+            {/* Legend below chart */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '24px', marginTop: 24, marginLeft: 24, pointerEvents: 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 12, height: 12, backgroundColor: COLORS.Reinvested, borderRadius: 2 }} />
+                    <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Reinvested Returns</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 12, height: 12, backgroundColor: COLORS.Distributed, borderRadius: 2 }} />
+                    <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Distributed Returns</span>
+                </div>
             </div>
 
             {/* Render the date label above cursor line */}
