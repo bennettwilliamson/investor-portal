@@ -323,56 +323,50 @@ export default function ReturnCombo(props: Props) {
                         );
                     })()}
                 </div>
-                {/* Toggle controls - keeping existing implementation */}
-                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10, pointerEvents: 'auto' }}>
-                    {/* Legend (hidden – moved below chart) */}
-                    <div style={{ display: 'none', flexDirection: 'row', gap: '24px', fontSize: '12px', lineHeight: '1.4', alignItems: 'center', marginBottom: '8px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div style={{ width: '12px', height: '12px', backgroundColor: COLORS.Reinvested, borderRadius: '2px' }} />
-                            <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Reinvested Returns</span>
+                {/* Grouped ReturnMode and ValueType toggles */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, pointerEvents: 'auto' }}>
+                    {/* Top row: Dollar/Percent + Realized/Total */}
+                    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                        {/* Dollar / Percent toggle */}
+                        <div style={{ display: 'flex', background: DARK_BLUE, padding: 4, borderRadius: 9999 }}>
+                            {([
+                                { key: 'dollar', label: '$' },
+                                { key: 'percent', label: '%' },
+                            ] as const).map(({ key, label }) => (
+                                <button
+                                    key={key}
+                                    onClick={() => setViewMode(key)}
+                                    style={{ padding: `${TOGGLE_PILL_VERT + 2}px ${TOGGLE_PILL_HORZ + 6}px`, background: viewMode === key ? ACCENT_BLUE : 'transparent', color: '#FFFFFF', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Utile Regular, sans-serif', fontSize: 16, borderRadius: 9999, transition: 'background 0.25s ease, color 0.25s ease' }}
+                                >
+                                    {label}
+                                </button>
+                            ))}
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div style={{ width: '12px', height: '12px', backgroundColor: COLORS.Distributed, borderRadius: '2px' }} />
-                            <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Distributed Returns</span>
+
+                        {/* Realized / Total toggle */}
+                        <div style={{ display: 'flex', background: DARK_BLUE, padding: 4, borderRadius: 9999 }}>
+                            {([
+                                { key: 'realized', label: 'Realized' },
+                                { key: 'total', label: 'Total' },
+                            ] as const).map(({ key, label }) => (
+                                <button
+                                    key={key}
+                                    onClick={() => onReturnModeChange && onReturnModeChange(key)}
+                                    style={{ padding: `${TOGGLE_PILL_VERT + 2}px ${TOGGLE_PILL_HORZ + 6}px`, background: returnMode === key ? ACCENT_BLUE : 'transparent', color: '#FFFFFF', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Utile Regular, sans-serif', fontSize: 16, borderRadius: 9999, transition: 'background 0.25s ease, color 0.25s ease' }}
+                                >
+                                    {label}
+                                </button>
+                            ))}
                         </div>
                     </div>
-                    {/* Realized / Total toggle */}
-                    <div style={{ display: 'flex', background: DARK_BLUE, padding: 4, borderRadius: 9999, order: 1 }}>
-                        {([
-                            { key: 'realized', label: 'Realized' },
-                            { key: 'total', label: 'Total' },
-                        ] as const).map(({ key, label }) => (
-                            <button
-                                key={key}
-                                onClick={() => onReturnModeChange && onReturnModeChange(key)}
-                                style={{ padding: `${TOGGLE_PILL_VERT + 2}px ${TOGGLE_PILL_HORZ + 6}px`, background: returnMode === key ? ACCENT_BLUE : 'transparent', color: '#FFFFFF', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Utile Regular, sans-serif', fontSize: 16, borderRadius: 9999, transition: 'background 0.25s ease, color 0.25s ease' }}
-                            >
-                                {label}
-                            </button>
-                        ))}
-                    </div>
-                    {/* Time-frame toggle */}
-                    <div style={{ display: 'flex', background: DARK_BLUE, padding: 4, borderRadius: 9999, order: 2 }}>
+
+                    {/* Bottom row: Time-frame toggle */}
+                    <div style={{ display: 'flex', background: DARK_BLUE, padding: 4, borderRadius: 9999 }}>
                         {TIMEFRAME_OPTIONS.map(({ key, label }) => (
                             <button
                                 key={key}
                                 onClick={() => setTimeFrame(key)}
                                 style={{ padding: `${TOGGLE_PILL_VERT + 2}px ${TOGGLE_PILL_HORZ + 6}px`, background: timeFrame === key ? ACCENT_BLUE : 'transparent', color: '#FFFFFF', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Utile Regular, sans-serif', fontSize: 16, borderRadius: 9999, transition: 'background 0.25s ease, color 0.25s ease' }}
-                            >
-                                {label}
-                            </button>
-                        ))}
-                    </div>
-                    {/* Dollar / Percent toggle */}
-                    <div style={{ display: 'flex', background: DARK_BLUE, padding: 4, borderRadius: 9999, order: 0 }}>
-                        {([
-                            { key: 'dollar', label: '$' },
-                            { key: 'percent', label: '%' },
-                        ] as const).map(({ key, label }) => (
-                            <button
-                                key={key}
-                                onClick={() => setViewMode(key)}
-                                style={{ padding: `${TOGGLE_PILL_VERT + 2}px ${TOGGLE_PILL_HORZ + 6}px`, background: viewMode === key ? ACCENT_BLUE : 'transparent', color: '#FFFFFF', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Utile Regular, sans-serif', fontSize: 16, borderRadius: 9999, transition: 'background 0.25s ease, color 0.25s ease' }}
                             >
                                 {label}
                             </button>
