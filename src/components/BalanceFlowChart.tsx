@@ -702,7 +702,7 @@ export default function BalanceFlowChart(props: Props) {
             </div>
 
             {/* Chart area */}
-            <div style={{ flex: 1, position: 'relative', padding: 0 }} ref={chartAreaRef}>
+            <div style={{ flex: 1, position: 'relative', padding: 0, pointerEvents: clickedBarIndex !== null ? 'none' : 'auto' }} ref={chartAreaRef}>
                 <div style={{ display: 'none' }}>
                     {/* Time-frame toggle */}
                     <div

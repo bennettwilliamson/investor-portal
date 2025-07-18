@@ -398,7 +398,7 @@ export default function ReturnCombo(props: Props) {
             </div>
 
             {/* Chart area */}
-            <div style={{ flex: 1, position: 'relative', padding: 0, paddingBottom: 0 }}> {/* chart area */}
+            <div style={{ flex: 1, position: 'relative', padding: 0, paddingBottom: 0, pointerEvents: clickedBarIndex !== null ? 'none' : 'auto' }}> {/* chart area */}
                 {/* Hidden duplicate toggle controls - keeping existing implementation */}
                 <div style={{ display: 'none' }}>
                     {/* Time-frame toggle */}
