@@ -324,7 +324,7 @@ export default function ReturnCombo(props: Props) {
                     })()}
                 </div>
                 {/* Toggle controls - keeping existing implementation */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, pointerEvents: 'auto' }}>
+                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10, pointerEvents: 'auto' }}>
                     {/* Legend (hidden – moved below chart) */}
                     <div style={{ display: 'none', flexDirection: 'row', gap: '24px', fontSize: '12px', lineHeight: '1.4', alignItems: 'center', marginBottom: '8px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
