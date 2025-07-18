@@ -179,21 +179,22 @@ const DottedCursor: React.FC<
     // Compute coordinates every render
     const cx = x + (width ?? 0) / 2;
     const barTopY = points && points.length > 0 ? points[0].y : 0;
-    
-    const lastReportedPosition = React.useRef<{ x: number, y: number } | null>(null);
+    const currentPayload = points && points.length > 0 ? (points[0] as any).payload : null;
+    const lastPayloadRef = React.useRef<any>();
 
+    // Notify parent *after* render commit to avoid nested updates
     React.useEffect(() => {
-        if (onPositionUpdate) {
-            const newPos = { x: cx, y: barTopY };
-            if (lastReportedPosition.current?.x !== newPos.x || lastReportedPosition.current?.y !== newPos.y) {
-                onPositionUpdate(newPos);
-                lastReportedPosition.current = newPos;
-            }
+        if (onPositionUpdate && currentPayload && currentPayload !== lastPayloadRef.current) {
+            onPositionUpdate({ x: cx, y: barTopY });
+            lastPayloadRef.current = currentPayload;
         }
-    }, [cx, barTopY, onPositionUpdate]);
+    }, [cx, barTopY, onPositionUpdate, currentPayload]);
 
-
-    return <g />;
+    return (
+        <g>
+            <line x1={cx} y1={0} x2={cx} y2={height} stroke="#666666" strokeWidth={1} />
+        </g>
+    );
 };
 
 export default function ReturnCombo(props: Props) {
@@ -259,25 +260,18 @@ export default function ReturnCombo(props: Props) {
 
     // ---------- Refs & state for connector paths ----------
     const containerRef = React.useRef<HTMLDivElement>(null);
-    const chartAreaRef  = React.useRef<HTMLDivElement>(null);
-
-    // Store refs to each metric card in a map so we can measure them dynamically
-    const cardRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
-    const setCardRef = React.useMemo(() => {
-        const cache = new Map<string, (el: HTMLDivElement | null) => void>();
-        return (id: string) => {
-            if (!cache.has(id)) {
-                cache.set(id, (el: HTMLDivElement | null) => {
-                    cardRefs.current[id] = el;
-                });
-            }
-            return cache.get(id)!;
-        };
-    }, []);
+    const chartAreaRef = React.useRef<HTMLDivElement>(null);
+    const returnCardRef = React.useRef<HTMLDivElement>(null);
+    const beginningCardRef = React.useRef<HTMLDivElement>(null);
+    const endingCardRef = React.useRef<HTMLDivElement>(null);
 
     const [cursorPos, setCursorPos] = React.useState<{ x: number; y: number } | null>(null);
     const [activeBarIndex, setActiveBarIndex] = React.useState<number | null>(null);
-    const [cardAnchors, setCardAnchors] = React.useState<Array<{ id: string; x: number; y: number }>>([]);
+    const [cardAnchors, setCardAnchors] = React.useState({
+        return: null as { x: number; y: number } | null,
+        begin: null as { x: number; y: number } | null,
+        end: null as { x: number; y: number } | null,
+    });
 
     const handleCursorPosition = React.useCallback((posRelToChart: { x: number; y: number }) => {
         if (!chartAreaRef.current || !containerRef.current) return;
@@ -290,29 +284,20 @@ export default function ReturnCombo(props: Props) {
     }, []);
 
     React.useLayoutEffect(() => {
-        const updateAnchors = () => {
+        function updateAnchors() {
             if (!containerRef.current) return;
             const containerRect = containerRef.current.getBoundingClientRect();
-            const anchors: Array<{ id: string; x: number; y: number }> = [];
-            Object.entries(cardRefs.current).forEach(([id, el]) => {
-                if (!el) return;
-                const rect = el.getBoundingClientRect();
-                anchors.push({ id, x: rect.left - containerRect.left + rect.width / 2, y: rect.top - containerRect.top + rect.height });
+            const getAnchor = (ref: React.RefObject<HTMLDivElement>) => {
+                if (!ref.current) return null;
+                const rect = ref.current.getBoundingClientRect();
+                return { x: rect.left - containerRect.left + rect.width / 2, y: rect.top - containerRect.top + rect.height };
+            };
+            setCardAnchors({
+                return: getAnchor(returnCardRef),
+                begin: getAnchor(beginningCardRef),
+                end: getAnchor(endingCardRef),
             });
-
-            anchors.sort((a, b) => a.id.localeCompare(b.id));
-
-            setCardAnchors((prev) => {
-                if (
-                    prev.length === anchors.length &&
-                    prev.every((p, i) => p.id === anchors[i].id && p.x === anchors[i].x && p.y === anchors[i].y)
-                ) {
-                    return prev;
-                }
-                return anchors;
-            });
-        };
-
+        }
         updateAnchors();
         window.addEventListener('resize', updateAnchors);
         return () => window.removeEventListener('resize', updateAnchors);
@@ -323,9 +308,8 @@ export default function ReturnCombo(props: Props) {
             ref={containerRef}
             style={{
                 ...style,
-                display: 'grid',
-                gridTemplateRows: 'auto 1fr auto',
-                rowGap: 24,
+                display: 'flex',
+                flexDirection: 'column',
                 width: '100%',
                 height: '100%',
                 fontFamily: 'Utile Regular, sans-serif',
@@ -336,7 +320,7 @@ export default function ReturnCombo(props: Props) {
             }}
         >
             {/* Header row */}
-            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', width: '100%', padding: '0 0 48px 0', pointerEvents: 'none' }}>
+            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', width: '100%', padding: '0 0 8px 0', pointerEvents: 'none' }}>
                 <div style={{ display: 'flex', gap: 16 }}>
                     {(() => {
                         const cardBase: React.CSSProperties = { background: DARK_BLUE, borderRadius: 8, padding: '12px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 140, textAlign: 'center' };
@@ -345,17 +329,17 @@ export default function ReturnCombo(props: Props) {
                         const labelStyle: React.CSSProperties = { fontSize: 14, color: '#C0C0C0' };
                         return (
                             <>
-                                <div style={cardBase} ref={setCardRef('begin')}>
+                                <div style={cardBase} ref={beginningCardRef}>
                                     <div style={valueStyle}>{currencyFormatter.format(selectedData.beginningBalance)}</div>
                                     <div style={lineStyle} />
                                     <div style={labelStyle}>Beginning Balance</div>
                                 </div>
-                                <div style={cardBase} ref={setCardRef('return')}>
+                                <div style={cardBase} ref={returnCardRef}>
                                     <div style={valueStyle}>{returnValue}</div>
                                     <div style={lineStyle} />
                                     <div style={labelStyle}>{viewMode === 'dollar' ? 'Realized Return ($)' : 'Realized Return (%)'}</div>
                                 </div>
-                                <div style={cardBase} ref={setCardRef('end')}>
+                                <div style={cardBase} ref={endingCardRef}>
                                     <div style={valueStyle}>{currencyFormatter.format(selectedData.endingBalance)}</div>
                                     <div style={lineStyle} />
                                     <div style={labelStyle}>Ending Balance</div>
@@ -481,7 +465,6 @@ export default function ReturnCombo(props: Props) {
                             cursor={<DottedCursor onPositionUpdate={handleCursorPosition} />}
                             labelFormatter={(label) => `${label}`}
                             position={{ y: 0 }}
-                            isAnimationActive={false}
                         />
                         <Bar
                             dataKey={viewMode === 'dollar' ? 'returnDollar' : 'returnPercentValue'}
@@ -509,7 +492,7 @@ export default function ReturnCombo(props: Props) {
             </div>
 
             {/* Legend */}
-            <div style={{ padding: '16px 0 0 24px', display: 'flex', flexDirection: 'row', gap: '24px', fontSize: '12px', lineHeight: '1.4', alignItems: 'center' }}>
+            <div style={{ padding: '24px 0 0 0', display: 'flex', flexDirection: 'row', gap: '24px', fontSize: '12px', lineHeight: '1.4', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <div style={{ width: '12px', height: '12px', backgroundColor: COLORS.Reinvested, borderRadius: '2px' }} />
                     <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Reinvested Returns</span>
@@ -521,43 +504,22 @@ export default function ReturnCombo(props: Props) {
             </div>
 
             {/* SVG overlay for connector curves */}
-            {cursorPos && cardAnchors.length > 0 && (() => {
-                const busY = Math.max(...cardAnchors.map(a => a.y)) + 24;
-                const minX = Math.min(...cardAnchors.map(a => a.x));
-                const maxX = Math.max(...cardAnchors.map(a => a.x));
-
-                return (
-                    <>
-                        <svg
-                            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
-                        >
-                            <path d={`M ${cursorPos.x} ${cursorPos.y} V ${busY}`} stroke="#666666" strokeWidth={1} fill="none" />
-                            <path d={`M ${minX} ${busY} H ${maxX}`} stroke="#666666" strokeWidth={1} fill="none" />
-                            {cardAnchors.map((anchor) => (
-                                <path key={anchor.id} d={`M ${anchor.x} ${anchor.y} V ${busY}`} stroke="#666666" strokeWidth={1} fill="none" />
-                            ))}
-                        </svg>
-                        <div
-                            style={{
-                                position: 'absolute',
-                                left: cursorPos.x,
-                                top: busY + 12,
-                                transform: 'translateX(-50%)',
-                                background: '#333333',
-                                color: '#FFFFFF',
-                                padding: '4px 8px',
-                                borderRadius: 4,
-                                fontSize: 12,
-                                fontFamily: 'Utile Regular, sans-serif',
-                                whiteSpace: 'nowrap',
-                                pointerEvents: 'none',
-                            }}
-                        >
-                            {selectedData.quarterLabel}
-                        </div>
-                    </>
-                );
-            })()}
+            {cursorPos && cardAnchors && (
+                <>
+                    <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+                        {(['return', 'begin', 'end'] as const).map((key) => {
+                            const anchor = (cardAnchors as any)[key];
+                            if (!anchor) return null;
+                            const breakY = anchor.y + 10;
+                            const d = `M ${cursorPos.x} ${cursorPos.y} L ${cursorPos.x} ${breakY} L ${anchor.x} ${breakY} L ${anchor.x} ${anchor.y}`;
+                            return <path key={key} d={d} stroke="#666666" strokeWidth={1} fill="none" />;
+                        })}
+                    </svg>
+                    {cardAnchors.return && (
+                        <div style={{ position: 'absolute', left: cursorPos.x, top: (() => { if (containerRef.current && cardAnchors.return) { const breakY = cardAnchors.return.y + 10; const offset = 12; return breakY + offset; } return 0; })(), transform: 'translateX(-50%)', background: '#666666', color: '#FFFFFF', padding: '4px 8px', borderRadius: 4, fontSize: 16, fontFamily: 'Utile Regular, sans-serif', whiteSpace: 'nowrap', pointerEvents: 'none' }}>{selectedData.quarterLabel}</div>
+                    )}
+                </>
+            )}
         </div>
     );
 } 
