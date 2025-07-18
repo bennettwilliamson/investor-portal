@@ -221,9 +221,6 @@ export default function ReturnCombo(props: Props) {
     const [timeFrame, setTimeFrame] = React.useState<TimeFrameKey>('all');
     const [isAnimationEnabled, setIsAnimationEnabled] = React.useState(true);
 
-    // New: track the bar explicitly clicked to freeze selection
-    const [freezeIndex, setFreezeIndex] = React.useState<number | null>(null);
-
     React.useEffect(() => {
         const timer = setTimeout(() => setIsAnimationEnabled(false), 1000); // Disable animation after initial load
         return () => clearTimeout(timer);
@@ -254,11 +251,6 @@ export default function ReturnCombo(props: Props) {
         }
     }, [data, timeFrame]);
 
-    // Clear freeze when visible dataset changes (e.g., timeframe switch)
-    React.useEffect(() => {
-        setFreezeIndex(null);
-    }, [visibleData]);
-
     // Convert quarterly rate to annualised percentage for display (×4 then %)
     const chartData = visibleData.map((d) => ({
         ...d,
@@ -273,17 +265,6 @@ export default function ReturnCombo(props: Props) {
     } as const;
 
     const [selectedData, setSelectedData] = React.useState<QuarterData>(() => visibleData[visibleData.length - 1]);
-
-    // Helper to update cards only when not frozen
-    const handleTooltipUpdate = React.useCallback(
-        (row: QuarterData) => {
-            if (freezeIndex === null) {
-                setSelectedData(row);
-            }
-        },
-        [freezeIndex],
-    );
-
     React.useEffect(() => {
         if (visibleData.length > 0) {
             setSelectedData(visibleData[visibleData.length - 1]);
@@ -296,10 +277,32 @@ export default function ReturnCombo(props: Props) {
 
     // Tooltip connector removed – label is now inside SVG.
 
-    const [activeBarIndex, setActiveBarIndex] = React.useState<number | null>(null);
+    // Track the bar currently hovered (for cursor/tooltip) and the bar that has
+    // been explicitly selected via click. Hovered index is transient, whereas
+    // clicked index "freezes" the chart until the user clears the selection.
+
+    const [hoverBarIndex, setHoverBarIndex] = React.useState<number | null>(null);
+    const [clickedBarIndex, setClickedBarIndex] = React.useState<number | null>(null);
+
+    // When tooltip reports a new quarter, update the selected data *only* if we
+    // are NOT in a frozen (clicked) state.
+    const handleTooltipUpdate = React.useCallback(
+        (q: QuarterData) => {
+            if (clickedBarIndex === null) {
+                setSelectedData(q);
+            }
+        },
+        [clickedBarIndex]
+    );
 
     return (
         <div
+            onClick={() => {
+                if (clickedBarIndex !== null) {
+                    setClickedBarIndex(null);
+                    setSelectedData(visibleData[visibleData.length - 1]);
+                }
+            }}
             style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -395,15 +398,7 @@ export default function ReturnCombo(props: Props) {
             </div>
 
             {/* Chart area */}
-            <div
-                style={{ flex: 1, position: 'relative', padding: 0, paddingBottom: 0 }}
-                onClick={() => {
-                    if (freezeIndex !== null) {
-                        setFreezeIndex(null);
-                        setSelectedData(visibleData[visibleData.length - 1]);
-                    }
-                }}
-            > {/* chart area */}
+            <div style={{ flex: 1, position: 'relative', padding: 0, paddingBottom: 0 }}> {/* chart area */}
                 {/* Hidden duplicate toggle controls - keeping existing implementation */}
                 <div style={{ display: 'none' }}>
                     {/* Time-frame toggle */}
@@ -439,18 +434,34 @@ export default function ReturnCombo(props: Props) {
                         data={chartData}
                         margin={{ top: 48, right: 24, left: 24, bottom: 8 }}
                         barCategoryGap={2}
+                        // Handle pointer movement only when no bar is
+                        // currently selected via click.
                         onMouseMove={(state: any) => {
-                            if (freezeIndex !== null) return; // ignore hover when frozen
+                            if (clickedBarIndex !== null) return;
                             if (state && state.isTooltipActive) {
-                                setActiveBarIndex(state.activeTooltipIndex);
+                                setHoverBarIndex(state.activeTooltipIndex);
                             }
                         }}
+                        // Reset hover state when leaving the chart – but
+                        // only if there is no active click selection.
                         onMouseLeave={() => {
-                                if (freezeIndex === null) {
-                                    setSelectedData(visibleData[visibleData.length - 1]);
-                                }
-                                setActiveBarIndex(null);
+                                if (clickedBarIndex !== null) return;
+                                setSelectedData(visibleData[visibleData.length - 1]);
+                                setHoverBarIndex(null);
                             }}
+                        // Select a bar on click; clicking outside any bar
+                        // (state.activeTooltipIndex === undefined) clears
+                        // the selection.
+                        onClick={(state: any, e: any) => {
+                            if (state && typeof state.activeTooltipIndex === 'number') {
+                                setClickedBarIndex(state.activeTooltipIndex);
+                                setSelectedData(visibleData[state.activeTooltipIndex]);
+                                setHoverBarIndex(null);
+                                // Prevent the outer container from clearing the
+                                // selection immediately.
+                                if (e?.stopPropagation) e.stopPropagation();
+                            }
+                        }}
                     >
                         <XAxis dataKey="quarterLabel" axisLine={{ stroke: '#333333', strokeWidth: 1 }} tickLine={false} tick={axisTickStyle} />
                         <YAxis
@@ -487,16 +498,13 @@ export default function ReturnCombo(props: Props) {
                                 <Cell
                                     key={`cell-${index}`}
                                     fill={COLORS[entry.action]}
-                                    fillOpacity={freezeIndex !== null && index !== freezeIndex ? 0.1 : 1}
+                                    fillOpacity={clickedBarIndex !== null && index !== clickedBarIndex ? 0.1 : 1}
                                     onClick={(e) => {
+                                        // Prevent bubbling so the container-level handler doesn't immediately reset.
                                         e.stopPropagation();
-                                        if (freezeIndex === index) {
-                                            setFreezeIndex(null);
-                                            setSelectedData(visibleData[visibleData.length - 1]);
-                                        } else {
-                                            setFreezeIndex(index);
-                                            setSelectedData(visibleData[index]);
-                                        }
+                                        setClickedBarIndex(index);
+                                        setSelectedData(visibleData[index]);
+                                        setHoverBarIndex(null);
                                     }}
                                 />
                             ))}

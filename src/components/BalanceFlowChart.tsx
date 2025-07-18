@@ -315,11 +315,12 @@ export default function BalanceFlowChart(props: Props) {
 
     // Tooltip connector hook removed – we now render the label inside the SVG.
 
-    const [activeBarIndex, setActiveBarIndex] = React.useState<number | null>(null);
-    const [hoverPeriod, setHoverPeriod] = React.useState<number | null>(null);
+    // Track both the current hover index (transient) and a clicked index
+    // that freezes the hover behaviour until cleared.
+    const [hoverBarIndex, setHoverBarIndex] = React.useState<number | null>(null);
+    const [clickedBarIndex, setClickedBarIndex] = React.useState<number | null>(null);
 
-    // New: track the bar that has been explicitly clicked ("frozen" selection).
-    const [freezeIndex, setFreezeIndex] = React.useState<number | null>(null);
+    const [hoverPeriod, setHoverPeriod] = React.useState<number | null>(null);
 
     // Resolve the dataset: prefer caller-supplied data, otherwise fall back to the internal simulation.
     const data = React.useMemo<PeriodData[]>(() => {
@@ -344,36 +345,28 @@ export default function BalanceFlowChart(props: Props) {
         }
     }, [data, timeFrame]);
 
-    const [selectedData, setSelectedData] = React.useState<PeriodData>(() => visibleData[visibleData.length - 1]);
+    const hasFlow = React.useMemo(() => {
+        if (clickedBarIndex === null) return false;
+        const row = visibleData[clickedBarIndex];
+        return !!row && row.netFlow !== 0;
+    }, [clickedBarIndex, visibleData]);
 
-    // Helper to update the metric cards only when no bar is frozen.
-    const handleTooltipUpdate = React.useCallback(
-        (row: PeriodData) => {
-            if (freezeIndex === null) {
-                setSelectedData(row);
-            }
-        },
-        [freezeIndex],
-    );
+    const [selectedData, setSelectedData] = React.useState<PeriodData>(() => visibleData[visibleData.length - 1]);
 
     React.useEffect(() => {
         if (visibleData.length > 0) {
             setSelectedData(visibleData[visibleData.length - 1]);
         }
-        // Clear any frozen selection when the visible dataset changes (e.g., timeframe switch).
-        setFreezeIndex(null);
     }, [visibleData]);
 
     // Ensure the data used for the cursor/ReferenceLines is always in sync with the bar the user is hovering.
     // Using `selectedData` alone can be one render behind because it relies on the async tooltip update.
     const currentHoverData = React.useMemo(() => {
-        if (activeBarIndex !== null && activeBarIndex >= 0 && activeBarIndex < visibleData.length) {
-            return visibleData[activeBarIndex];
+        if (clickedBarIndex !== null && clickedBarIndex >= 0 && clickedBarIndex < visibleData.length) {
+            return visibleData[clickedBarIndex];
         }
         return selectedData;
-    }, [activeBarIndex, visibleData, selectedData]);
-
-    const hasFlow = React.useMemo(() => currentHoverData.netFlow !== 0, [currentHoverData]);
+    }, [clickedBarIndex, visibleData, selectedData]);
 
     // Compute dynamic Y-axis ticks aiming for 5–8 labels
     const baseStep = 100_000;
@@ -487,10 +480,27 @@ export default function BalanceFlowChart(props: Props) {
         return () => ro.disconnect();
     }, [visibleData, isOneYear, isAllTime]);
 
+    // Update handler for tooltip that honours the clickedBar freeze state
+    const handleTooltipUpdate = React.useCallback(
+        (row: PeriodData) => {
+            if (clickedBarIndex === null) {
+                setSelectedData(row);
+            }
+        },
+        [clickedBarIndex]
+    );
+
     // ---------------- JSX ----------------
     return (
         <div
             ref={containerRef}
+            onClick={() => {
+                if (clickedBarIndex !== null) {
+                    setClickedBarIndex(null);
+                    setSelectedData(visibleData[visibleData.length - 1]);
+                    setHoverPeriod(null);
+                }
+            }}
             style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -693,18 +703,7 @@ export default function BalanceFlowChart(props: Props) {
             </div>
 
             {/* Chart area */}
-            <div
-                style={{ flex: 1, position: 'relative', padding: 0 }}
-                ref={chartAreaRef}
-                onClick={() => {
-                    if (freezeIndex !== null) {
-                        setFreezeIndex(null);
-                        setSelectedData(visibleData[visibleData.length - 1]);
-                        setHoverPeriod(null);
-                        setActiveBarIndex(null);
-                    }
-                }}
-            >
+            <div style={{ flex: 1, position: 'relative', padding: 0 }} ref={chartAreaRef}>
                 <div style={{ display: 'none' }}>
                     {/* Time-frame toggle */}
                     <div
@@ -744,11 +743,9 @@ export default function BalanceFlowChart(props: Props) {
                         data={visibleData}
                         margin={{ top: 24, right: 0, left: 0, bottom: 8 }}
                         onMouseMove={(state: any) => {
-                            // Ignore hover updates when a bar is frozen via click.
-                            if (freezeIndex !== null) return;
-
+                            if (clickedBarIndex !== null) return; // freeze when clicked
                             if (state && state.isTooltipActive) {
-                                setActiveBarIndex(state.activeTooltipIndex);
+                                setHoverBarIndex(state.activeTooltipIndex);
                                 if (state.activeTooltipIndex != null) {
                                     const p = visibleData[state.activeTooltipIndex];
                                     if (p) setHoverPeriod(p.period);
@@ -756,11 +753,20 @@ export default function BalanceFlowChart(props: Props) {
                             }
                         }}
                         onMouseLeave={() => {
-                            if (freezeIndex === null) {
-                                setSelectedData(visibleData[visibleData.length - 1]);
-                            }
-                            setActiveBarIndex(null);
+                            if (clickedBarIndex !== null) return; // keep frozen
+                            setSelectedData(visibleData[visibleData.length - 1]);
+                            setHoverBarIndex(null);
                             setHoverPeriod(null);
+                        }}
+                        onClick={(state: any, e: any) => {
+                            if (state && typeof state.activeTooltipIndex === 'number') {
+                                setClickedBarIndex(state.activeTooltipIndex);
+                                setSelectedData(visibleData[state.activeTooltipIndex]);
+                                const p = visibleData[state.activeTooltipIndex];
+                                if (p) setHoverPeriod(p.period);
+                                setHoverBarIndex(null);
+                                if (e?.stopPropagation) e.stopPropagation();
+                            }
                         }}
                     >
                         {hoverPeriod !== null && (
@@ -839,23 +845,14 @@ export default function BalanceFlowChart(props: Props) {
                                 <Cell
                                     key={`cell-${index}`}
                                     fill={entry.netFlow >= 0 ? COLORS.Reinvested : COLORS.Distributed}
-                                    fillOpacity={freezeIndex !== null && index !== freezeIndex ? 0.1 : 1}
+                                    fillOpacity={clickedBarIndex !== null && index !== clickedBarIndex ? 0.1 : 1}
                                     onClick={(e) => {
-                                        // Prevent the click from bubbling to the overlay reset handler.
                                         e.stopPropagation();
-
-                                        if (freezeIndex === index) {
-                                            // Clicking the same bar toggles off the freeze.
-                                            setFreezeIndex(null);
-                                            setSelectedData(visibleData[visibleData.length - 1]);
-                                            setHoverPeriod(null);
-                                            setActiveBarIndex(null);
-                                        } else {
-                                            setFreezeIndex(index);
-                                            setSelectedData(entry);
-                                            setHoverPeriod(entry.period);
-                                            setActiveBarIndex(null);
-                                        }
+                                        setClickedBarIndex(index);
+                                        setSelectedData(visibleData[index]);
+                                        const p = visibleData[index];
+                                        if (p) setHoverPeriod(p.period);
+                                        setHoverBarIndex(null);
                                     }}
                                 />
                             ))}
