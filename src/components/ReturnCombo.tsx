@@ -221,6 +221,9 @@ export default function ReturnCombo(props: Props) {
     const [timeFrame, setTimeFrame] = React.useState<TimeFrameKey>('all');
     const [isAnimationEnabled, setIsAnimationEnabled] = React.useState(true);
 
+    // New: track the bar explicitly clicked to freeze selection
+    const [freezeIndex, setFreezeIndex] = React.useState<number | null>(null);
+
     React.useEffect(() => {
         const timer = setTimeout(() => setIsAnimationEnabled(false), 1000); // Disable animation after initial load
         return () => clearTimeout(timer);
@@ -251,6 +254,11 @@ export default function ReturnCombo(props: Props) {
         }
     }, [data, timeFrame]);
 
+    // Clear freeze when visible dataset changes (e.g., timeframe switch)
+    React.useEffect(() => {
+        setFreezeIndex(null);
+    }, [visibleData]);
+
     // Convert quarterly rate to annualised percentage for display (×4 then %)
     const chartData = visibleData.map((d) => ({
         ...d,
@@ -265,6 +273,17 @@ export default function ReturnCombo(props: Props) {
     } as const;
 
     const [selectedData, setSelectedData] = React.useState<QuarterData>(() => visibleData[visibleData.length - 1]);
+
+    // Helper to update cards only when not frozen
+    const handleTooltipUpdate = React.useCallback(
+        (row: QuarterData) => {
+            if (freezeIndex === null) {
+                setSelectedData(row);
+            }
+        },
+        [freezeIndex],
+    );
+
     React.useEffect(() => {
         if (visibleData.length > 0) {
             setSelectedData(visibleData[visibleData.length - 1]);
@@ -376,7 +395,15 @@ export default function ReturnCombo(props: Props) {
             </div>
 
             {/* Chart area */}
-            <div style={{ flex: 1, position: 'relative', padding: 0, paddingBottom: 0 }}> {/* chart area */}
+            <div
+                style={{ flex: 1, position: 'relative', padding: 0, paddingBottom: 0 }}
+                onClick={() => {
+                    if (freezeIndex !== null) {
+                        setFreezeIndex(null);
+                        setSelectedData(visibleData[visibleData.length - 1]);
+                    }
+                }}
+            > {/* chart area */}
                 {/* Hidden duplicate toggle controls - keeping existing implementation */}
                 <div style={{ display: 'none' }}>
                     {/* Time-frame toggle */}
@@ -413,12 +440,15 @@ export default function ReturnCombo(props: Props) {
                         margin={{ top: 48, right: 24, left: 24, bottom: 8 }}
                         barCategoryGap={2}
                         onMouseMove={(state: any) => {
+                            if (freezeIndex !== null) return; // ignore hover when frozen
                             if (state && state.isTooltipActive) {
                                 setActiveBarIndex(state.activeTooltipIndex);
                             }
                         }}
                         onMouseLeave={() => {
-                                setSelectedData(visibleData[visibleData.length - 1]);
+                                if (freezeIndex === null) {
+                                    setSelectedData(visibleData[visibleData.length - 1]);
+                                }
                                 setActiveBarIndex(null);
                             }}
                     >
@@ -440,7 +470,7 @@ export default function ReturnCombo(props: Props) {
                         <CartesianGrid strokeDasharray="3 3" stroke="#333333" opacity={0.3} />
                         <Tooltip
                             content={(tooltipProps) => (
-                                <CustomTooltip {...(tooltipProps as any)} onUpdate={setSelectedData} />
+                                <CustomTooltip {...(tooltipProps as any)} onUpdate={handleTooltipUpdate} />
                             )}
                             cursor={<DottedCursor label={selectedData.quarterLabel} /> as any}
                             labelFormatter={(label) => `${label}`}
@@ -454,7 +484,21 @@ export default function ReturnCombo(props: Props) {
                             animationEasing="ease-out"
                         >
                             {chartData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[entry.action]} fillOpacity={activeBarIndex !== null && index !== activeBarIndex ? 0.1 : 1} />
+                                <Cell
+                                    key={`cell-${index}`}
+                                    fill={COLORS[entry.action]}
+                                    fillOpacity={freezeIndex !== null && index !== freezeIndex ? 0.1 : 1}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (freezeIndex === index) {
+                                            setFreezeIndex(null);
+                                            setSelectedData(visibleData[visibleData.length - 1]);
+                                        } else {
+                                            setFreezeIndex(index);
+                                            setSelectedData(visibleData[index]);
+                                        }
+                                    }}
+                                />
                             ))}
                         </Bar>
                         <Line
