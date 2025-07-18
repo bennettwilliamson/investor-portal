@@ -16,7 +16,6 @@ import {
     ReferenceLine,
     Tooltip,
 } from 'recharts';
-import { useTooltipConnector } from './useTooltipConnector';
 
 // Types
 interface PeriodData {
@@ -218,9 +217,10 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, onUpdate
     return null;
 };
 
-const DottedCursor: React.FC<
-    any & { onPositionUpdate?: (pos: { x: number; y: number }) => void; showBelow?: boolean }
-> = ({ x, width, height, points, onPositionUpdate, showBelow }) => {
+// Shared cursor color so the line and label match
+const CURSOR_COLOR = '#666666';
+
+const DottedCursor: React.FC<any & { showBelow?: boolean }> = ({ x, width, height, points, showBelow }) => {
     // For some chart types (e.g., ComposedChart), x can be undefined – fall back to points array
     let cx: number = 0;
     if (points && points.length > 0 && typeof (points[0] as any).x === "number") {
@@ -243,15 +243,16 @@ const DottedCursor: React.FC<
     const dashStartY = pointY + dotRadius;
 
     const currentPayload = points && points.length > 0 ? (points[0] as any).payload : null;
-    const lastPayloadRef = React.useRef<any>();
+    const labelText: string = currentPayload ? (currentPayload as any).label : '';
 
-    // Notify parent after render commit to avoid nested updates loop
-    React.useEffect(() => {
-        if (onPositionUpdate && currentPayload && currentPayload !== lastPayloadRef.current) {
-            onPositionUpdate({ x: cx, y: pointY });
-            lastPayloadRef.current = currentPayload;
-        }
-    }, [cx, pointY, onPositionUpdate, currentPayload]);
+    // Basic sizing heuristic
+    const FONT_SIZE = 12;
+    const PADDING_X = 8;
+    const PADDING_Y = 4;
+    const AVG_CHAR_WIDTH = FONT_SIZE * 0.6;
+    const textWidth = labelText.length * AVG_CHAR_WIDTH;
+    const rectWidth = textWidth + PADDING_X * 2;
+    const rectHeight = FONT_SIZE + PADDING_Y * 2;
 
     return (
         <g>
@@ -261,10 +262,36 @@ const DottedCursor: React.FC<
                     y1={dashStartY}
                     x2={cx}
                     y2={dashedEndY}
-                    stroke="#666666"
+                    stroke={CURSOR_COLOR}
                     strokeWidth={1}
                     strokeDasharray="3 3"
                 />
+            )}
+
+            {/* Always render the solid portion of the line above (handled by ReferenceLine). Add label at the top */}
+            {labelText && (
+                <g transform={`translate(${cx}, 0)`} pointerEvents="none">
+                    <rect
+                        x={-rectWidth / 2}
+                        y={-rectHeight}
+                        width={rectWidth}
+                        height={rectHeight}
+                        rx={4}
+                        ry={4}
+                        fill={CURSOR_COLOR}
+                    />
+                    <text
+                        x={0}
+                        y={-rectHeight / 2}
+                        textAnchor="middle"
+                        dominantBaseline="central"
+                        fill="#FFFFFF"
+                        fontSize={FONT_SIZE}
+                        fontFamily="Utile Regular, sans-serif"
+                    >
+                        {labelText}
+                    </text>
+                </g>
             )}
         </g>
     );
@@ -280,15 +307,7 @@ export default function BalanceFlowChart(props: Props) {
     const containerRef = React.useRef<HTMLDivElement>(null);
     const chartAreaRef = React.useRef<HTMLDivElement>(null);
 
-    // Use the simplified tooltip connector hook for date label
-    const {
-        handleCursorPosition,
-        resetPosition,
-        renderConnectorOverlay,
-    } = useTooltipConnector({
-        containerRef,
-        chartAreaRef,
-    });
+    // Tooltip connector hook removed – we now render the label inside the SVG.
 
     const [activeBarIndex, setActiveBarIndex] = React.useState<number | null>(null);
     const [hoverPeriod, setHoverPeriod] = React.useState<number | null>(null);
@@ -684,7 +703,6 @@ export default function BalanceFlowChart(props: Props) {
                         }}
                         onMouseLeave={() => {
                             setSelectedData(visibleData[visibleData.length - 1]);
-                            resetPosition();
                             setActiveBarIndex(null);
                             setHoverPeriod(null);
                         }}
@@ -762,7 +780,7 @@ export default function BalanceFlowChart(props: Props) {
                             content={(tooltipProps) => (
                                 <CustomTooltip {...(tooltipProps as any)} onUpdate={setSelectedData} />
                             )}
-                            cursor={<DottedCursor onPositionUpdate={handleCursorPosition} showBelow={false} />}
+                            cursor={<DottedCursor showBelow={false} />}
                             labelFormatter={(label) => `${label}`}
                             position={{ y: 0 }}
                         />
@@ -786,8 +804,7 @@ export default function BalanceFlowChart(props: Props) {
                 </div>
             </div>
 
-            {/* Render the date label above cursor line */}
-            {renderConnectorOverlay(selectedData.label)}
+            {/* Date label is now rendered inside the SVG via DottedCursor */}
         </div>
     );
 } 

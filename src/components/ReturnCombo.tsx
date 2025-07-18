@@ -14,7 +14,7 @@ import {
     CartesianGrid,
     Line,
 } from 'recharts';
-import { useTooltipConnector } from './useTooltipConnector';
+// No longer need HTML overlay; we embed label inside the SVG.
 
 interface QuarterData {
     quarter: number;
@@ -174,26 +174,51 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, onUpdate
     return null;
 };
 
-const DottedCursor: React.FC<
-    any & { onPositionUpdate?: (pos: { x: number; y: number }) => void }
-> = ({ x, width, height, points, onPositionUpdate }) => {
-    // Compute coordinates every render
-    const cx = x + (width ?? 0) / 2;
-    const barTopY = points && points.length > 0 ? points[0].y : 0;
-    const currentPayload = points && points.length > 0 ? (points[0] as any).payload : null;
-    const lastPayloadRef = React.useRef<any>();
+const CURSOR_COLOR = '#666666';
 
-    // Notify parent *after* render commit to avoid nested updates
-    React.useEffect(() => {
-        if (onPositionUpdate && currentPayload && currentPayload !== lastPayloadRef.current) {
-            onPositionUpdate({ x: cx, y: barTopY });
-            lastPayloadRef.current = currentPayload;
-        }
-    }, [cx, barTopY, onPositionUpdate, currentPayload]);
+const DottedCursor: React.FC<any> = ({ x, width, height, points }) => {
+    const cx = x + (width ?? 0) / 2;
+
+    const currentPayload = points && points.length > 0 ? (points[0] as any).payload : null;
+    const labelText: string = currentPayload ? (currentPayload as any).quarterLabel : '';
+
+    // Sizing heuristics
+    const FONT_SIZE = 12;
+    const PADDING_X = 8;
+    const PADDING_Y = 4;
+    const AVG_CHAR_WIDTH = FONT_SIZE * 0.6;
+    const textWidth = labelText.length * AVG_CHAR_WIDTH;
+    const rectWidth = textWidth + PADDING_X * 2;
+    const rectHeight = FONT_SIZE + PADDING_Y * 2;
 
     return (
-        <g>
-            <line x1={cx} y1={0} x2={cx} y2={height} stroke="#666666" strokeWidth={1} />
+        <g pointerEvents="none">
+            <line x1={cx} y1={0} x2={cx} y2={height} stroke={CURSOR_COLOR} strokeWidth={1} />
+
+            {labelText && (
+                <g transform={`translate(${cx}, 0)`}>
+                    <rect
+                        x={-rectWidth / 2}
+                        y={-rectHeight}
+                        width={rectWidth}
+                        height={rectHeight}
+                        rx={4}
+                        ry={4}
+                        fill={CURSOR_COLOR}
+                    />
+                    <text
+                        x={0}
+                        y={-rectHeight / 2}
+                        textAnchor="middle"
+                        dominantBaseline="central"
+                        fill="#FFFFFF"
+                        fontSize={FONT_SIZE}
+                        fontFamily="Utile Regular, sans-serif"
+                    >
+                        {labelText}
+                    </text>
+                </g>
+            )}
         </g>
     );
 };
@@ -259,25 +284,12 @@ export default function ReturnCombo(props: Props) {
         ? currencyFormatter.format(selectedData.returnDollar)
         : `${(selectedData.returnRate * 4 * 100).toFixed(2)}%`;
 
-    // ---------- Refs for tooltip date label ----------
-    const containerRef = React.useRef<HTMLDivElement>(null);
-    const chartAreaRef = React.useRef<HTMLDivElement>(null);
-
-    // Use the simplified tooltip connector hook for date label
-    const {
-        handleCursorPosition,
-        resetPosition,
-        renderConnectorOverlay,
-    } = useTooltipConnector({
-        containerRef,
-        chartAreaRef,
-    });
+    // Tooltip connector removed – label is now inside SVG.
 
     const [activeBarIndex, setActiveBarIndex] = React.useState<number | null>(null);
 
     return (
         <div
-            ref={containerRef}
             style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -379,7 +391,7 @@ export default function ReturnCombo(props: Props) {
             </div>
 
             {/* Chart area */}
-            <div style={{ flex: 1, position: 'relative', padding: 0, paddingBottom: 0 }} ref={chartAreaRef}>
+            <div style={{ flex: 1, position: 'relative', padding: 0, paddingBottom: 0 }}> {/* chart area */}
                 {/* Hidden duplicate toggle controls - keeping existing implementation */}
                 <div style={{ display: 'none' }}>
                     {/* Time-frame toggle */}
@@ -421,10 +433,9 @@ export default function ReturnCombo(props: Props) {
                             }
                         }}
                         onMouseLeave={() => {
-                            setSelectedData(visibleData[visibleData.length - 1]);
-                            resetPosition();
-                            setActiveBarIndex(null);
-                        }}
+                                setSelectedData(visibleData[visibleData.length - 1]);
+                                setActiveBarIndex(null);
+                            }}
                     >
                         <XAxis dataKey="quarterLabel" axisLine={{ stroke: '#333333', strokeWidth: 1 }} tickLine={false} tick={axisTickStyle} />
                         <YAxis
@@ -446,7 +457,7 @@ export default function ReturnCombo(props: Props) {
                             content={(tooltipProps) => (
                                 <CustomTooltip {...(tooltipProps as any)} onUpdate={setSelectedData} />
                             )}
-                            cursor={<DottedCursor onPositionUpdate={handleCursorPosition} />}
+                            cursor={<DottedCursor />}
                             labelFormatter={(label) => `${label}`}
                             position={{ y: 0 }}
                         />
@@ -487,8 +498,7 @@ export default function ReturnCombo(props: Props) {
                 </div>
             </div>
 
-            {/* Render the date label above cursor line */}
-            {renderConnectorOverlay(selectedData.quarterLabel)}
+            {/* Date label rendered within SVG via DottedCursor */}
         </div>
     );
 } 
