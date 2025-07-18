@@ -67,8 +67,8 @@ export default function Home() {
     const transactions = (equityData as any[]).map((t) => ({
       ...t,
       amount: parseAmount(t.Actual_Transaction_Amount as string),
-      // Use Effective_Date as the canonical date, fallback to Tran_Date if missing
-      date: new Date((t as any).Effective_Date ?? (t as any).Tran_Date as string),
+      // Use Tran_Date per latest requirement (fallback to Effective_Date if missing)
+      date: new Date((t as any).Tran_Date ?? (t as any).Effective_Date as string),
     })) as Array<{
       amount: number;
       date: Date;
@@ -109,11 +109,11 @@ export default function Home() {
 
     sortedKeys.forEach((key, idx) => {
       const grp = groups.get(key)!;
-      let contributionDollar = 0;
-      let incomePaidDollar = 0;     // cash earnings paid to investor
-      let redemptionGaapDollar = 0;
-      let redemptionNavDollar = 0;
-      let taxDollar = 0; // captured but excluded from GAAP & returns per latest mapping
+      // ----- Flow buckets -----
+      let addGaap = 0;        // Contributions / transfers in that increase GAAP
+      let subtractGaap = 0;   // Redemptions / transfers out that reduce GAAP
+
+      let incomePaidDollar = 0;     // cash earnings paid to investor (realised)
       let incomeReinvestDollar = 0; // realised but reinvested
       let unrealizedDollar = 0;     // mark-to-market change
 
@@ -125,44 +125,56 @@ export default function Home() {
       grp.transactions.forEach((tx) => {
         const type = tx.Transaction_Type as string;
 
-        if (type === 'Contribution - Equity') {
-          contributionDollar += tx.amount;
+        // ---- ADD or SUBTRACT GAAP FLOWS ----
+        if (
+          type === 'Contribution - Equity' ||
+          type === 'Equity Conversion - from Line of Credit' ||
+          type === 'Equity Conversion - from Long Term Note' ||
+          type === 'Equity Conversion - from Short Term Note' ||
+          type === 'Equity Conversion - from Temporary Note' ||
+          type === 'Transfer In'
+        ) {
+          addGaap += tx.amount;
+        } else if (
+          type === 'Redemption - GAAP' ||
+          type === 'Taxes Paid Behalf of Investor - Reinvest' ||
+          type === 'Transfer Out'
+        ) {
+          subtractGaap += tx.amount;
         }
-        // ----- Realised earnings components -----
-        else if (type.startsWith('Income Paid')) {
-          // Includes both "Income Paid" and any "Income Paid - Adj" variants
+
+        // ---- REALISED EARNINGS ----
+        if (type.startsWith('Income Paid')) {
           incomePaidDollar += tx.amount;
         } else if (type.startsWith('Income Reinvestment')) {
           // Includes "Income Reinvestment" and "Income Reinvestment - Adj"
           incomeReinvestDollar += tx.amount;
           action = 'Reinvested';
-        // ----- Unrealised component -----
-        } else if (type.startsWith('Unrealized Gains/Losses')) {
+        }
+
+        // ---- UNREALISED EARNINGS ----
+        if (type.startsWith('Unrealized Gains/Losses')) {
           // Includes both base and "- Adj" variants
           unrealizedDollar += tx.amount;
-        } else if (type === 'Redemption - GAAP') {
-          redemptionGaapDollar += tx.amount;
-        } else if (type === 'Redemption - NAV') {
+        }
+
+        // ---- OTHER bucket handling ----
+        if (type === 'Redemption - NAV') {
           redemptionNavDollar += tx.amount;
-        } else if (type === 'Tax Increase/Decrease') {
-          taxDollar += tx.amount;
-        } else {
-          // Ignore other transaction types for return calculations
         }
       });
 
       const realizedDollar = incomePaidDollar + incomeReinvestDollar;
 
       // GAAP capital movements: GAAP = previous + contributions - cash withdrawals/redemptions + income reinvestment + tax adjustments
-      const gaapEnd =
-        gaapBegin + contributionDollar + incomeReinvestDollar - redemptionGaapDollar;
+      const gaapEnd = gaapBegin + addGaap + incomeReinvestDollar - subtractGaap;
 
       cumulativeUnreal += unrealizedDollar - redemptionNavDollar;
       const navEnd = gaapEnd + cumulativeUnreal;
 
       // Denominator = GAAP at quarter start minus any GAAP redemptions executed during the quarter (to exclude withdrawals)
       const denominatorBase = gaapBegin;
-      const denominator = denominatorBase - redemptionGaapDollar;
+      const denominator = denominatorBase - subtractGaap;
 
       const realizedRate = denominator > 0 ? realizedDollar / denominator : 0;
       const totalReturnDollar = realizedDollar + unrealizedDollar;
@@ -181,10 +193,10 @@ export default function Home() {
         returnDollar: totalReturnDollar, // total
         returnRate: totalReturnRate,     // total
         action,
-        netFlow: contributionDollar - redemptionGaapDollar - redemptionNavDollar,
-        capitalFlow: contributionDollar - redemptionGaapDollar - redemptionNavDollar,
-        contributionDollar,
-        redemptionGaapDollar,
+        netFlow: addGaap - subtractGaap - redemptionNavDollar,
+        capitalFlow: addGaap - subtractGaap - redemptionNavDollar,
+        contributionDollar: addGaap,
+        redemptionGaapDollar: subtractGaap,
         redemptionNavDollar,
         gaapEnd,
         navEnd,
