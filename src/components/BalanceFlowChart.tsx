@@ -201,7 +201,16 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, onUpdate
 // Shared cursor color so the line and label match
 const CURSOR_COLOR = '#666666';
 
-const DottedCursor: React.FC<any & { showBelow?: boolean }> = ({ x, width, height, points, showBelow }) => {
+interface CursorProps {
+    x?: number;
+    width?: number;
+    height?: number;
+    points?: any[];
+    showBelow?: boolean;
+    label?: string; // injected externally to ensure we always have the date text
+}
+
+const DottedCursor: React.FC<CursorProps> = ({ x, width, height = 0, points, showBelow, label = '' }) => {
     // For some chart types (e.g., ComposedChart), x can be undefined – fall back to points array
     let cx: number = 0;
     if (points && points.length > 0 && typeof (points[0] as any).x === "number") {
@@ -223,8 +232,11 @@ const DottedCursor: React.FC<any & { showBelow?: boolean }> = ({ x, width, heigh
 
     const dashStartY = pointY + dotRadius;
 
-    const currentPayload = points && points.length > 0 ? (points[0] as any).payload : null;
-    const labelText: string = currentPayload ? (currentPayload as any).label : '';
+    // Prefer externally supplied label, fallback to payload-derived label if present
+    let labelText = label;
+    if (!labelText && points && points.length > 0 && typeof (points[0] as any).payload?.label === 'string') {
+        labelText = (points[0] as any).payload.label as string;
+    }
 
     // Basic sizing heuristic
     const FONT_SIZE = 12;
@@ -761,7 +773,7 @@ export default function BalanceFlowChart(props: Props) {
                             content={(tooltipProps) => (
                                 <CustomTooltip {...(tooltipProps as any)} onUpdate={setSelectedData} />
                             )}
-                            cursor={<DottedCursor showBelow={false} />}
+                            cursor={<DottedCursor showBelow={false} label={selectedData.label} /> as any}
                             labelFormatter={(label) => `${label}`}
                             position={{ y: 0 }}
                         />

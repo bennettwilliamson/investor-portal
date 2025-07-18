@@ -157,11 +157,21 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, onUpdate
 
 const CURSOR_COLOR = '#666666';
 
-const DottedCursor: React.FC<any> = ({ x, width, height, points }) => {
+interface RC_CursorProps {
+    x?: number;
+    width?: number;
+    height?: number;
+    points?: any[];
+    label?: string;
+}
+
+const DottedCursor: React.FC<RC_CursorProps> = ({ x = 0, width = 0, height = 0, points, label = '' }) => {
     const cx = x + (width ?? 0) / 2;
 
-    const currentPayload = points && points.length > 0 ? (points[0] as any).payload : null;
-    const labelText: string = currentPayload ? (currentPayload as any).quarterLabel : '';
+    let labelText = label;
+    if (!labelText && points && points.length > 0 && typeof (points[0] as any).payload?.quarterLabel === 'string') {
+        labelText = (points[0] as any).payload.quarterLabel as string;
+    }
 
     // Sizing heuristics
     const FONT_SIZE = 12;
@@ -438,7 +448,7 @@ export default function ReturnCombo(props: Props) {
                             content={(tooltipProps) => (
                                 <CustomTooltip {...(tooltipProps as any)} onUpdate={setSelectedData} />
                             )}
-                            cursor={<DottedCursor />}
+                            cursor={<DottedCursor label={selectedData.quarterLabel} /> as any}
                             labelFormatter={(label) => `${label}`}
                             position={{ y: 0 }}
                         />
