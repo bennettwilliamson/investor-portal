@@ -178,9 +178,7 @@ const DottedCursor: React.FC<
     any & { onPositionUpdate?: (pos: { x: number; y: number }) => void }
 > = ({ x, width, height, points, onPositionUpdate }) => {
     // Compute coordinates every render
-    // BarChart has a left margin of 24px – subtract it to get the true position relative to the chart area container
-    const MARGIN_LEFT = 24;
-    const cx = x + (width ?? 0) / 2 - MARGIN_LEFT;
+    const cx = x + (width ?? 0) / 2;
     const barTopY = points && points.length > 0 ? points[0].y : 0;
     const currentPayload = points && points.length > 0 ? (points[0] as any).payload : null;
     const lastPayloadRef = React.useRef<any>();
