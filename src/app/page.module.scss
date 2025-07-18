@@ -32,4 +32,24 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1rem;
+}
+
+.chartTitle {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 400;
+  color: #E6E7E8;
+  font-family: 'Utile Regular', sans-serif;
+  position: relative;
+  display: inline-block;
+
+  &::after {
+    content: '';
+    display: block;
+    height: 3px;
+    width: 100%;
+    background-color: #008bce;
+    margin-top: 0.4rem;
+    border-radius: 1px;
+  }
 } 

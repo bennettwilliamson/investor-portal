@@ -342,7 +342,14 @@ export default function BalanceFlowChart(props: Props) {
         }
     }, [visibleData]);
 
-
+    // Ensure the data used for the cursor/ReferenceLines is always in sync with the bar the user is hovering.
+    // Using `selectedData` alone can be one render behind because it relies on the async tooltip update.
+    const currentHoverData = React.useMemo(() => {
+        if (activeBarIndex !== null && activeBarIndex >= 0 && activeBarIndex < visibleData.length) {
+            return visibleData[activeBarIndex];
+        }
+        return selectedData;
+    }, [activeBarIndex, visibleData, selectedData]);
 
     // Compute dynamic Y-axis ticks aiming for 5–8 labels
     const baseStep = 100_000;
@@ -567,16 +574,16 @@ export default function BalanceFlowChart(props: Props) {
                         }}
                     >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ width: '12px', height: '2px', backgroundColor: ACCENT_BLUE }} />
+                            <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Balance</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <div style={{ width: '12px', height: '12px', backgroundColor: COLORS.Reinvested, borderRadius: '2px' }} />
                             <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Contribution</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <div style={{ width: '12px', height: '12px', backgroundColor: COLORS.Distributed, borderRadius: '2px' }} />
                             <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Redemptions</span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div style={{ width: '12px', height: '2px', backgroundColor: ACCENT_BLUE }} />
-                            <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Balance</span>
                         </div>
                     </div>
                     {/* GAAP / NAV toggle */}
@@ -702,7 +709,7 @@ export default function BalanceFlowChart(props: Props) {
                     >
                         {hoverPeriod !== null && (
                             <ReferenceLine
-                                segment={[{ x: hoverPeriod, y: upperTick }, { x: hoverPeriod, y: selectedData.endingBalance }]}
+                                segment={[{ x: hoverPeriod, y: upperTick }, { x: hoverPeriod, y: currentHoverData.endingBalance }]}
                                 stroke="#666666"
                                 strokeWidth={1}
                                 ifOverflow="extendDomain"
@@ -712,10 +719,10 @@ export default function BalanceFlowChart(props: Props) {
                             <ReferenceLine
                                 key="dashed-ref"
                                 segment={[
-                                    { x: hoverPeriod, y: selectedData.endingBalance + 0.01 },
+                                    { x: hoverPeriod, y: currentHoverData.endingBalance + 0.01 },
                                     {
                                         x: hoverPeriod,
-                                        y: hasFlow ? (selectedData.netFlow > 0 ? selectedData.netFlow : 0) : selectedData.endingBalance + 0.01,
+                                        y: hasFlow ? (currentHoverData.netFlow > 0 ? currentHoverData.netFlow : 0) : currentHoverData.endingBalance + 0.01,
                                     },
                                 ]}
                                 stroke="#666666"
@@ -773,7 +780,7 @@ export default function BalanceFlowChart(props: Props) {
                             content={(tooltipProps) => (
                                 <CustomTooltip {...(tooltipProps as any)} onUpdate={setSelectedData} />
                             )}
-                            cursor={<DottedCursor showBelow={false} label={selectedData.label} /> as any}
+                            cursor={<DottedCursor showBelow={false} label={currentHoverData.label} /> as any}
                             labelFormatter={(label) => `${label}`}
                             position={{ y: 0 }}
                         />
@@ -784,16 +791,16 @@ export default function BalanceFlowChart(props: Props) {
             {/* Legend below chart */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: 24, pointerEvents: 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 12, height: 2, backgroundColor: ACCENT_BLUE }} />
+                    <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Balance</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 12, height: 12, backgroundColor: COLORS.Reinvested, borderRadius: 2 }} />
                     <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Contribution</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 12, height: 12, backgroundColor: COLORS.Distributed, borderRadius: 2 }} />
                     <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Redemptions</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 12, height: 2, backgroundColor: ACCENT_BLUE }} />
-                    <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Balance</span>
                 </div>
             </div>
 

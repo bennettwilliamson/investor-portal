@@ -291,13 +291,7 @@ export default function Home() {
             }}>
               {/* Header */}
               <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <h2 style={{
-                  margin: 0,
-                  fontSize: '30px',
-                  fontWeight: 400,
-                  color: '#E6E7E8',
-                  fontFamily: 'Utile Regular, sans-serif'
-                }}>
+                <h2 className={styles.chartTitle}>
                   Your Historical Returns
                 </h2>
               </div>
@@ -324,13 +318,7 @@ export default function Home() {
             }}>
               {/* Header */}
               <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <h2 style={{
-                  margin: 0,
-                  fontSize: '30px',
-                  fontWeight: 400,
-                  color: '#E6E7E8',
-                  fontFamily: 'Utile Regular, sans-serif'
-                }}>
+                <h2 className={styles.chartTitle}>
                   Your Historical Balance
                 </h2>
               </div>
