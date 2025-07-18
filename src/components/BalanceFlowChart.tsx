@@ -767,7 +767,7 @@ export default function BalanceFlowChart(props: Props) {
             </div>
 
             {/* Legend below chart */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: 24, pointerEvents: 'none' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: 18, pointerEvents: 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 12, height: 12, backgroundColor: COLORS.Reinvested, borderRadius: 2 }} />
                     <span style={{ color: '#C0C0C0', fontFamily: 'Utile Regular, sans-serif' }}>Contribution</span>
